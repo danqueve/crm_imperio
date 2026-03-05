@@ -1,0 +1,87 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+    text-align: center;
+}
+
+header {
+    background-color: #ffffff;
+    padding: 20px 0;
+    border-bottom: 1px solid #ddd;
+}
+
+.logo {
+    max-width: 150px;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+h1 {
+    color: #4a148c; /* Morado oscuro para el título */
+    margin: 5px 0;
+}
+
+h2 {
+    color: #6a1b9a; /* Un morado un poco más claro para el subtítulo */
+    margin: 5px 0 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 0 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Espacio entre los botones */
+}
+
+.button {
+    display: flex; /* Para alinear el icono y el texto */
+    align-items: center;
+    justify-content: center;
+    padding: 15px 20px;
+    background-color: #ffffa0; /* Amarillo claro */
+    color: #333;
+    text-decoration: none;
+    border-radius: 30px; /* Bordes redondeados */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.button:hover {
+    background-color: #ffeb3b; /* Amarillo un poco más oscuro al pasar el ratón */
+    transform: translateY(-2px);
+}
+
+.button i {
+    margin-right: 10px; /* Espacio entre el icono y el texto */
+    font-size: 1.3em;
+}
+
+/* Media Queries para Responsiveness */
+
+/* Para tablets (600px a 900px) */
+@media (min-width: 600px) and (max-width: 899px) {
+    .container {
+        padding: 0 30px;
+    }
+    .button {
+        font-size: 1.2em;
+        padding: 18px 25px;
+    }
+}
+
+/* Para desktops (900px y más) */
+@media (min-width: 900px) {
+    .container {
+        padding: 0 50px;
+    }
+    .button {
+        font-size: 1.3em;
+        padding: 20px 30px;
+    }
+}

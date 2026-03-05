@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Imperio Comercial - Nuestros Artículos</title>
+
+    <!-- FAVICON -->
+    <link rel="icon" type="image/jpg" href="img/logo.jpg"> 
+
+    <!-- Google Fonts: Open Sans y INTER -->
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=Inter:wght@300;700;900&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        /* Estilos generales y fondo navideño */
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background-color: #f0f2f5;
+            background-image: url('img/fon_nav.jpg'); /* Asegúrate de que esta imagen exista */
+            background-size: cover; 
+            background-repeat: no-repeat;
+            background-attachment: fixed; 
+            background-position: center center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Contenedor principal */
+        .main-card {
+            background-color: rgba(255, 255, 255, 0.95); /* Fondo casi opaco para mejor lectura */
+            padding: 30px;
+            border-radius: 1rem; 
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2); 
+            max-width: 500px; 
+            width: 100%;
+            margin: 20px auto;
+        }
+        
+        header {
+            margin-bottom: 25px;
+        }
+
+        .logo {
+            max-width: 120px;
+            margin-bottom: 15px;
+        }
+
+        /* Títulos Minimalistas */
+        h1 {
+            font-family: 'Inter', sans-serif; 
+            color: #4a148c; 
+            font-weight: 900; 
+            margin-bottom: 5px;
+            letter-spacing: 2px; 
+            text-transform: uppercase; 
+            font-size: 2rem;
+        }
+
+        h2 {
+            font-family: 'Inter', sans-serif; 
+            color: #6a1b9a; 
+            font-weight: 300; 
+            font-size: 1.2rem;
+            margin: 5px 0 20px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Botones personalizados */
+        .btn-custom {
+            width: 100%;
+            font-weight: 600;
+            font-size: 1.1rem;
+            padding: 1rem 1.5rem;
+            border-radius: 9999px; /* Píldora */
+            text-align: left; 
+            transition: all 0.2s ease-in-out;
+            border: 2px solid #ffeb3b; 
+            background-color: #ffffa0; 
+            color: #333; 
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-custom:hover {
+            background-color: #ffeb3b; 
+            color: #1a202c; 
+            transform: translateY(-2px); 
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+            border-color: #fbc02d; 
+        }
+
+        .btn-custom i {
+            margin-right: 15px;
+            min-width: 25px; 
+            text-align: center;
+        }
+    </style>
+</head>
+<body class="p-4">
+
+    <div class="main-card">
+        <!-- Encabezado -->
+        <header class="text-center">
+            <img src="img/logo.jpg" onerror="this.onerror=null; this.src='https://placehold.co/120x120/4a148c/ffffff/png?text=LOGO';" alt="Imperio Comercial Logo" class="logo mx-auto d-block rounded-full shadow-md">
+            <h1>IMPERIO COMERCIAL</h1>
+            <h2>Nuestros Artículos</h2>
+        </header>
+
+        <!-- CARRUSEL -->
+        <div id="articulosCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+            <!-- Indicadores -->
+            <div class="carousel-indicators">
+                <button type="button" data-bs-target="#articulosCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#articulosCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                <button type="button" data-bs-target="#articulosCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+            </div>
+
+            <div class="carousel-inner rounded-lg shadow-md">
+                <!-- Imagen 1 -->
+                <div class="carousel-item active" data-bs-interval="3000">
+                     <a href="https://whatsapp.com/channel/0029VbAx7YP0LKZNFx9IsF0P" target="_blank">
+                        <img src="img/slide1.png" onerror="this.onerror=null; this.src='https://placehold.co/500x200/4a148c/ffffff?text=Slide+1';" class="d-block w-full h-auto" alt="Promoción 1">
+                    </a>
+                </div>
+                <!-- Imagen 2 -->
+                <div class="carousel-item" data-bs-interval="3000">
+                    <a href="https://whatsapp.com/channel/0029VbAx7YP0LKZNFx9IsF0P" target="_blank">
+                        <img src="img/slide1.png" onerror="this.onerror=null; this.src='https://placehold.co/500x200/6a1b9a/ffffff?text=Slide+2';" class="d-block w-full h-auto" alt="Promoción 2">
+                    </a>
+                </div>
+                 <!-- Imagen 3 -->
+                <div class="carousel-item" data-bs-interval="3000">
+                     <a href="https://drive.google.com/file/d/19ymthW5VYbznZFt6fvE0xLpuYUqLmyBU/view?usp=drive_link" target="_blank">
+                        <img src="img/banner_hidro.png" onerror="this.onerror=null; this.src='https://placehold.co/500x200/4a148c/ffffff?text=Slide+3';" class="d-block w-full h-auto" alt="Promoción 3">
+                    </a>
+                </div>
+            </div>
+            
+            <button class="carousel-control-prev" type="button" data-bs-target="#articulosCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Anterior</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#articulosCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                <span class="visually-hidden">Siguiente</span>
+            </button>
+        </div>
+
+        <!-- BOTONES -->
+        <div class="d-grid gap-3">
+
+            <!-- LÍNEA BLANCA Y CLIMATIZACIÓN -->
+            <a href="https://drive.google.com/file/d/1Uyr0bgGHTV6ityhNIpa5pYFMfCspojBj/view?usp=drive_link" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-volume-up"></i> Parlantes BT
+            </a>
+            <a href="https://drive.google.com/file/d/12VUp291YOW52f6jXwizLfFjSu6eLGBy2/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-fan"></i> Ventiladores
+            </a>
+            <a href="https://drive.google.com/file/d/1597npV0Xn4hdCXhLZ1ReQ_J-aBDSvUVO/view?usp=drive_link" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-wind"></i> Aires Acondicionados
+            </a>
+            <a href="https://drive.google.com/file/d/17VyJPgSGZN3skQx-Mb3MQv74Zg9WukOy/view?usp=drive_link" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-tshirt"></i> Lavarropas
+            </a>
+            <a href="https://drive.google.com/file/d/17fP6Lj7TQh9WU95nC6zkz-gDUrzIKMxM/view?usp=drive_link" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-ice-cream"></i> Freezer
+            </a>
+            <a href="https://drive.google.com/file/d/1j471hIJDCcxwreNSgYnuJoBJ22oOZz50/view?usp=drive_link" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-box-open"></i> Heladeras
+            </a>
+            <a href="https://drive.google.com/file/d/1G8JBDSIR7g8BXz0DBsbnLOEsZGuFe1Rh/view?usp=drive_link" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-motorcycle"></i> Motos Baterias Niños
+            </a>
+            <a href="https://drive.google.com/file/d/1_nz6mpgI7P45iqD6hdv3NcO0pQcvSJfE/view?usp=drive_link" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-bicycle"></i> Biciletas R-29
+            </a>
+            <a href="https://drive.google.com/file/d/1n1kkdyNtDJa7N3i8S7wypY1rNBcA4k23/view?usp=drive_link" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-refrigerator"></i> Heladeras No Frost
+            </a>
+
+            <!-- MUEBLES -->
+            <a href="https://drive.google.com/file/d/1MOQ1urBsnw-0sKBE-8c1KStrVW7LaZjV/view?usp=drive_link" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-bed"></i> Sommier y Respaldos
+            </a>
+            <a href="https://drive.google.com/file/d/1XOM3ojuDUpdYaG-sw_0d2RXAFKBU5-Kw/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-couch"></i> Juego de Living
+            </a>
+            <a href="https://drive.google.com/file/d/1zrBFb9RySnFMqhdUY8j9CkGFL3bx-L62/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-cabinet-filing"></i> Placares y Racks
+            </a>
+            <a href="https://drive.google.com/file/d/1b5pamg011uyfqCDLZFtSJ1FG-dGiI5Mb/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-boxes-stacked"></i> Alacenas y Otros
+            </a>
+
+            <!-- PEQUEÑOS ELECTRODOMÉSTICOS / COCINA -->
+            <a href="https://drive.google.com/file/d/1jaqcZfFbfR1EAQuEn0doI8B1_Ndg6uWq/view?usp=drive_link" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-stove"></i> Cocina y Extractores
+            </a>
+            <a href="https://drive.google.com/file/d/1WO7-bTq8V37tvf8cHkc0cZdpKAJLTBja/view?usp=drive_link" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-microwave"></i> Microondas
+            </a>
+            <a href="https://drive.google.com/file/d/1dwWvxKfeHX6SUc3Z3BX65p6JYC4Xbce4/view?usp=drive_link" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-oven"></i> Hornos Eléctricos
+            </a>
+            <a href="https://drive.google.com/file/d/1y_UeUvt5duOipsxcuMsVVBdlv5Odd6rR/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-blender"></i> Licuadoras
+            </a>
+            <a href="https://drive.google.com/file/d/15l7BRKFljTdsxDqv4MpPG5ySeNG16R0c/view?usp=drive_link" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-egg-fried"></i> Batidoras
+            </a>
+            <a href="https://drive.google.com/file/d/1yQc9Nc0tXhxRGg-ebc_tnM45VlFfhHsO/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-robot"></i> Multiprocesadora
+            </a>
+            <a href="https://drive.google.com/file/d/1EQyQuff1rxFes5dMQ46AiGqJSIkCl_eY/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-pot-food"></i> Freidora y Otros
+            </a>
+            <a href="URL_GOOGLE_DRIVE_CAFETERAS_EXPRESS" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-mug-hot"></i> Cafeteras EXPRESS
+            </a>
+            <a href="https://drive.google.com/file/d/1aqYXntQB_diTYM4y--JkUoyEbjoyTjOm/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-coffee-pot"></i> Cafeteras de Filtro
+            </a>
+            <a href="https://drive.google.com/file/d/1ZTjASIZmZkPNRBYGFTPBxH2zTydn4GYa/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-bread-slice"></i> Tostadoras
+            </a>
+            <a href="https://drive.google.com/file/d/1jheclcbTu_RFyvbnCHs0DqzHVV-R5qfZ/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-hand-holding-box"></i> MiniPimer
+            </a>
+
+            <!-- CUIDADO PERSONAL Y LIMPIEZA -->
+            <a href="https://drive.google.com/file/d/12O_-lNFJXQDJxsw605Yl8BmA1nHca9EV/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-hat-wizard"></i> Planchitas para el Cabello
+            </a>
+            <a href="https://drive.google.com/file/d/10h2G51U2xtp2Ly8E1Ll_1u5ZA2uGWvcW/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-wind-turbine"></i> Secadores de Pelo
+            </a>
+            <a href="https://drive.google.com/file/d/1KjKhoXKI1_n8_zwQ-4E522GGeCXanLO3/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-scissors"></i> Afeitadora
+            </a>
+            <a href="https://drive.google.com/file/d/1VVav1olc7S_wbHf-27BK-8cWXxMoHTmA/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-iron"></i> Planchas
+            </a>
+            <a href="https://drive.google.com/file/d/1G18YfRIuUXeNLQpGVMxdIPPjBi0wJ5Tt/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-trash"></i> Aspiradoras
+            </a>
+
+            <!-- TECNOLOGÍA / AUDIO -->
+            <a href="https://drive.google.com/file/d/1GXF8gGgQ2jVs-gD7bH01iJHNo7w1KWNo/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-tv"></i> TV - SmartTV
+            </a>
+            <a href="https://drive.google.com/file/d/1J-72NLuAwTGPExD96epBwZiBw4fUGuPg/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-watch-fitness"></i> SmartWatch
+            </a>
+
+            <!-- HERRAMIENTAS Y JARDÍN / CAMPING -->
+            <a href="https://drive.google.com/file/d/19xUactQZRkeC9w1tB-BX_gjg8wuVG63r/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-wrench"></i> Herramientas Manuales
+            </a>
+            <a href="https://drive.google.com/file/d/1DEnkYgUOnGPPdsr7DoY6WJejk3W8eU_7/view?usp=drive_link" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-leaf"></i> Herramientas Jardinería
+            </a>
+            <a href="https://drive.google.com/file/d/1V_69ZFYXcHjrNxXK-VvsMKkn6TtnCKqw/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-campground"></i> Camping Carpas y Colchonetas
+            </a>
+            <a href="https://drive.google.com/file/d/1EBp1unf_4JGxzDNF0WXuIsELSS_6fF3B/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-chair"></i> Camping Mesas y Sillas
+            </a>
+            <a href="https://drive.google.com/file/d/1h8BNDG6CMC_U2RzLm0-uCVBMFXPmayJm/view" target="_blank" class="btn btn-custom d-flex align-items-center">
+                <i class="fas fa-swimming-pool"></i> Piletas de Lona
+            </a>
+
+        </div>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+config.php
+uploads/
+*.log
+
+# Dumps de BD (contienen datos reales de clientes)
+*.sql
+
+# Archivos de IDE / herramientas locales
+.claude/
