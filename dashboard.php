@@ -142,12 +142,12 @@ include 'includes/header.php';
             <table class="w-full text-left text-sm">
                 <thead class="bg-slate-950/50 text-slate-500 uppercase text-[10px] font-bold tracking-widest border-b border-slate-800">
                     <tr>
-                        <th class="p-5 pl-6">#</th>
-                        <th class="p-5">Fecha</th>
+                        <th class="p-5 pl-6 hidden sm:table-cell">#</th>
+                        <th class="p-5 hidden sm:table-cell">Fecha</th>
                         <th class="p-5">Cliente</th>
-                        <th class="p-5">Cargado por</th>
+                        <th class="p-5 hidden lg:table-cell">Cargado por</th>
                         <th class="p-5">Artículo / Total</th>
-                        <th class="p-5">Estado</th>
+                        <th class="p-5 hidden sm:table-cell">Estado</th>
                         <th class="p-5 text-right">Acciones</th>
                     </tr>
                 </thead>
@@ -167,15 +167,16 @@ include 'includes/header.php';
                     <?php else: ?>
                         <?php $counter = 1; foreach ($orders as $order): ?>
                         <tr class="hover:bg-slate-800/30 transition-colors border-l-4 <?= $order['status'] === 'revision' ? 'border-yellow-500/60' : 'border-emerald-500/60' ?>">
-                            <td class="p-5 pl-6 font-bold text-slate-600"><?= $counter++ ?></td>
-                            <td class="p-5 text-slate-300 font-mono text-xs"><?= date('d/m/Y', strtotime($order['created_at'])) ?></td>
-                            <td class="p-5">
+                            <td class="p-5 pl-6 font-bold text-slate-600 hidden sm:table-cell"><?= $counter++ ?></td>
+                            <td class="p-5 text-slate-300 font-mono text-xs hidden sm:table-cell"><?= date('d/m/Y', strtotime($order['created_at'])) ?></td>
+                            <td class="p-3 sm:p-5">
                                 <div class="font-bold text-white"><?= htmlspecialchars($order['client_name']) ?></div>
                                 <div class="text-[10px] text-emerald-400 font-mono tracking-tighter flex items-center gap-1 mt-0.5">
                                     <i data-lucide="phone" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($order['client_whatsapp']) ?>
                                 </div>
+                                <div class="text-[10px] text-slate-500 font-mono mt-0.5 sm:hidden"><?= date('d/m/Y', strtotime($order['created_at'])) ?></div>
                             </td>
-                            <td class="p-5 text-slate-400">
+                            <td class="p-5 text-slate-400 hidden lg:table-cell">
                                 <div class="flex items-center gap-1.5">
                                     <i data-lucide="user-edit" class="w-3.5 h-3.5 text-slate-500"></i>
                                     <!-- Nombre del vendedor convertido en enlace a su perfil -->
@@ -185,24 +186,17 @@ include 'includes/header.php';
                                     </a>
                                 </div>
                             </td>
-                            <td class="p-5">
+                            <td class="p-3 sm:p-5">
                                 <div class="text-slate-200 font-medium"><?= htmlspecialchars($order['item']) ?></div>
                                 <div class="text-xs font-bold text-emerald-500/80">$<?= number_format($order['total_amount'], 0, ',', '.') ?></div>
+                                <div class="mt-1 sm:hidden"><?= status_badge($order['status']) ?></div>
                             </td>
-                            <td class="p-5">
-                                <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase border inline-flex items-center gap-1.5
-                                    <?= $order['status'] === 'revision' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' ?>">
-                                    <?php if ($order['status'] === 'revision'): ?>
-                                        <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse shrink-0"></span>
-                                    <?php else: ?>
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0"></span>
-                                    <?php endif; ?>
-                                    <?= $order['status'] === 'revision' ? 'En Revisión' : 'Aprobado' ?>
-                                </span>
+                            <td class="p-5 hidden sm:table-cell">
+                                <?= status_badge($order['status']) ?>
                             </td>
-                            <td class="p-5 text-right">
-                                <div class="flex justify-end gap-2 items-center">
-                                    <a href="ver_ficha.php?id=<?= $order['id'] ?>" class="p-2 rounded-lg bg-slate-800 hover:bg-blue-600 text-blue-400 hover:text-white transition border border-slate-700 shadow-sm" title="Ver Ficha">
+                            <td class="p-3 sm:p-5 text-right">
+                                <div class="flex justify-end gap-1.5 sm:gap-2 items-center">
+                                    <a href="ver_ficha.php?id=<?= $order['id'] ?>" class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-blue-600 text-blue-400 hover:text-white transition border border-slate-700 shadow-sm" title="Ver Ficha">
                                         <i data-lucide="eye" class="w-4 h-4"></i>
                                     </a>
 
@@ -212,18 +206,18 @@ include 'includes/header.php';
                                             <?= csrf_field() ?>
                                             <input type="hidden" name="id" value="<?= $order['id'] ?>">
                                             <input type="hidden" name="status" value="aprobado">
-                                            <button type="submit" class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg hover:bg-emerald-600 hover:text-white transition border border-emerald-500/20" title="Aprobar Venta">
+                                            <button type="submit" class="w-10 h-10 flex items-center justify-center bg-emerald-500/10 text-emerald-400 rounded-lg hover:bg-emerald-600 hover:text-white transition border border-emerald-500/20" title="Aprobar Venta">
                                                 <i data-lucide="check" class="w-4 h-4"></i>
                                             </button>
                                         </form>
-                                        <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition border border-red-500/20" title="Cancelar/Rechazar Venta">
+                                        <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="w-10 h-10 flex items-center justify-center bg-red-500/10 text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition border border-red-500/20" title="Cancelar/Rechazar Venta">
                                             <i data-lucide="x" class="w-4 h-4"></i>
                                         </a>
                                     <?php endif; ?>
 
                                     <?php if ($is_vendedor && $order['status'] === 'revision'): ?>
                                         <div class="w-px h-4 bg-slate-700 mx-1"></div>
-                                        <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="p-2 bg-red-500/10 text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition border border-red-500/20" title="Cancelar mi carga" onclick="return confirm('¿Confirma que desea cancelar y retirar esta venta enviada?')">
+                                        <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="w-10 h-10 flex items-center justify-center bg-red-500/10 text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition border border-red-500/20" title="Cancelar mi carga" onclick="return confirm('¿Confirma que desea cancelar y retirar esta venta enviada?')">
                                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                                         </a>
                                     <?php endif; ?>

@@ -1,24 +1,47 @@
 <?php
 require 'includes/db.php';
 
-// SEGURIDAD: Permitir Admin, Supervisor Y VERIFICADOR
-// Antes: if (!isset($_SESSION['role']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'supervisor')) {
-if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'supervisor', 'verificador'])) {
+// SEGURIDAD: Admin, Supervisor, Verificador y Vendedor (solo para cancelar su propia venta en revisión)
+$role    = $_SESSION['role'] ?? '';
+$user_id = $_SESSION['user_id'] ?? 0;
+
+if (!in_array($role, ['admin', 'supervisor', 'verificador', 'vendedor'])) {
     header("Location: dashboard.php");
     exit;
 }
 
-$id = $_GET['id'] ?? null;
+$id = (int)($_GET['id'] ?? 0);
+
+// Si es vendedor, verificar propiedad y estado en GET (acceso a la página)
+if ($role === 'vendedor' && $id) {
+    $stmtChk = $pdo->prepare("SELECT user_id, status FROM sales WHERE id = ?");
+    $stmtChk->execute([$id]);
+    $saleChk = $stmtChk->fetch();
+    if (!$saleChk || (int)$saleChk['user_id'] !== (int)$user_id || $saleChk['status'] !== 'revision') {
+        header("Location: dashboard.php");
+        exit;
+    }
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
-    $reason = trim($_POST['reason']);
-    $sale_id = $_POST['sale_id'];
-    
+    $reason  = trim($_POST['reason'] ?? '');
+    $sale_id = (int)($_POST['sale_id'] ?? 0);
+
+    // Re-verificar propiedad en POST para vendedores
+    if ($role === 'vendedor') {
+        $stmtChk2 = $pdo->prepare("SELECT user_id, status FROM sales WHERE id = ?");
+        $stmtChk2->execute([$sale_id]);
+        $saleChk2 = $stmtChk2->fetch();
+        if (!$saleChk2 || (int)$saleChk2['user_id'] !== (int)$user_id || $saleChk2['status'] !== 'revision') {
+            header("Location: dashboard.php");
+            exit;
+        }
+    }
+
     if ($reason) {
-        // Guardamos rejected_by con el ID del usuario actual (incluido Verificador)
         $stmt = $pdo->prepare("UPDATE sales SET status = 'rechazado', rejected_reason = ?, rejected_by = ? WHERE id = ?");
-        $stmt->execute([$reason, $_SESSION['user_id'], $sale_id]);
+        $stmt->execute([$reason, $user_id, $sale_id]);
         log_audit($pdo, 'reject', 'sale', $sale_id, "Motivo: $reason");
 
         header("Location: dashboard.php");

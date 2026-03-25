@@ -16,7 +16,7 @@ include 'includes/header.php';
     
     <!-- Cabecera interna -->
     <div class="flex items-center gap-4 mb-8">
-        <a href="dashboard.php" class="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white transition border border-slate-700">
+        <a href="dashboard.php" class="w-10 h-10 flex items-center justify-center bg-slate-800 rounded-full text-slate-400 hover:text-white transition border border-slate-700 shrink-0">
             <i data-lucide="chevron-left"></i>
         </a>
         <div>

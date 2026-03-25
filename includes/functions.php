@@ -87,3 +87,23 @@ if (!function_exists('renderPagination')) {
         return ob_get_clean();
     }
 }
+
+// --- Status Badge ---
+
+if (!function_exists('status_badge')) {
+    function status_badge(string $status): string {
+        $map = [
+            'revision'  => ['classes' => 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',   'label' => 'En Revisión', 'dot' => 'bg-yellow-400 animate-pulse'],
+            'aprobado'  => ['classes' => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', 'label' => 'Aprobado',    'dot' => 'bg-emerald-400'],
+            'entregado' => ['classes' => 'bg-blue-500/10 text-blue-400 border-blue-500/20',          'label' => 'Entregado',   'dot' => 'bg-blue-400'],
+            'rechazado' => ['classes' => 'bg-red-500/10 text-red-400 border-red-500/20',             'label' => 'Rechazado',   'dot' => 'bg-red-400'],
+        ];
+        $cfg = $map[$status] ?? ['classes' => 'bg-slate-800 text-slate-400 border-slate-700', 'label' => ucfirst($status), 'dot' => 'bg-slate-400'];
+        return sprintf(
+            '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border %s"><span class="w-1.5 h-1.5 rounded-full shrink-0 %s"></span>%s</span>',
+            $cfg['classes'],
+            $cfg['dot'],
+            htmlspecialchars($cfg['label'])
+        );
+    }
+}

@@ -20,12 +20,12 @@ $where = [];
 $params = [];
 
 if ($filtro_action !== '') {
-    $where[] = "a.action = ?";
-    $params[] = $filtro_action;
+    $where[] = "a.action = :filtro_action";
+    $params[':filtro_action'] = $filtro_action;
 }
 if ($filtro_user !== '') {
-    $where[] = "a.user_id = ?";
-    $params[] = $filtro_user;
+    $where[] = "a.user_id = :filtro_user";
+    $params[':filtro_user'] = (int)$filtro_user;
 }
 
 $whereSql = $where ? "WHERE " . implode(" AND ", $where) : "";
@@ -42,9 +42,14 @@ $stmtLog = $pdo->prepare(
      LEFT JOIN users u ON a.user_id = u.id
      $whereSql
      ORDER BY a.created_at DESC
-     LIMIT $por_pagina OFFSET $offset"
+     LIMIT :limit OFFSET :offset"
 );
-$stmtLog->execute($params);
+foreach ($params as $key => $value) {
+    $stmtLog->bindValue($key, $value);
+}
+$stmtLog->bindValue(':limit',  $por_pagina, PDO::PARAM_INT);
+$stmtLog->bindValue(':offset', $offset,     PDO::PARAM_INT);
+$stmtLog->execute();
 $logs = $stmtLog->fetchAll();
 
 // Obtener lista de acciones únicas para el filtro

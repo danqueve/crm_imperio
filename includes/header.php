@@ -64,7 +64,7 @@ $avatarInitial  = strtoupper(mb_substr($_SESSION['name'] ?? 'U', 0, 1));
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CRM Imperio</title>
     <link rel="icon" href="img/logo.jpg" type="image/jpeg">
     <!-- Tailwind CSS -->
@@ -83,9 +83,11 @@ $avatarInitial  = strtoupper(mb_substr($_SESSION['name'] ?? 'U', 0, 1));
         /* Utilidad para ocultar scrollbar en móviles */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Safe area insets para dispositivos con notch (iPhone X+) */
+        .mobile-bottom-nav { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.375rem); }
     </style>
 </head>
-<body class="bg-slate-950 text-gray-100 font-sans min-h-screen flex flex-col selection:bg-blue-500 selection:text-white">
+<body class="bg-slate-950 text-gray-100 font-sans min-h-[100dvh] flex flex-col selection:bg-blue-500 selection:text-white">
 
     <!-- Navbar Superior -->
     <nav class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30">
@@ -176,7 +178,7 @@ $avatarInitial  = strtoupper(mb_substr($_SESSION['name'] ?? 'U', 0, 1));
         </div>
 
         <!-- Navegación Móvil -->
-        <div class="md:hidden border-t border-slate-800/80 bg-slate-900 px-2 py-1.5 flex overflow-x-auto gap-1 no-scrollbar items-center">
+        <div class="md:hidden border-t border-slate-800/80 bg-slate-900 px-2 pt-1.5 mobile-bottom-nav flex overflow-x-auto gap-1 no-scrollbar items-center">
             <?php
             $mobileLinks = [
                 ['href' => 'dashboard.php',              'icon' => 'home',        'label' => 'Panel',    'cond' => true],

@@ -57,10 +57,22 @@ include 'includes/header.php';
 
 <main class="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 lg:p-8 fade-in">
 
-    <!-- Mensaje Flash -->
+    <!-- Mensajes Flash -->
     <?php if (isset($_GET['msg']) && $_GET['msg'] == 'updated'): ?>
     <div class="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-xl flex items-center gap-3 shadow-lg animate-pulse">
         <i data-lucide="check-circle" class="w-5 h-5"></i> <span>Ficha actualizada correctamente.</span>
+    </div>
+    <?php elseif (isset($_GET['msg']) && $_GET['msg'] == 'file_deleted'): ?>
+    <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl flex items-center gap-3 shadow-lg">
+        <i data-lucide="trash-2" class="w-5 h-5"></i> <span>Archivo eliminado correctamente.</span>
+    </div>
+    <?php elseif (isset($_GET['msg']) && $_GET['msg'] == 'error_delete'): ?>
+    <div class="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 rounded-xl flex items-center gap-3 shadow-lg">
+        <i data-lucide="alert-triangle" class="w-5 h-5"></i> <span>No se pudo eliminar el archivo.</span>
+    </div>
+    <?php elseif (isset($_GET['msg']) && $_GET['msg'] == 'error'): ?>
+    <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl flex items-center gap-3 shadow-lg">
+        <i data-lucide="alert-octagon" class="w-5 h-5"></i> <span>Ocurrió un error al guardar los cambios. Intente nuevamente.</span>
     </div>
     <?php endif; ?>
 
@@ -352,16 +364,17 @@ include 'includes/header.php';
 
 <!-- MODAL DE EDICIÓN TOTAL -->
 <?php if ($can_manage): ?>
-<div id="editModal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-xl hidden items-center justify-center p-4 z-50 overflow-y-auto">
-    <div class="bg-slate-900/95 border border-slate-700/60 rounded-3xl shadow-2xl shadow-black/60 ring-1 ring-white/5 w-full max-w-4xl p-6 sm:p-10 my-8 transform transition-all">
+<div id="editModal" class="fixed inset-0 bg-slate-950/75 backdrop-blur-xl hidden z-50 overflow-y-auto">
+    <div class="flex min-h-full items-start sm:items-center justify-center p-2 sm:p-4">
+    <div class="bg-slate-900/95 border border-slate-700/60 rounded-2xl sm:rounded-3xl shadow-2xl shadow-black/60 ring-1 ring-white/5 w-full max-w-4xl p-4 sm:p-8 my-2 sm:my-6 transform transition-all">
         <div class="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
             <h3 class="text-xl font-bold text-white flex items-center gap-3">
                 <i data-lucide="settings-2" class="text-blue-500 w-6 h-6"></i> Edición Integral de la Ficha
             </h3>
-            <button onclick="closeEditModal()" class="text-slate-500 hover:text-white transition bg-slate-800 p-2 rounded-full"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <button onclick="closeEditModal()" class="text-slate-500 hover:text-white transition bg-slate-800 w-10 h-10 flex items-center justify-center rounded-full shrink-0"><i data-lucide="x" class="w-5 h-5"></i></button>
         </div>
 
-        <form action="update_sale_full.php" method="POST" class="space-y-8">
+        <form action="update_sale_full.php" method="POST" enctype="multipart/form-data" class="space-y-8">
             <?= csrf_field() ?>
             <input type="hidden" name="sale_id" value="<?= $order['id'] ?>">
             
@@ -467,6 +480,10 @@ include 'includes/header.php';
                                 <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1">Valor Cuota ($)</label>
                                 <input type="number" id="edit_monto" name="amount" value="<?= $order['installment_amount'] ?? 0 ?>" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white outline-none" oninput="recalculateTotal()" required>
                             </div>
+                            <div class="col-span-2">
+                                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1">Adelanto ($)</label>
+                                <input type="number" name="down_payment" value="<?= htmlspecialchars($order['down_payment'] ?? 0) ?>" min="0" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:border-emerald-500 outline-none transition">
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -477,11 +494,63 @@ include 'includes/header.php';
                 <div id="edit_total" class="text-3xl font-black text-white">$<?= number_format($order['total_amount'] ?? 0, 0, ',', '.') ?></div>
             </div>
 
+            <!-- DOCUMENTACIÓN ADJUNTA (EDICIÓN) -->
+            <div class="space-y-4">
+                <h4 class="text-purple-400 text-xs font-bold uppercase tracking-widest border-l-4 border-purple-500 pl-3">Documentación Adjunta</h4>
+
+                <?php
+                // Re-query con id para los botones de eliminar
+                $stmtFilesEdit = $pdo->prepare("SELECT sf.id, sf.file_path FROM sale_files sf WHERE sf.sale_id = ?");
+                $stmtFilesEdit->execute([$order['id']]);
+                $filesWithIds = $stmtFilesEdit->fetchAll(PDO::FETCH_ASSOC);
+                ?>
+
+                <?php if (!empty($filesWithIds)): ?>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-500 uppercase mb-2 ml-1">Archivos actuales:</p>
+                    <div class="flex flex-wrap gap-2">
+                        <?php foreach ($filesWithIds as $ef):
+                            $isPdf = strpos(strtolower($ef['file_path']), '.pdf') !== false;
+                        ?>
+                        <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400" id="file-chip-<?= $ef['id'] ?>">
+                            <i data-lucide="<?= $isPdf ? 'file-text' : 'image' ?>" class="w-4 h-4 text-purple-400 shrink-0"></i>
+                            <a href="uploads/<?= htmlspecialchars($ef['file_path']) ?>" target="_blank"
+                               class="truncate max-w-[140px] hover:text-purple-300 transition">
+                                <?= htmlspecialchars($ef['file_path']) ?>
+                            </a>
+                            <?php if (in_array($role, ['admin', 'supervisor']) || ($role === 'vendedor' && $order['status'] === 'revision')): ?>
+                            <button type="button"
+                                    class="p-1 text-slate-700 hover:text-red-400 transition rounded"
+                                    title="Eliminar"
+                                    onclick="deleteFile(<?= $ef['id'] ?>, <?= $order['id'] ?>)">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <?php endif; ?>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+
+                <!-- Zona de carga de nuevos archivos -->
+                <div class="bg-slate-950 border-2 border-dashed border-slate-800 rounded-2xl p-6 text-center group hover:border-purple-500/50 transition-colors cursor-pointer"
+                     onclick="document.getElementById('edit_sale_files').click()">
+                    <input type="file" name="sale_files[]" id="edit_sale_files" multiple
+                           accept="image/*,.pdf" class="hidden" onchange="previewEditFiles(this)">
+                    <div id="edit_file_list">
+                        <i data-lucide="upload-cloud" class="w-7 h-7 text-slate-600 mx-auto mb-2 group-hover:text-purple-400 transition"></i>
+                        <p class="text-slate-500 text-xs font-medium">Click para agregar más documentos</p>
+                        <p class="text-[10px] text-slate-600 mt-1">JPG, PNG, PDF — máx. 5MB cada uno</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="flex gap-4 pt-4">
                 <button type="button" onclick="closeEditModal()" class="flex-1 py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-2xl transition font-bold uppercase text-xs">Cancelar</button>
                 <button type="submit" class="flex-1 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl transition font-bold uppercase text-xs shadow-xl shadow-blue-900/30">Guardar Cambios</button>
             </div>
         </form>
+    </div>
     </div>
 </div>
 
@@ -489,7 +558,6 @@ include 'includes/header.php';
     function openEditModal() {
         const modal = document.getElementById('editModal');
         modal.classList.remove('hidden');
-        modal.classList.add('flex');
         document.body.style.overflow = 'hidden';
         lucide.createIcons();
     }
@@ -497,8 +565,7 @@ include 'includes/header.php';
     function closeEditModal() {
         const modal = document.getElementById('editModal');
         modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        document.body.style.overflow = 'auto';
+        document.body.style.overflow = '';
     }
 
     function recalculateTotal() {
@@ -506,6 +573,43 @@ include 'includes/header.php';
         const monto = parseFloat(document.getElementById('edit_monto').value) || 0;
         const total = cuotas * monto;
         document.getElementById('edit_total').innerText = '$' + total.toLocaleString('es-AR');
+    }
+
+    function previewEditFiles(input) {
+        const container = document.getElementById('edit_file_list');
+        if (!input.files || input.files.length === 0) return;
+        let html = '<div class="flex flex-wrap gap-1 justify-center mt-1">';
+        Array.from(input.files).forEach(file => {
+            html += `<span class="bg-slate-800 text-slate-400 text-[10px] px-2 py-1 rounded border border-slate-700 flex items-center gap-1">
+                <i data-lucide="file" class="w-3 h-3 text-purple-400"></i>${file.name}
+            </span>`;
+        });
+        html += '</div>';
+        container.innerHTML = html;
+        lucide.createIcons();
+    }
+
+    const _csrfToken = '<?= htmlspecialchars(csrf_token()) ?>';
+
+    function deleteFile(fileId, saleId) {
+        if (!confirm('¿Eliminar este archivo? Esta acción no se puede deshacer.')) return;
+
+        const fd = new FormData();
+        fd.append('file_id',    fileId);
+        fd.append('sale_id',    saleId);
+        fd.append('csrf_token', _csrfToken);
+
+        fetch('delete_sale_file.php', { method: 'POST', body: fd })
+            .then(response => {
+                // El endpoint redirige; tomamos la URL final para detectar errores
+                const chip = document.getElementById('file-chip-' + fileId);
+                if (response.url && response.url.includes('error_delete')) {
+                    alert('No se pudo eliminar el archivo.');
+                } else {
+                    if (chip) chip.remove();
+                }
+            })
+            .catch(() => alert('Error de conexión al intentar eliminar.'));
     }
 </script>
 <?php endif; ?>

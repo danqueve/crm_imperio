@@ -131,30 +131,14 @@ include 'includes/header.php';
                                 <div class="text-[10px] text-emerald-500 font-bold">$<?= number_format($s['total_amount'], 0, ',', '.') ?></div>
                             </td>
                             <td class="p-5 text-center">
-                                <?php 
-                                $statusClasses = [
-                                    'revision' => 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-                                    'aprobado' => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-                                    'entregado' => 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-                                    'rechazado' => 'bg-red-500/10 text-red-400 border-red-500/20'
-                                ];
-                                $statusLabels = [
-                                    'revision' => 'Revisión',
-                                    'aprobado' => 'Aprobado',
-                                    'entregado' => 'Entregado',
-                                    'rechazado' => 'Rechazado'
-                                ];
-                                ?>
-                                <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border <?= $statusClasses[$s['status']] ?? 'bg-slate-800 text-slate-400 border-slate-700' ?>">
-                                    <?= $statusLabels[$s['status']] ?? 'Desconocido' ?>
-                                </span>
+                                <?= status_badge($s['status']) ?>
                             </td>
                             <td class="p-5">
                                 <div class="text-[10px] text-slate-400">
                                     <?php if ($s['status'] === 'entregado'): ?>
                                         <span class="block font-bold text-blue-400/80 mb-0.5 uppercase tracking-tighter">Entregado por:</span> 
                                         <span class="flex items-center gap-1"><i data-lucide="user-check" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($s['delivered_by_name'] ?? 'S/D') ?></span>
-                                        <span class="text-slate-600 block mt-0.5 font-mono"><?= date('d/m/Y', strtotime($s['delivered_at'])) ?></span>
+                                        <span class="text-slate-600 block mt-0.5 font-mono"><?= !empty($s['delivered_at']) ? date('d/m/Y', strtotime($s['delivered_at'])) : '-' ?></span>
                                     <?php elseif ($s['status'] === 'rechazado'): ?>
                                         <span class="block font-bold text-red-400/80 mb-0.5 uppercase tracking-tighter">Rechazado por:</span> 
                                         <span class="flex items-center gap-1 mb-1"><i data-lucide="shield-alert" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($s['rejected_by_name'] ?? 'Admin') ?></span>

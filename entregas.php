@@ -146,7 +146,7 @@ include 'includes/header.php';
                                     <?php if ($order['status'] === 'entregado'): ?>
                                         <div class="flex items-center gap-1.5 mt-0.5">
                                             <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 font-bold uppercase">Entrega</span>
-                                            <span class="text-xs text-emerald-400"><?= date('d/m/Y', strtotime($order['delivered_at'])) ?></span>
+                                            <span class="text-xs text-emerald-400"><?= !empty($order['delivered_at']) ? date('d/m/Y', strtotime($order['delivered_at'])) : '-' ?></span>
                                         </div>
                                     <?php endif; ?>
                                 </div>

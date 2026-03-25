@@ -92,8 +92,8 @@ $allHistory = $stmtFull->fetchAll(PDO::FETCH_ASSOC);
 
 // Preparar array de datos simplificados para que JavaScript genere el PDF
 $pdfData = array_map(function($h) {
-    $auditDetail = ($h['status'] === 'entregado') 
-        ? "Entregado por: " . ($h['delivered_by_name'] ?? 'S/D') . " el " . date('d/m/Y', strtotime($h['delivered_at']))
+    $auditDetail = ($h['status'] === 'entregado')
+        ? "Entregado por: " . ($h['delivered_by_name'] ?? 'S/D') . " el " . (!empty($h['delivered_at']) ? date('d/m/Y', strtotime($h['delivered_at'])) : '-')
         : "Rechazado por: " . ($h['rejected_by_name'] ?? 'Admin') . ". Motivo: " . ($h['rejected_reason'] ?? '-');
 
     return [
@@ -127,22 +127,18 @@ if (isset($_GET['ajax'])) {
                     <div class="text-[10px] text-slate-500 italic"><?= htmlspecialchars($h['seller_name']) ?></div>
                 </td>
                 <td class="p-5">
-                    <?php if ($h['status'] === 'entregado'): ?>
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border bg-blue-500/10 text-blue-400 border-blue-500/20"><i data-lucide="check-circle" class="w-3 h-3"></i> Entregado</span>
-                    <?php else: ?>
-                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border bg-red-500/10 text-red-400 border-red-500/20"><i data-lucide="x-circle" class="w-3 h-3"></i> Rechazado</span>
-                    <?php endif; ?>
+                    <?= status_badge($h['status']) ?>
                 </td>
                 <td class="p-5">
                     <?php if ($h['status'] === 'entregado'): ?>
                         <div class="text-[10px] text-slate-400">
-                            <span class="block font-bold text-blue-400/80 mb-0.5 uppercase tracking-tighter">Entregado por:</span> 
+                            <span class="block font-bold text-blue-400/80 mb-0.5 uppercase tracking-tighter">Entregado por:</span>
                             <span class="flex items-center gap-1"><i data-lucide="user-check" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($h['delivered_by_name'] ?? 'S/D') ?></span>
-                            <span class="text-slate-600 block mt-0.5 font-mono"><?= date('d/m/Y', strtotime($h['delivered_at'])) ?></span>
+                            <span class="text-slate-600 block mt-0.5 font-mono"><?= !empty($h['delivered_at']) ? date('d/m/Y', strtotime($h['delivered_at'])) : '-' ?></span>
                         </div>
                     <?php else: ?>
                         <div class="text-[10px] text-slate-400 max-w-[200px]">
-                            <span class="block font-bold text-red-400/80 mb-0.5 uppercase tracking-tighter">Rechazado por:</span> 
+                            <span class="block font-bold text-red-400/80 mb-0.5 uppercase tracking-tighter">Rechazado por:</span>
                             <span class="flex items-center gap-1 mb-1"><i data-lucide="shield-alert" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($h['rejected_by_name'] ?? 'Admin') ?></span>
                             <div class="italic text-slate-500 border-l-2 border-slate-800 pl-2 line-clamp-2">"<?= htmlspecialchars($h['rejected_reason'] ?? 'Sin motivo') ?>"</div>
                         </div>
@@ -254,22 +250,18 @@ include 'includes/header.php';
                                 <div class="text-[10px] text-slate-500 italic"><?= htmlspecialchars($h['seller_name']) ?></div>
                             </td>
                             <td class="p-5">
-                                <?php if ($h['status'] === 'entregado'): ?>
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border bg-blue-500/10 text-blue-400 border-blue-500/20"><i data-lucide="check-circle" class="w-3 h-3"></i> Entregado</span>
-                                <?php else: ?>
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border bg-red-500/10 text-red-400 border-red-500/20"><i data-lucide="x-circle" class="w-3 h-3"></i> Rechazado</span>
-                                <?php endif; ?>
+                                <?= status_badge($h['status']) ?>
                             </td>
                             <td class="p-5">
                                 <?php if ($h['status'] === 'entregado'): ?>
                                     <div class="text-[10px] text-slate-400">
                                         <span class="block font-bold text-blue-400/80 mb-0.5 uppercase tracking-tighter">Entregado por:</span> 
                                         <span class="flex items-center gap-1"><i data-lucide="user-check" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($h['delivered_by_name'] ?? 'S/D') ?></span>
-                                        <span class="text-slate-600 block mt-0.5 font-mono"><?= date('d/m/Y', strtotime($h['delivered_at'])) ?></span>
+                                        <span class="text-slate-600 block mt-0.5 font-mono"><?= !empty($h['delivered_at']) ? date('d/m/Y', strtotime($h['delivered_at'])) : '-' ?></span>
                                     </div>
                                 <?php else: ?>
                                     <div class="text-[10px] text-slate-400 max-w-[200px]">
-                                        <span class="block font-bold text-red-400/80 mb-0.5 uppercase tracking-tighter">Rechazado por:</span> 
+                                        <span class="block font-bold text-red-400/80 mb-0.5 uppercase tracking-tighter">Rechazado por:</span>
                                         <span class="flex items-center gap-1 mb-1"><i data-lucide="shield-alert" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($h['rejected_by_name'] ?? 'Admin') ?></span>
                                         <div class="italic text-slate-500 border-l-2 border-slate-800 pl-2 line-clamp-2">"<?= htmlspecialchars($h['rejected_reason'] ?? 'Sin motivo') ?>"</div>
                                     </div>
