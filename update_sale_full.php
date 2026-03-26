@@ -6,8 +6,14 @@ require 'includes/db.php';
  * Propósito: Procesar la edición integral de todos los campos de una venta desde ver_ficha.php.
  */
 
-// 1. SEGURIDAD: Solo Admin, Supervisor o Verificador pueden editar
-if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'supervisor', 'verificador'])) {
+// 1. SEGURIDAD: Gestores siempre. Vendedor solo si es dueño y la venta está en 'revision'.
+$role    = $_SESSION['role'] ?? '';
+$user_id = (int)($_SESSION['user_id'] ?? 0);
+
+$allowed_manager = in_array($role, ['admin', 'supervisor', 'verificador']);
+$is_vendedor     = ($role === 'vendedor');
+
+if (!$allowed_manager && !$is_vendedor) {
     header("Location: dashboard.php");
     exit;
 }
@@ -16,6 +22,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
 
     $sale_id = (int)($_POST['sale_id'] ?? 0);
+
+    // Verificación adicional para vendedor: ownership + estado revision
+    if ($is_vendedor) {
+        $chk = $pdo->prepare("SELECT id FROM sales WHERE id = ? AND user_id = ? AND status = 'revision'");
+        $chk->execute([$sale_id, $user_id]);
+        if (!$chk->fetch()) {
+            header("Location: dashboard.php");
+            exit;
+        }
+    }
 
     // 2. CAPTURA DE DATOS - SECCIÓN CLIENTE
     $client_name         = trim($_POST['client_name'] ?? '');
@@ -41,6 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $amount              = (float)($_POST['amount'] ?? 0);
     $total               = $installments * $amount;
     $down_payment        = (float)($_POST['down_payment'] ?? 0);
+    $observations        = trim($_POST['observations'] ?? '');
 
     try {
         $pdo->beginTransaction();
@@ -65,7 +82,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     installments_count = ?,
                     installment_amount = ?,
                     total_amount = ?,
-                    down_payment = ?
+                    down_payment = ?,
+                    observations = ?
                 WHERE id = ?";
 
         $stmt = $pdo->prepare($sql);
@@ -89,6 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $amount,
             $total,
             $down_payment,
+            $observations,
             $sale_id
         ]);
 
@@ -135,7 +154,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->rollBack();
         }
         error_log("update_sale_full [sale_id={$sale_id}]: " . $e->getMessage());
-        header("Location: ver_ficha.php?id={$sale_id}&msg=error");
+        $redirect = $is_vendedor ? "editar_venta.php?id={$sale_id}&msg=error" : "ver_ficha.php?id={$sale_id}&msg=error";
+        header("Location: $redirect");
         exit;
     }
 } else {

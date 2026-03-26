@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual del Vendedor – CRM Imperio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+
+    /* ── Estilos exclusivos de impresión / PDF ── */
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; color: #0f172a !important; }
+      .page-break { page-break-before: always; }
+      .avoid-break { page-break-inside: avoid; }
+      a { color: inherit !important; text-decoration: none !important; }
+
+      /* Forzar colores en print (navegadores modernos) */
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+      /* Cover page centrada */
+      #cover { display: flex !important; height: 100vh; }
+    }
+
+    /* Animación fade-in solo en pantalla */
+    @media screen {
+      .section-card { animation: fadeUp .4s ease both; }
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+    }
+
+    /* Badge de estado */
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 9999px;
+      font-size: 13px; font-weight: 600;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+    /* Paso numerado */
+    .step-num {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+
+    /* Tabla */
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: 10px 14px; border: 1px solid #e2e8f0; font-size: 14px; }
+    th { background: #1e40af; color: white; font-weight: 600; }
+    tr:nth-child(even) td { background: #f8fafc; }
+
+    /* TOC link */
+    .toc-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 12px; border-radius: 8px; transition: background .15s;
+      text-decoration: none; color: #1e293b;
+    }
+    .toc-item:hover { background: #eff6ff; }
+
+    /* Tip box */
+    .tip { border-left: 4px solid #3b82f6; background: #eff6ff; padding: 12px 16px; border-radius: 0 8px 8px 0; }
+    .warn { border-left: 4px solid #f59e0b; background: #fffbeb; padding: 12px 16px; border-radius: 0 8px 8px 0; }
+    .danger { border-left: 4px solid #ef4444; background: #fef2f2; padding: 12px 16px; border-radius: 0 8px 8px 0; }
+    .success { border-left: 4px solid #10b981; background: #ecfdf5; padding: 12px 16px; border-radius: 0 8px 8px 0; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen">
+
+  <!-- ══════════════════════════════════════════
+       BARRA DE HERRAMIENTAS (solo pantalla)
+  ══════════════════════════════════════════ -->
+  <div class="no-print sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- Logo textual -->
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
+          <span class="text-white font-bold text-xs">CI</span>
+        </div>
+        <span class="font-semibold text-slate-700 text-sm">CRM Imperio · Manual del Vendedor</span>
+      </div>
+      <button onclick="window.print()"
+        class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+        </svg>
+        Exportar PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PORTADA
+  ══════════════════════════════════════════ -->
+  <div id="cover" class="avoid-break max-w-4xl mx-auto mt-8 mb-6 no-print:mt-8">
+    <div class="bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="px-10 py-16 flex flex-col items-center text-center">
+        <!-- Logo / Isotipo -->
+        <div class="w-20 h-20 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center mb-6 shadow-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+              d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+          </svg>
+        </div>
+
+        <span class="text-blue-300 text-sm font-semibold uppercase tracking-widest mb-3">CRM Imperio</span>
+        <h1 class="text-4xl font-extrabold text-white leading-tight mb-4">
+          Manual del Vendedor
+        </h1>
+        <p class="text-blue-200 text-lg max-w-lg mb-8">
+          Guía completa para gestionar ventas a crédito: desde el ingreso al sistema hasta el seguimiento de cada ficha.
+        </p>
+
+        <div class="flex gap-4 flex-wrap justify-center">
+          <div class="bg-white/10 border border-white/20 rounded-xl px-5 py-3 text-center">
+            <p class="text-blue-300 text-xs uppercase tracking-wide font-medium">Versión</p>
+            <p class="text-white font-bold">1.0</p>
+          </div>
+          <div class="bg-white/10 border border-white/20 rounded-xl px-5 py-3 text-center">
+            <p class="text-blue-300 text-xs uppercase tracking-wide font-medium">Rol</p>
+            <p class="text-white font-bold">Vendedor</p>
+          </div>
+          <div class="bg-white/10 border border-white/20 rounded-xl px-5 py-3 text-center">
+            <p class="text-blue-300 text-xs uppercase tracking-wide font-medium">Fecha</p>
+            <p class="text-white font-bold">Marzo 2026</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Franja inferior -->
+      <div class="bg-white/5 border-t border-white/10 px-10 py-4 flex items-center justify-between">
+        <span class="text-blue-300 text-xs">Documento interno · Uso exclusivo del equipo de ventas</span>
+        <div class="flex gap-1">
+          <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+          <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+          <span class="w-2 h-2 rounded-full bg-white/40"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       CONTENIDO PRINCIPAL
+  ══════════════════════════════════════════ -->
+  <main class="max-w-4xl mx-auto px-4 pb-16 space-y-8">
+
+    <!-- ── ÍNDICE ── -->
+    <div class="section-card avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-slate-200 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+          </svg>
+        </div>
+        <h2 class="font-bold text-slate-700">Contenido</h2>
+      </div>
+      <div class="px-6 py-5 space-y-1">
+        <a href="#sec1" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">1</span>
+            <span class="font-medium">Ingreso al sistema</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 1</span>
+        </a>
+        <a href="#sec2" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">2</span>
+            <span class="font-medium">Panel principal (Dashboard)</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 1</span>
+        </a>
+        <a href="#sec3" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">3</span>
+            <span class="font-medium">Registrar una nueva venta</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 2</span>
+        </a>
+        <a href="#sec4" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">4</span>
+            <span class="font-medium">Estados de una venta</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 3</span>
+        </a>
+        <a href="#sec5" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">5</span>
+            <span class="font-medium">Ver ficha de una venta</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 3</span>
+        </a>
+        <a href="#sec6" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">6</span>
+            <span class="font-medium">Editar una venta</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 4</span>
+        </a>
+        <a href="#sec7" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">7</span>
+            <span class="font-medium">Eliminar archivos adjuntos</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 5</span>
+        </a>
+        <a href="#sec8" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">8</span>
+            <span class="font-medium">Historial de ventas</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 5</span>
+        </a>
+        <a href="#sec9" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">9</span>
+            <span class="font-medium">Preguntas frecuentes</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 6</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 1 – INGRESO AL SISTEMA
+    ══════════════════════════════════════════ -->
+    <div id="sec1" class="section-card avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <!-- Cabecera -->
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 1</span>
+          <h2 class="text-white text-xl font-bold">Ingreso al sistema</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-5">
+        <p class="text-slate-600 leading-relaxed">
+          Para acceder al CRM Imperio debe ingresar con su usuario y contraseña asignados por el administrador.
+          La sesión se cierra automáticamente después de <strong>30 minutos</strong> de inactividad por seguridad.
+        </p>
+
+        <!-- Pasos -->
+        <div class="space-y-3">
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">1</div>
+            <div>
+              <p class="font-semibold text-slate-700">Abra el navegador</p>
+              <p class="text-slate-500 text-sm mt-0.5">Ingrese la dirección del sistema que le proporcionó su supervisor.</p>
+            </div>
+          </div>
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">2</div>
+            <div>
+              <p class="font-semibold text-slate-700">Complete sus datos</p>
+              <p class="text-slate-500 text-sm mt-0.5">
+                <span class="font-medium text-slate-600">Usuario:</span> su número de DNI (sin puntos ni espacios).<br>
+                <span class="font-medium text-slate-600">Contraseña:</span> la que le fue asignada.
+              </p>
+            </div>
+          </div>
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">3</div>
+            <div>
+              <p class="font-semibold text-slate-700">Presione <em>"Ingresar"</em></p>
+              <p class="text-slate-500 text-sm mt-0.5">Si los datos son correctos será redirigido al Panel principal.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tip">
+          <p class="text-sm text-blue-800">
+            <strong>Tip:</strong> Si el sistema le informa <em>"Sesión expirada"</em>, simplemente vuelva a iniciar sesión con su usuario y contraseña. No perderá ninguna venta ya guardada.
+          </p>
+        </div>
+
+        <div class="warn">
+          <p class="text-sm text-amber-800">
+            <strong>Importante:</strong> No comparta su contraseña con nadie. Cada venta queda registrada bajo su usuario y es responsabilidad suya.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 2 – PANEL PRINCIPAL
+    ══════════════════════════════════════════ -->
+    <div id="sec2" class="section-card avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 2</span>
+          <h2 class="text-white text-xl font-bold">Panel principal</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-5">
+        <p class="text-slate-600 leading-relaxed">
+          Al ingresar verá su panel personal. Aquí se muestran únicamente <strong>sus ventas activas</strong> (en revisión y aprobadas). El sistema no le muestra ventas de otros vendedores.
+        </p>
+
+        <!-- Tarjetas de estadísticas -->
+        <h3 class="font-semibold text-slate-700">Tarjetas de resumen</h3>
+        <div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div class="avoid-break rounded-xl border border-yellow-200 bg-yellow-50 p-4 text-center">
+            <p class="text-2xl font-extrabold text-yellow-600">N</p>
+            <p class="text-xs font-medium text-yellow-700 mt-1">En Revisión</p>
+          </div>
+          <div class="avoid-break rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
+            <p class="text-2xl font-extrabold text-emerald-600">N</p>
+            <p class="text-xs font-medium text-emerald-700 mt-1">Aprobadas</p>
+          </div>
+          <div class="avoid-break rounded-xl border border-blue-200 bg-blue-50 p-4 text-center">
+            <p class="text-2xl font-extrabold text-blue-600">N</p>
+            <p class="text-xs font-medium text-blue-700 mt-1">Entregadas</p>
+          </div>
+          <div class="avoid-break rounded-xl border border-red-200 bg-red-50 p-4 text-center">
+            <p class="text-2xl font-extrabold text-red-600">N</p>
+            <p class="text-xs font-medium text-red-700 mt-1">Rechazadas</p>
+          </div>
+        </div>
+
+        <!-- Menú de navegación -->
+        <h3 class="font-semibold text-slate-700">Menú de navegación</h3>
+        <table>
+          <thead>
+            <tr><th>Opción</th><th>¿Para qué sirve?</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="font-medium">Panel</td><td>Volver al inicio / ver mis ventas activas</td></tr>
+            <tr><td class="font-medium">Nueva Venta</td><td>Registrar una nueva ficha de cliente</td></tr>
+            <tr><td class="font-medium">Historial</td><td>Ver todas mis ventas (todos los estados)</td></tr>
+            <tr><td class="font-medium">Mis Ventas</td><td>Perfil personal con estadísticas propias</td></tr>
+            <tr><td class="font-medium">Cerrar sesión</td><td>Salir del sistema de forma segura</td></tr>
+          </tbody>
+        </table>
+
+        <!-- Bandeja de ventas activas -->
+        <h3 class="font-semibold text-slate-700">Bandeja de ventas activas</h3>
+        <p class="text-slate-600 text-sm leading-relaxed">
+          Debajo de las tarjetas verá una tabla con sus ventas en estado <strong>En Revisión</strong> y <strong>Aprobado</strong>.
+          Desde allí puede hacer clic en cualquier fila para ver el detalle completo de la venta.
+        </p>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 3 – REGISTRAR NUEVA VENTA
+    ══════════════════════════════════════════ -->
+    <div id="sec3" class="section-card bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden page-break">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 3</span>
+          <h2 class="text-white text-xl font-bold">Registrar una nueva venta</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-6">
+        <p class="text-slate-600 leading-relaxed">
+          Vaya a <strong>Nueva Venta</strong> en el menú. El formulario está dividido en <strong>tres bloques</strong> y un área de archivos adjuntos.
+          Complete todos los campos marcados como obligatorios (<span class="text-red-500 font-bold">*</span>).
+        </p>
+
+        <!-- Bloque 1 -->
+        <div class="avoid-break">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 text-sm font-bold flex items-center justify-center shrink-0">A</div>
+            <h3 class="font-semibold text-slate-700 text-lg">Datos del cliente</h3>
+          </div>
+          <table>
+            <thead><tr><th>Campo</th><th>Descripción</th><th>Obligatorio</th></tr></thead>
+            <tbody>
+              <tr><td>DNI</td><td>Sin puntos ni espacios. Ej: 32456789</td><td class="text-center text-red-500 font-bold">Sí</td></tr>
+              <tr><td>Apellido y Nombre</td><td>Nombre completo del cliente</td><td class="text-center text-red-500 font-bold">Sí</td></tr>
+              <tr><td>Domicilio</td><td>Calle y número</td><td class="text-center text-red-500 font-bold">Sí</td></tr>
+              <tr><td>Barrio</td><td>Barrio o sector</td><td class="text-center text-red-500 font-bold">Sí</td></tr>
+              <tr><td>Localidad</td><td>Ciudad o localidad</td><td class="text-center text-red-500 font-bold">Sí</td></tr>
+              <tr><td>WhatsApp</td><td>Número de contacto principal. Ej: 381…</td><td class="text-center text-red-500 font-bold">Sí</td></tr>
+              <tr><td>Nro Llamada</td><td>Teléfono alternativo (opcional)</td><td class="text-center text-slate-400">No</td></tr>
+              <tr><td>Ubicación Google Maps</td><td>Pegue el enlace del domicilio en Google Maps</td><td class="text-center text-slate-400">No</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Bloque 2 -->
+        <div class="avoid-break">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 text-sm font-bold flex items-center justify-center shrink-0">B</div>
+            <h3 class="font-semibold text-slate-700 text-lg">Datos laborales</h3>
+          </div>
+          <table>
+            <thead><tr><th>Campo</th><th>Descripción</th><th>Obligatorio</th></tr></thead>
+            <tbody>
+              <tr><td>Tipo de Empleo</td><td>Ej: Rel. Dependencia, Monotributo, Jubilado</td><td class="text-center text-slate-400">No</td></tr>
+              <tr><td>Ocupación</td><td>Ej: Empleado de comercio, Docente</td><td class="text-center text-slate-400">No</td></tr>
+              <tr><td>Nombre del Trabajo</td><td>Empresa o lugar donde trabaja</td><td class="text-center text-slate-400">No</td></tr>
+              <tr><td>Domicilio Laboral</td><td>Dirección del trabajo</td><td class="text-center text-slate-400">No</td></tr>
+            </tbody>
+          </table>
+          <p class="text-slate-500 text-xs mt-2">Aunque no son obligatorios, completar estos datos mejora la evaluación del crédito.</p>
+        </div>
+
+        <!-- Bloque 3 -->
+        <div class="avoid-break">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 text-sm font-bold flex items-center justify-center shrink-0">C</div>
+            <h3 class="font-semibold text-slate-700 text-lg">Detalle de la venta</h3>
+          </div>
+          <table>
+            <thead><tr><th>Campo</th><th>Descripción</th><th>Obligatorio</th></tr></thead>
+            <tbody>
+              <tr><td>Artículo</td><td>Producto o bien que se financia</td><td class="text-center text-red-500 font-bold">Sí</td></tr>
+              <tr><td>Día de Cobro</td><td>Día del mes en que se cobra la cuota</td><td class="text-center text-red-500 font-bold">Sí</td></tr>
+              <tr><td>Cuotas</td><td>Cantidad de cuotas del plan</td><td class="text-center text-red-500 font-bold">Sí</td></tr>
+              <tr><td>Monto por cuota ($)</td><td>Importe de cada cuota</td><td class="text-center text-red-500 font-bold">Sí</td></tr>
+              <tr><td>Frecuencia de Pago</td><td>Semanal, Quincenal o Mensual</td><td class="text-center text-red-500 font-bold">Sí</td></tr>
+              <tr><td>Adelanto ($)</td><td>Monto entregado al momento de la venta (puede ser $0)</td><td class="text-center text-slate-400">No</td></tr>
+              <tr><td>Total</td><td>Se calcula automáticamente (cuotas × monto)</td><td class="text-center text-slate-400">Auto</td></tr>
+              <tr><td>Observaciones</td><td>Horarios, aclaraciones del crédito, etc.</td><td class="text-center text-slate-400">No</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Archivos adjuntos -->
+        <div class="avoid-break">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 text-sm font-bold flex items-center justify-center shrink-0">D</div>
+            <h3 class="font-semibold text-slate-700 text-lg">Archivos adjuntos</h3>
+          </div>
+          <p class="text-slate-600 text-sm mb-3">
+            Puede adjuntar imágenes o PDF del DNI, recibos de sueldo, boletas u otra documentación del cliente.
+          </p>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <p class="font-medium text-slate-700 mb-1">Formatos aceptados</p>
+              <p class="text-slate-500">Imágenes (JPG, PNG) y PDF</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <p class="font-medium text-slate-700 mb-1">Tamaño máximo</p>
+              <p class="text-slate-500">5 MB por archivo</p>
+            </div>
+            <div class="rounded-lg border border-slate-200 bg-slate-50 p-3">
+              <p class="font-medium text-slate-700 mb-1">Múltiples archivos</p>
+              <p class="text-slate-500">Puede adjuntar varios a la vez</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tips -->
+        <div class="tip avoid-break">
+          <p class="text-sm text-blue-800 font-semibold mb-1">Antes de guardar, verifique:</p>
+          <ul class="text-sm text-blue-700 space-y-1 ml-4 list-disc">
+            <li>El DNI no tiene puntos ni espacios.</li>
+            <li>El número de WhatsApp es correcto y accesible.</li>
+            <li>La cantidad de cuotas y el monto por cuota son los acordados con el cliente.</li>
+            <li>Los documentos del cliente están adjuntos (DNI frente y dorso como mínimo).</li>
+          </ul>
+        </div>
+
+        <div class="danger avoid-break">
+          <p class="text-sm text-red-800">
+            <strong>Atención:</strong> Una vez guardada la venta no podrá editar los datos del cliente. Si cometió un error, comuníqueselo a su supervisor para que lo corrija.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 4 – ESTADOS DE UNA VENTA
+    ══════════════════════════════════════════ -->
+    <div id="sec4" class="section-card avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 4</span>
+          <h2 class="text-white text-xl font-bold">Estados de una venta</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-5">
+        <p class="text-slate-600 leading-relaxed">
+          Cada venta pasa por un ciclo de estados. Como vendedor usted puede <strong>ver</strong> el estado de sus ventas,
+          pero no puede cambiarlo — esa tarea corresponde al verificador, supervisor o administrador.
+        </p>
+
+        <!-- Flujo visual -->
+        <div class="flex flex-wrap gap-2 items-center text-sm font-medium">
+          <span class="badge bg-yellow-100 text-yellow-800"><span class="dot bg-yellow-500"></span>En Revisión</span>
+          <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+          <span class="badge bg-emerald-100 text-emerald-800"><span class="dot bg-emerald-500"></span>Aprobado</span>
+          <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+          <span class="badge bg-blue-100 text-blue-800"><span class="dot bg-blue-500"></span>Entregado</span>
+          <span class="text-slate-400 mx-1">|</span>
+          <span class="badge bg-red-100 text-red-800"><span class="dot bg-red-500"></span>Rechazado</span>
+        </div>
+
+        <!-- Tabla de estados -->
+        <table>
+          <thead>
+            <tr><th>Estado</th><th>Significado</th><th>¿Qué hago yo?</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge bg-yellow-100 text-yellow-800"><span class="dot bg-yellow-500"></span>En Revisión</span></td>
+              <td>La venta fue cargada y está pendiente de análisis por el verificador.</td>
+              <td>Esperar. Puede hacer seguimiento llamando al cliente.</td>
+            </tr>
+            <tr>
+              <td><span class="badge bg-emerald-100 text-emerald-800"><span class="dot bg-emerald-500"></span>Aprobado</span></td>
+              <td>El crédito fue aprobado. El equipo coordinará la entrega.</td>
+              <td>Avisar al cliente que su crédito fue aprobado.</td>
+            </tr>
+            <tr>
+              <td><span class="badge bg-blue-100 text-blue-800"><span class="dot bg-blue-500"></span>Entregado</span></td>
+              <td>El producto fue entregado. La operación está completa.</td>
+              <td>La venta está cerrada. Genera comisión.</td>
+            </tr>
+            <tr>
+              <td><span class="badge bg-red-100 text-red-800"><span class="dot bg-red-500"></span>Rechazado</span></td>
+              <td>El crédito no fue aprobado. En la ficha aparece el motivo.</td>
+              <td>Leer el motivo y comunicárselo al cliente.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 5 – VER FICHA DE UNA VENTA
+    ══════════════════════════════════════════ -->
+    <div id="sec5" class="section-card avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 5</span>
+          <h2 class="text-white text-xl font-bold">Ver ficha de una venta</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-5">
+        <p class="text-slate-600 leading-relaxed">
+          Al hacer clic sobre una venta en el panel o en el historial, verá su <strong>ficha completa</strong>.
+          Solo puede ver fichas de sus propias ventas.
+        </p>
+
+        <!-- Pipeline visual explicado -->
+        <h3 class="font-semibold text-slate-700">Indicador visual de estado</h3>
+        <p class="text-slate-600 text-sm leading-relaxed">
+          En la parte superior de la ficha verá un <strong>indicador de progreso</strong> que muestra en qué etapa está la venta:
+        </p>
+        <div class="avoid-break flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-4">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center shrink-0">1</div>
+            <span class="text-xs font-semibold text-blue-700">En Revisión</span>
+          </div>
+          <div class="flex-1 h-0.5 bg-slate-300 rounded"></div>
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-slate-300 text-slate-500 text-xs font-bold flex items-center justify-center shrink-0">2</div>
+            <span class="text-xs font-semibold text-slate-500">Aprobado</span>
+          </div>
+          <div class="flex-1 h-0.5 bg-slate-300 rounded"></div>
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-slate-300 text-slate-500 text-xs font-bold flex items-center justify-center shrink-0">3</div>
+            <span class="text-xs font-semibold text-slate-500">Entregado</span>
+          </div>
+        </div>
+        <p class="text-slate-500 text-xs">Si la venta fue rechazada, en lugar del pipeline verá una franja roja con la etiqueta <strong>"Operación Rechazada"</strong>.</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="avoid-break rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p class="font-semibold text-slate-700 mb-2">¿Qué contiene la ficha?</p>
+            <ul class="text-sm text-slate-600 space-y-1 list-disc ml-4">
+              <li>Datos completos del cliente</li>
+              <li>Información laboral</li>
+              <li>Detalle del plan de cuotas y total</li>
+              <li>Archivos adjuntos (DNI, recibos, etc.)</li>
+              <li>Notas / observaciones de la venta</li>
+              <li>Estado actual con pipeline visual</li>
+              <li>Motivo de rechazo (si aplica)</li>
+              <li>Quién aprobó el crédito y cuándo (si fue aprobado)</li>
+            </ul>
+          </div>
+          <div class="avoid-break rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <p class="font-semibold text-slate-700 mb-2">¿Qué puedo hacer desde la ficha?</p>
+            <ul class="text-sm text-slate-600 space-y-1 list-disc ml-4">
+              <li>Ver toda la información del cliente</li>
+              <li>Consultar el motivo de rechazo</li>
+              <li>Abrir archivos adjuntos (se abren en nueva pestaña)</li>
+              <li>Llamar por WhatsApp al cliente (botón directo)</li>
+              <li>Abrir la ubicación en Google Maps (si fue cargada)</li>
+              <li>Volver con el botón ← Volver</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- WhatsApp y Maps -->
+        <div class="avoid-break grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="success">
+            <p class="text-sm text-emerald-800">
+              <strong>WhatsApp:</strong> El número del cliente es un enlace directo. Al hacer clic se abre WhatsApp Web (o la app en el celular) con el chat listo para escribir.
+            </p>
+          </div>
+          <div class="tip">
+            <p class="text-sm text-blue-800">
+              <strong>Google Maps:</strong> Si el cliente tiene ubicación cargada, aparece un botón azul <em>"Abrir ubicación"</em> que lo lleva directo al mapa.
+            </p>
+          </div>
+        </div>
+
+        <div class="tip">
+          <p class="text-sm text-blue-800">
+            <strong>Tip:</strong> Si una venta fue rechazada, el motivo aparece en un recuadro rojo en la parte superior de la ficha. Léalo con atención antes de comunicárselo al cliente.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 6 – EDITAR UNA VENTA
+    ══════════════════════════════════════════ -->
+    <div id="sec6" class="section-card bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden page-break">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 6</span>
+          <h2 class="text-white text-xl font-bold">Editar una venta</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-5">
+        <p class="text-slate-600 leading-relaxed">
+          Si necesita corregir datos de una venta que ya cargó, puede editarla <strong>mientras esté en estado "En Revisión"</strong>.
+          Una vez que la venta es aprobada o rechazada, la edición se bloquea automáticamente.
+        </p>
+
+        <!-- Condición de acceso -->
+        <div class="avoid-break grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+          <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
+            <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <p class="font-semibold text-emerald-700">Su venta</p>
+            <p class="text-emerald-600 text-xs mt-1">Solo puede editar ventas registradas por usted</p>
+          </div>
+          <div class="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-center">
+            <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <p class="font-semibold text-emerald-700">En Revisión</p>
+            <p class="text-emerald-600 text-xs mt-1">La venta debe estar en estado "En Revisión"</p>
+          </div>
+          <div class="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
+            <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-2">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </div>
+            <p class="font-semibold text-red-700">Bloqueado si...</p>
+            <p class="text-red-600 text-xs mt-1">La venta fue aprobada, rechazada o es de otro vendedor</p>
+          </div>
+        </div>
+
+        <!-- Cómo acceder -->
+        <h3 class="font-semibold text-slate-700">Cómo acceder a la edición</h3>
+        <div class="space-y-3">
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">1</div>
+            <div>
+              <p class="font-semibold text-slate-700">Abra la ficha de la venta</p>
+              <p class="text-slate-500 text-sm mt-0.5">Desde el panel principal, haga clic sobre la venta en estado "En Revisión".</p>
+            </div>
+          </div>
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">2</div>
+            <div>
+              <p class="font-semibold text-slate-700">Haga clic en "EDITAR MI VENTA"</p>
+              <p class="text-slate-500 text-sm mt-0.5">El botón azul aparece en la parte superior derecha de la ficha, solo cuando la venta está En Revisión. Si la venta ya fue aprobada o rechazada, el botón no aparece.</p>
+            </div>
+          </div>
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">3</div>
+            <div>
+              <p class="font-semibold text-slate-700">Modifique los campos necesarios</p>
+              <p class="text-slate-500 text-sm mt-0.5">El formulario se abre pre-relleno con todos los datos actuales. Solo cambie lo que necesita corregir.</p>
+            </div>
+          </div>
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">4</div>
+            <div>
+              <p class="font-semibold text-slate-700">Guarde los cambios</p>
+              <p class="text-slate-500 text-sm mt-0.5">Presione <strong>"Guardar Cambios"</strong>. El sistema lo regresará a la ficha con los datos actualizados.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Qué se puede editar -->
+        <h3 class="font-semibold text-slate-700">¿Qué se puede modificar?</h3>
+        <div class="avoid-break grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+              </div>
+              <p class="font-semibold text-slate-700">Datos del cliente</p>
+            </div>
+            <ul class="text-slate-500 space-y-0.5 text-xs list-disc ml-4">
+              <li>DNI y nombre completo</li>
+              <li>Domicilio, barrio, localidad</li>
+              <li>WhatsApp y teléfono alternativo</li>
+              <li>Enlace Google Maps</li>
+            </ul>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+              </div>
+              <p class="font-semibold text-slate-700">Datos laborales</p>
+            </div>
+            <ul class="text-slate-500 space-y-0.5 text-xs list-disc ml-4">
+              <li>Tipo de empleo y ocupación</li>
+              <li>Nombre de la empresa</li>
+              <li>Domicilio laboral</li>
+            </ul>
+          </div>
+          <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div class="flex items-center gap-2 mb-2">
+              <div class="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+              </div>
+              <p class="font-semibold text-slate-700">Detalle de venta</p>
+            </div>
+            <ul class="text-slate-500 space-y-0.5 text-xs list-disc ml-4">
+              <li>Artículo vendido</li>
+              <li>Cuotas, monto y frecuencia</li>
+              <li>Día de cobro y adelanto</li>
+              <li>Observaciones</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Archivos en la edición -->
+        <h3 class="font-semibold text-slate-700">Archivos adjuntos durante la edición</h3>
+        <p class="text-slate-600 text-sm leading-relaxed">
+          En la pantalla de edición también puede gestionar los archivos adjuntos:
+        </p>
+        <div class="avoid-break grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="success">
+            <p class="text-sm text-emerald-800">
+              <strong>Agregar archivos:</strong> Aparece una zona de carga en la parte inferior del formulario. Puede subir nuevas imágenes o PDF (máx. 5 MB cada uno).
+            </p>
+          </div>
+          <div class="warn">
+            <p class="text-sm text-amber-800">
+              <strong>Eliminar archivos:</strong> Los archivos ya cargados aparecen listados con un botón <strong>✕</strong> para eliminarlos. La eliminación es permanente.
+            </p>
+          </div>
+        </div>
+
+        <div class="danger avoid-break">
+          <p class="text-sm text-red-800">
+            <strong>Importante:</strong> Si el verificador ya comenzó a analizar la venta y usted la edita, los datos nuevos reemplazarán a los anteriores. Asegúrese de que los cambios sean correctos antes de guardar.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 7 – ELIMINAR ARCHIVOS ADJUNTOS
+    ══════════════════════════════════════════ -->
+    <div id="sec7" class="section-card avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 7</span>
+          <h2 class="text-white text-xl font-bold">Eliminar archivos adjuntos</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-5">
+        <p class="text-slate-600 leading-relaxed">
+          Si adjuntó un archivo incorrecto, puede eliminarlo <strong>siempre que la venta esté en estado "En Revisión"</strong>.
+          Una vez que la venta fue aprobada o rechazada, ya no es posible eliminar archivos.
+        </p>
+
+        <div class="avoid-break">
+          <h3 class="font-semibold text-slate-700 mb-3">Pasos para eliminar un archivo</h3>
+          <div class="space-y-3">
+            <div class="flex gap-4 items-start">
+              <div class="step-num bg-blue-100 text-blue-700 mt-0.5">1</div>
+              <div>
+                <p class="font-semibold text-slate-700">Abra la ficha de la venta</p>
+                <p class="text-slate-500 text-sm mt-0.5">Desde el panel principal, haga clic sobre la venta en estado "En Revisión".</p>
+              </div>
+            </div>
+            <div class="flex gap-4 items-start">
+              <div class="step-num bg-blue-100 text-blue-700 mt-0.5">2</div>
+              <div>
+                <p class="font-semibold text-slate-700">Ubique la sección "Documentación Adjunta"</p>
+                <p class="text-slate-500 text-sm mt-0.5">Desplácese hacia abajo hasta encontrar los archivos cargados.</p>
+              </div>
+            </div>
+            <div class="flex gap-4 items-start">
+              <div class="step-num bg-blue-100 text-blue-700 mt-0.5">3</div>
+              <div>
+                <p class="font-semibold text-slate-700">Haga clic en el ícono de eliminar</p>
+                <p class="text-slate-500 text-sm mt-0.5">Cada archivo tiene un botón de eliminación. El sistema le pedirá confirmación antes de borrar.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="warn avoid-break">
+          <p class="text-sm text-amber-800">
+            <strong>Restricciones importantes:</strong>
+          </p>
+          <ul class="text-sm text-amber-700 mt-2 space-y-1 list-disc ml-4">
+            <li>Solo puede eliminar archivos de <strong>sus propias ventas</strong>.</li>
+            <li>Solo funciona mientras la venta esté en estado <strong>"En Revisión"</strong>.</li>
+            <li>La eliminación es <strong>permanente</strong>. No se puede recuperar el archivo.</li>
+            <li>Si necesita reemplazar un archivo, elimine el anterior y cargue el nuevo.</li>
+          </ul>
+        </div>
+
+        <div class="danger avoid-break">
+          <p class="text-sm text-red-800">
+            <strong>Atención:</strong> No existe forma de eliminar archivos de ventas ya aprobadas o rechazadas. Si necesita hacerlo, comuníquese con su supervisor o administrador.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 8 – HISTORIAL DE VENTAS
+    ══════════════════════════════════════════ -->
+    <div id="sec8" class="section-card avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden page-break">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 8</span>
+          <h2 class="text-white text-xl font-bold">Historial de ventas</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-5">
+        <p class="text-slate-600 leading-relaxed">
+          En la sección <strong>Historial</strong> puede ver sus ventas <strong>finalizadas</strong>: las entregadas y las rechazadas.
+          Las ventas activas (En Revisión y Aprobadas) aparecen únicamente en el <strong>Panel principal</strong>.
+        </p>
+
+        <div class="warn avoid-break">
+          <p class="text-sm text-amber-800">
+            <strong>Importante:</strong> El historial por defecto muestra ventas del <strong>mes actual</strong>. Si busca una venta de meses anteriores, ajuste el filtro de fechas.
+          </p>
+        </div>
+
+        <!-- Filtros -->
+        <h3 class="font-semibold text-slate-700">Filtros disponibles</h3>
+        <table>
+          <thead><tr><th>Filtro</th><th>Descripción</th></tr></thead>
+          <tbody>
+            <tr><td class="font-medium">Desde / Hasta</td><td>Rango de fechas de carga de la venta. Por defecto: mes actual.</td></tr>
+            <tr><td class="font-medium">Buscar cliente</td><td>Filtra en tiempo real por nombre o DNI del cliente. No hace falta presionar Enter.</td></tr>
+          </tbody>
+        </table>
+
+        <!-- Pasos búsqueda -->
+        <h3 class="font-semibold text-slate-700">Cómo buscar una venta</h3>
+        <div class="space-y-3">
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">1</div>
+            <div>
+              <p class="font-semibold text-slate-700">Ingrese al Historial</p>
+              <p class="text-slate-500 text-sm mt-0.5">Haga clic en "Historial" en el menú superior.</p>
+            </div>
+          </div>
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">2</div>
+            <div>
+              <p class="font-semibold text-slate-700">Ajuste las fechas si es necesario</p>
+              <p class="text-slate-500 text-sm mt-0.5">Si la venta es de un mes anterior, cambie el rango de fechas y presione <strong>"Filtrar"</strong>.</p>
+            </div>
+          </div>
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">3</div>
+            <div>
+              <p class="font-semibold text-slate-700">Use el buscador</p>
+              <p class="text-slate-500 text-sm mt-0.5">Escriba el nombre o DNI del cliente. El listado se filtra automáticamente mientras escribe.</p>
+            </div>
+          </div>
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">4</div>
+            <div>
+              <p class="font-semibold text-slate-700">Haga clic en el ícono de ficha</p>
+              <p class="text-slate-500 text-sm mt-0.5">Al final de cada fila hay un botón para ver la ficha completa de esa venta.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Exportar PDF -->
+        <h3 class="font-semibold text-slate-700">Exportar historial a PDF</h3>
+        <p class="text-slate-600 text-sm leading-relaxed">
+          El historial cuenta con un botón <strong>"Exportar PDF"</strong> (en rojo, junto al botón Filtrar).
+          Genera un PDF con todas las ventas del rango de fechas y filtro actuales, incluyendo el detalle de auditoría de cada una.
+        </p>
+        <div class="tip avoid-break">
+          <p class="text-sm text-blue-800">
+            El PDF se abre en una nueva pestaña del navegador. Desde allí puede guardarlo o imprimirlo.
+          </p>
+        </div>
+
+        <div class="success">
+          <p class="text-sm text-emerald-800">
+            <strong>Útil para:</strong> Verificar si un cliente ya tiene una venta finalizada antes de registrar una nueva. También para hacer seguimiento de ventas rechazadas y entregadas en el mes.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 9 – PREGUNTAS FRECUENTES
+    ══════════════════════════════════════════ -->
+    <div id="sec9" class="section-card bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 9</span>
+          <h2 class="text-white text-xl font-bold">Preguntas frecuentes</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-4">
+
+        <!-- FAQ items -->
+        <div class="avoid-break rounded-xl border border-slate-200 overflow-hidden">
+          <div class="bg-slate-50 px-5 py-3 flex items-start gap-3">
+            <span class="text-blue-600 font-extrabold text-lg leading-none mt-0.5">?</span>
+            <p class="font-semibold text-slate-700">Cargué una venta con datos incorrectos, ¿puedo editarla?</p>
+          </div>
+          <div class="px-5 py-4 text-sm text-slate-600 leading-relaxed">
+            <strong>Sí, mientras la venta esté en estado "En Revisión".</strong> Abra la ficha de la venta y presione el botón <em>"EDITAR MI VENTA"</em> que aparece en la parte superior. Podrá modificar todos los campos: datos del cliente, información laboral, plan de pago, observaciones y archivos adjuntos.<br><br>
+            Si la venta ya fue aprobada o rechazada, ya no podrá editarla. En ese caso, comuníquese con su supervisor indicando el número de venta y el dato a corregir.
+          </div>
+        </div>
+
+        <div class="avoid-break rounded-xl border border-slate-200 overflow-hidden">
+          <div class="bg-slate-50 px-5 py-3 flex items-start gap-3">
+            <span class="text-blue-600 font-extrabold text-lg leading-none mt-0.5">?</span>
+            <p class="font-semibold text-slate-700">¿Por qué no veo mis ventas aprobadas en el historial?</p>
+          </div>
+          <div class="px-5 py-4 text-sm text-slate-600 leading-relaxed">
+            El historial muestra solo ventas <strong>finalizadas</strong> (entregadas y rechazadas). Sus ventas en estado "En Revisión" o "Aprobado" las encuentra en el <strong>Panel principal</strong>, en la bandeja de ventas activas.
+          </div>
+        </div>
+
+        <div class="avoid-break rounded-xl border border-slate-200 overflow-hidden">
+          <div class="bg-slate-50 px-5 py-3 flex items-start gap-3">
+            <span class="text-blue-600 font-extrabold text-lg leading-none mt-0.5">?</span>
+            <p class="font-semibold text-slate-700">Mi venta fue rechazada, ¿qué hago?</p>
+          </div>
+          <div class="px-5 py-4 text-sm text-slate-600 leading-relaxed">
+            Abra la ficha de la venta rechazada y lea el motivo que aparece destacado. Comuníqueselo al cliente. Si el cliente subsana la observación (ej: presenta nueva documentación), puede consultar con su supervisor si es posible reabrir el caso.
+          </div>
+        </div>
+
+        <div class="avoid-break rounded-xl border border-slate-200 overflow-hidden">
+          <div class="bg-slate-50 px-5 py-3 flex items-start gap-3">
+            <span class="text-blue-600 font-extrabold text-lg leading-none mt-0.5">?</span>
+            <p class="font-semibold text-slate-700">¿Cuánto tiempo tarda en procesarse una venta?</p>
+          </div>
+          <div class="px-5 py-4 text-sm text-slate-600 leading-relaxed">
+            El tiempo depende del área de verificación. Generalmente las ventas en estado "En Revisión" son procesadas dentro del mismo día o al día siguiente hábil. Consulte con su supervisor si lleva más de 48 horas sin novedades.
+          </div>
+        </div>
+
+        <div class="avoid-break rounded-xl border border-slate-200 overflow-hidden">
+          <div class="bg-slate-50 px-5 py-3 flex items-start gap-3">
+            <span class="text-blue-600 font-extrabold text-lg leading-none mt-0.5">?</span>
+            <p class="font-semibold text-slate-700">¿Puedo cargar ventas desde el celular?</p>
+          </div>
+          <div class="px-5 py-4 text-sm text-slate-600 leading-relaxed">
+            Sí. El sistema es compatible con dispositivos móviles. Abra el navegador de su celular, ingrese a la dirección del CRM e inicie sesión normalmente. Todas las funciones están disponibles desde el celular.
+          </div>
+        </div>
+
+        <div class="avoid-break rounded-xl border border-slate-200 overflow-hidden">
+          <div class="bg-slate-50 px-5 py-3 flex items-start gap-3">
+            <span class="text-blue-600 font-extrabold text-lg leading-none mt-0.5">?</span>
+            <p class="font-semibold text-slate-700">No puedo adjuntar un archivo, ¿qué puede estar pasando?</p>
+          </div>
+          <div class="px-5 py-4 text-sm text-slate-600 leading-relaxed">
+            Verifique que el archivo no supere los <strong>5 MB</strong> y que sea una imagen (JPG, PNG) o PDF. Si el archivo es muy pesado, puede comprimirlo antes de adjuntarlo. Ante cualquier problema técnico, avise a su supervisor.
+          </div>
+        </div>
+
+        <div class="avoid-break rounded-xl border border-slate-200 overflow-hidden">
+          <div class="bg-slate-50 px-5 py-3 flex items-start gap-3">
+            <span class="text-blue-600 font-extrabold text-lg leading-none mt-0.5">?</span>
+            <p class="font-semibold text-slate-700">¿Cómo sé si ya cargué a ese cliente antes?</p>
+          </div>
+          <div class="px-5 py-4 text-sm text-slate-600 leading-relaxed">
+            Vaya al <strong>Historial</strong> y busque por DNI o nombre del cliente. Si aparece una ficha existente, no vuelva a cargarla. Consulte con su supervisor si necesita actualizar algún dato.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         PIE DE PÁGINA / FIRMA
+    ══════════════════════════════════════════ -->
+    <div class="avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 px-6 py-6">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow">
+            <span class="text-white font-bold text-sm">CI</span>
+          </div>
+          <div>
+            <p class="font-bold text-slate-700 text-sm">CRM Imperio</p>
+            <p class="text-slate-400 text-xs">Manual del Vendedor · Versión 1.0 · Marzo 2026</p>
+          </div>
+        </div>
+        <div class="text-center sm:text-right">
+          <p class="text-slate-400 text-xs">Documento interno. No distribuir fuera del equipo.</p>
+          <p class="text-slate-400 text-xs mt-0.5">Ante dudas, consulte con su supervisor.</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</body>
+</html>

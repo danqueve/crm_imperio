@@ -92,6 +92,10 @@ include 'includes/header.php';
         <button onclick="openEditModal()" class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg shadow-blue-900/20">
             <i data-lucide="edit-3" class="w-4 h-4"></i> EDITAR FICHA
         </button>
+        <?php elseif ($role === 'vendedor' && $order['user_id'] == $_SESSION['user_id'] && $order['status'] === 'revision'): ?>
+        <a href="editar_venta.php?id=<?= $order['id'] ?>" class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg shadow-blue-900/20">
+            <i data-lucide="edit-3" class="w-4 h-4"></i> EDITAR MI VENTA
+        </a>
         <?php endif; ?>
     </div>
 
