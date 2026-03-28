@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // 6. PROCESAR ARCHIVOS ADJUNTOS (Múltiples)
         if (isset($_FILES['sale_files']) && !empty($_FILES['sale_files']['name'][0])) {
-            $upload_dir = 'uploads/';
+            $upload_dir = __DIR__ . '/uploads/';
 
             // Crear carpeta si no existe
             if (!is_dir($upload_dir)) {
@@ -101,12 +101,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $files               = $_FILES['sale_files'];
-            $allowed_extensions  = ['jpg', 'jpeg', 'png', 'pdf'];
+            $allowed_extensions  = ['jpg', 'jpeg', 'png', 'pdf', 'jfif'];
             $allowed_mime_types  = ['image/jpeg', 'image/png', 'application/pdf'];
             $max_file_size       = 5 * 1024 * 1024; // 5 MB por archivo
 
             for ($i = 0; $i < count($files['name']); $i++) {
                 if ($files['error'][$i] !== UPLOAD_ERR_OK) {
+                    if ($files['error'][$i] === UPLOAD_ERR_INI_SIZE || $files['error'][$i] === UPLOAD_ERR_FORM_SIZE) {
+                        error_log("save_sale: Archivo excedio limite de tamaño: " . $files['name'][$i]);
+                    }
                     continue;
                 }
 
@@ -141,6 +144,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Registrar cada archivo en la tabla auxiliar 'sale_files'
                     $sql_file = "INSERT INTO sale_files (sale_id, file_path) VALUES (?, ?)";
                     $pdo->prepare($sql_file)->execute([$sale_id, $new_file_name]);
+                } else {
+                    error_log("save_sale [sale_id={$sale_id}]: No se pudo mover archivo '{$original_name}' a '{$dest_path}'");
                 }
             }
         }

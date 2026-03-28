@@ -117,12 +117,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_FILES['sale_files']) && !empty($_FILES['sale_files']['name'][0])) {
             $upload_dir         = __DIR__ . '/uploads/';
             $files              = $_FILES['sale_files'];
-            $allowed_extensions = ['jpg', 'jpeg', 'png', 'pdf'];
+            $allowed_extensions = ['jpg', 'jpeg', 'png', 'pdf', 'jfif'];
             $allowed_mimes      = ['image/jpeg', 'image/png', 'application/pdf'];
             $max_size           = 5 * 1024 * 1024;
 
             for ($i = 0; $i < count($files['name']); $i++) {
-                if ($files['error'][$i] !== UPLOAD_ERR_OK) continue;
+                if ($files['error'][$i] !== UPLOAD_ERR_OK) {
+                    if ($files['error'][$i] === UPLOAD_ERR_INI_SIZE || $files['error'][$i] === UPLOAD_ERR_FORM_SIZE) {
+                        error_log("update_sale_full: Archivo excedió limite de tamaño: " . $files['name'][$i]);
+                    }
+                    continue;
+                }
 
                 $tmp_name  = $files['tmp_name'][$i];
                 $extension = strtolower(pathinfo($files['name'][$i], PATHINFO_EXTENSION));

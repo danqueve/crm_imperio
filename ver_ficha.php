@@ -39,19 +39,6 @@ $stmtFiles = $pdo->prepare("SELECT file_path FROM sale_files WHERE sale_id = ?")
 $stmtFiles->execute([$id]);
 $files = $stmtFiles->fetchAll(PDO::FETCH_ASSOC);
 
-if (!empty($order['file_path'])) {
-    $already_listed = false;
-    foreach ($files as $f) {
-        if ($f['file_path'] === $order['file_path']) {
-            $already_listed = true;
-            break;
-        }
-    }
-    if (!$already_listed) {
-        array_unshift($files, ['file_path' => $order['file_path']]);
-    }
-}
-
 include 'includes/header.php';
 ?>
 
