@@ -29,8 +29,8 @@ function getMobileClass($page_name) {
 $role = $_SESSION['role'] ?? '';
 $user_id = $_SESSION['user_id'] ?? 0;
 
-// Permiso para gestionar entregas (Admin, Supervisor y Verificador)
-$can_manage_deliveries = in_array($role, ['admin', 'supervisor', 'verificador']);
+// Permiso para gestionar entregas (Admin, Supervisor, Verificador y Entregador)
+$can_manage_deliveries = in_array($role, ['admin', 'supervisor', 'verificador', 'entregador']);
 
 // Permiso para ver comisiones GLOBALES (Solo Admin y Supervisor)
 $can_see_commissions = in_array($role, ['admin', 'supervisor']);
@@ -126,6 +126,7 @@ $avatarInitial  = strtoupper(mb_substr($_SESSION['name'] ?? 'U', 0, 1));
                             <i data-lucide="user" class="w-4 h-4"></i> Mis Ventas
                         </a>
                         <?php endif; ?>
+
 
                         <?php if ($can_manage_deliveries): ?>
                         <div class="w-px h-5 bg-slate-700 mx-1"></div>

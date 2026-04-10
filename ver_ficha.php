@@ -30,7 +30,13 @@ $order = $stmt->fetch();
 if (!$order) die("Venta no encontrada");
 
 // Seguridad: Vendedores solo ven sus propias ventas
+// Entregadores pueden ver sus ventas + cualquier venta aprobada/entregada (para gestionar la entrega)
 if ($role === 'vendedor' && $order['user_id'] != $_SESSION['user_id']) {
+    die("No tiene permiso para ver esta venta.");
+}
+if ($role === 'entregador' 
+    && $order['user_id'] != $_SESSION['user_id'] 
+    && !in_array($order['status'], ['aprobado', 'entregado'])) {
     die("No tiene permiso para ver esta venta.");
 }
 

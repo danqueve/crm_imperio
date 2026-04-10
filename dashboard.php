@@ -9,12 +9,14 @@ $name = $_SESSION['name'];
 
 // Permisos
 $is_vendedor = ($role === 'vendedor');
+$is_entregador = ($role === 'entregador');
+$is_limited_view = ($is_vendedor || $is_entregador); // Roles que solo ven sus propias ventas
 $can_manage = in_array($role, ['admin', 'supervisor', 'verificador']);
 
 // --- 1. ESTADÍSTICAS PARA TARJETAS ---
 $sqlStats = "SELECT status, COUNT(*) as total FROM sales";
 $paramsStats = [];
-if ($is_vendedor) {
+if ($is_limited_view) {
     $sqlStats .= " WHERE user_id = ?";
     $paramsStats[] = $user_id;
 }
@@ -35,7 +37,7 @@ $stats = [
 $monthlySql = "SELECT DATE_FORMAT(created_at, '%b %y') as label, COUNT(*) as total
                FROM sales";
 $paramsMonthly = [];
-if ($is_vendedor) {
+if ($is_limited_view) {
     $monthlySql .= " WHERE user_id = ?";
     $paramsMonthly[] = $user_id;
 }
@@ -51,7 +53,7 @@ $dataMonths = json_encode(array_column($monthlyStats, 'total'));
 $dataStatus = json_encode(array_values($stats));
 
 // --- 3. LISTADO DE TABLA (BANDEJA DE ENTRADA) ---
-if ($is_vendedor) {
+if ($is_limited_view) {
     $stmt = $pdo->prepare("SELECT * FROM sales WHERE user_id = ? AND status IN ('revision', 'aprobado') ORDER BY created_at DESC");
     $stmt->execute([$user_id]);
 } else {
@@ -118,7 +120,7 @@ include 'includes/header.php';
             <button onclick="exportarPDF()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 text-sm font-bold shadow-lg shadow-rose-900/30">
                 <i data-lucide="file-down" class="w-4 h-4"></i> PDF PENDIENTES
             </button>
-            <?php if ($can_manage): ?>
+            <?php if ($can_manage || $is_entregador): ?>
             <a href="entregas.php" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 text-sm font-bold shadow-lg shadow-emerald-900/30">
                 <i data-lucide="truck" class="w-4 h-4"></i> GESTIÓN ENTREGAS
             </a>
@@ -131,7 +133,7 @@ include 'includes/header.php';
         <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950/30">
             <h3 class="font-bold text-lg text-white flex items-center gap-2 uppercase tracking-wider">
                 <i data-lucide="inbox" class="w-5 h-5 text-blue-500"></i>
-                <?= $is_vendedor ? "Mis Ventas Activas" : "Bandeja de Entrada (Revisión)" ?>
+                <?= $is_limited_view ? "Mis Ventas Activas" : "Bandeja de Entrada (Revisión)" ?>
             </h3>
             <span class="text-[10px] font-bold text-slate-500 uppercase bg-slate-950 px-3 py-1 rounded border border-slate-800 tracking-widest">
                 <?= count($orders) ?> REGISTROS

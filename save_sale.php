@@ -7,7 +7,7 @@ require 'includes/db.php';
  */
 
 // 1. SEGURIDAD: Verificar sesión y roles permitidos
-$allowed_roles = ['vendedor', 'admin', 'supervisor', 'verificador'];
+$allowed_roles = ['vendedor', 'admin', 'supervisor', 'verificador', 'entregador'];
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
     die("Acceso denegado. No tiene permisos para realizar esta acción.");
 }

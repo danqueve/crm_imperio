@@ -11,9 +11,9 @@ $my_role = $_SESSION['role'];
 $my_id = $_SESSION['user_id'];
 
 // LÓGICA DE ID:
-// - Vendedores y Verificadores: SOLO pueden ver su propio perfil (Seguridad)
+// - Vendedores, Verificadores y Entregadores: SOLO pueden ver su propio perfil (Seguridad)
 // - Admin y Supervisor: Pueden ver el de cualquiera por GET, o el suyo por defecto
-if (in_array($my_role, ['vendedor', 'verificador'])) {
+if (in_array($my_role, ['vendedor', 'verificador', 'entregador'])) {
     $seller_id = $my_id;
 } else {
     $seller_id = $_GET['id'] ?? $my_id;

@@ -24,8 +24,8 @@ $whereClause = "WHERE s.status IN ('rechazado', 'entregado')
                 AND s.created_at BETWEEN :start AND :end";
 $params = [':start' => $startSql, ':end' => $endSql];
 
-// Si es vendedor, solo ve su propio historial
-if ($role === 'vendedor') {
+// Si es vendedor o entregador, solo ve su propio historial
+if ($role === 'vendedor' || $role === 'entregador') {
     $whereClause .= " AND s.user_id = :user_id";
     $params[':user_id'] = $user_id;
 }

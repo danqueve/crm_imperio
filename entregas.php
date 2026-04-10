@@ -2,8 +2,8 @@
 require 'includes/db.php';
 require_once 'includes/functions.php'; // Requerimiento de funciones globales
 
-// SEGURIDAD: Permitir acceso a Admin, Supervisor y Verificador
-if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'supervisor', 'verificador'])) {
+// SEGURIDAD: Permitir acceso a Admin, Supervisor, Verificador y Entregador
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'supervisor', 'verificador', 'entregador'])) {
     header("Location: dashboard.php");
     exit;
 }

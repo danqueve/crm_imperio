@@ -1,9 +1,9 @@
 <?php
 require 'includes/db.php';
 
-// SEGURIDAD: Permitir acceso a Admin, Supervisor y Verificador
-// (Verificadores pueden entregar y aprobar, pero no ver comisiones ni usuarios)
-if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'supervisor', 'verificador'])) {
+// SEGURIDAD: Permitir acceso a Admin, Supervisor, Verificador y Entregador
+// (Entregadores solo pueden marcar como entregado)
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'supervisor', 'verificador', 'entregador'])) {
     header("Location: dashboard.php");
     exit;
 }
@@ -22,6 +22,12 @@ $status = $_POST['status'] ?? null;
 $allowed_statuses = ['aprobado', 'entregado', 'revision'];
 if (!in_array($status, $allowed_statuses)) {
     header("Location: dashboard.php");
+    exit;
+}
+
+// RESTRICCIÓN DE ENTREGADOR: Solo puede marcar como 'entregado'
+if ($_SESSION['role'] === 'entregador' && $status !== 'entregado') {
+    header("Location: entregas.php");
     exit;
 }
 

@@ -140,7 +140,8 @@ include 'includes/header.php';
                         <div class="relative">
                             <select name="role" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 pl-10 text-white focus:border-blue-500 outline-none appearance-none cursor-pointer transition hover:bg-slate-900">
                                 <option value="vendedor">Vendedor</option>
-                                <option value="verificador">Verificador</option> <!-- NUEVA OPCIÓN -->
+                                <option value="entregador">Entregador</option>
+                                <option value="verificador">Verificador</option>
                                 <option value="supervisor">Supervisor</option>
                                 <option value="admin">Administrador</option>
                             </select>
@@ -206,9 +207,10 @@ include 'includes/header.php';
                                             <input type="hidden" name="action" value="update_role">
                                             <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
                                             
-                                            <select name="new_role" class="bg-slate-950 border border-slate-700 rounded text-xs text-white py-1.5 px-2 focus:border-blue-500 outline-none w-24 cursor-pointer hover:bg-slate-900 transition">
+                                            <select name="new_role" class="bg-slate-950 border border-slate-700 rounded text-xs text-white py-1.5 px-2 focus:border-blue-500 outline-none w-28 cursor-pointer hover:bg-slate-900 transition">
                                                 <option value="vendedor" <?= $u['role'] == 'vendedor' ? 'selected' : '' ?>>Vend.</option>
-                                                <option value="verificador" <?= $u['role'] == 'verificador' ? 'selected' : '' ?>>Verif.</option> <!-- OPCIÓN VERIFICADOR -->
+                                                <option value="entregador" <?= $u['role'] == 'entregador' ? 'selected' : '' ?>>Entreg.</option>
+                                                <option value="verificador" <?= $u['role'] == 'verificador' ? 'selected' : '' ?>>Verif.</option>
                                                 <option value="supervisor" <?= $u['role'] == 'supervisor' ? 'selected' : '' ?>>Sup.</option>
                                                 <option value="admin" <?= $u['role'] == 'admin' ? 'selected' : '' ?>>Admin</option>
                                             </select>

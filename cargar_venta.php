@@ -1,8 +1,8 @@
 <?php
 require 'includes/db.php';
 
-// SEGURIDAD: Permitir acceso a Vendedor, Admin, Supervisor Y VERIFICADOR
-$allowed_roles = ['vendedor', 'admin', 'supervisor', 'verificador'];
+// SEGURIDAD: Permitir acceso a Vendedor, Admin, Supervisor, Verificador y Entregador
+$allowed_roles = ['vendedor', 'admin', 'supervisor', 'verificador', 'entregador'];
 
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) { 
     header("Location: dashboard.php"); 
