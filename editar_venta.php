@@ -66,6 +66,13 @@ include 'includes/header.php';
     </div>
     <?php endif; ?>
 
+    <?php if (isset($_GET['msg']) && $_GET['msg'] === 'error'): ?>
+    <div class="mb-6 flex items-center gap-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl px-5 py-4 text-sm">
+        <i data-lucide="alert-octagon" class="w-5 h-5 shrink-0"></i>
+        <span>Ocurrió un error al guardar los cambios. Intente nuevamente.</span>
+    </div>
+    <?php endif; ?>
+
     <form action="update_sale_full.php" method="POST" enctype="multipart/form-data" class="space-y-8">
         <?= csrf_field() ?>
         <input type="hidden" name="sale_id" value="<?= $sale_id ?>">
@@ -268,18 +275,13 @@ include 'includes/header.php';
                                class="truncate max-w-[130px] hover:text-purple-300 transition">
                                 <?= htmlspecialchars($f['file_path']) ?>
                             </a>
-                            <!-- Botón eliminar archivo (mini-form CSRF) -->
-                            <form method="POST" action="delete_sale_file.php"
-                                  onsubmit="return confirm('¿Eliminar este archivo? Esta acción no se puede deshacer.')">
-                                <?= csrf_field() ?>
-                                <input type="hidden" name="file_id" value="<?= $f['id'] ?>">
-                                <input type="hidden" name="sale_id" value="<?= $sale_id ?>">
-                                <button type="submit"
-                                        class="p-1 text-slate-600 hover:text-red-400 transition rounded"
-                                        title="Eliminar archivo">
-                                    <i data-lucide="x" class="w-3.5 h-3.5"></i>
-                                </button>
-                            </form>
+                            <!-- Botón eliminar archivo (vía JavaScript para evitar forms anidados) -->
+                            <button type="button"
+                                    class="p-1 text-slate-600 hover:text-red-400 transition rounded"
+                                    title="Eliminar archivo"
+                                    onclick="deleteFileFromEdit(<?= $f['id'] ?>, <?= $sale_id ?>)">
+                                <i data-lucide="x" class="w-3.5 h-3.5"></i>
+                            </button>
                         </div>
                         <?php endforeach; ?>
                     </div>
@@ -330,6 +332,9 @@ include 'includes/header.php';
 </main>
 
 <script>
+    // Token CSRF para operaciones via fetch
+    const _csrfToken = '<?= htmlspecialchars(csrf_token()) ?>';
+
     // Recalcular total en tiempo real
     function recalcTotal() {
         const cuotas = parseFloat(document.getElementById('edit_cuotas').value) || 0;
@@ -352,6 +357,27 @@ include 'includes/header.php';
             });
             lucide.createIcons();
         }
+    }
+
+    // Eliminar archivo adjunto vía fetch (sin anidar formularios)
+    function deleteFileFromEdit(fileId, saleId) {
+        if (!confirm('¿Eliminar este archivo? Esta acción no se puede deshacer.')) return;
+
+        const fd = new FormData();
+        fd.append('file_id',    fileId);
+        fd.append('sale_id',    saleId);
+        fd.append('csrf_token', _csrfToken);
+
+        fetch('delete_sale_file.php', { method: 'POST', body: fd })
+            .then(response => {
+                const chip = document.getElementById('chip-' + fileId);
+                if (response.url && response.url.includes('error_delete')) {
+                    alert('No se pudo eliminar el archivo.');
+                } else {
+                    if (chip) chip.remove();
+                }
+            })
+            .catch(() => alert('Error de conexión al intentar eliminar.'));
     }
 </script>
 
