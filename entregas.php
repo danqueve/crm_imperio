@@ -13,6 +13,10 @@ $role = $_SESSION['role'];
 // Variable para saber si puede ver el perfil del vendedor (solo admin/supervisor)
 $can_view_profile = in_array($role, ['admin', 'supervisor', 'verificador']);
 
+// --- TAB ACTIVO ---
+$tab = (isset($_GET['tab']) && $_GET['tab'] === 'entregadas') ? 'entregadas' : 'pendientes';
+$statusFilter = ($tab === 'pendientes') ? 'aprobado' : 'entregado';
+
 // --- FILTRO DE LOCALIDAD ---
 $localidades_disponibles = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Concepción','Famaillá','Lules','Manantial','Monteros','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Villa Carmela','Yerba Buena'];
 $filter_locality = isset($_GET['locality']) && in_array($_GET['locality'], $localidades_disponibles) ? $_GET['locality'] : '';
@@ -25,41 +29,48 @@ $offset = ($pagina_actual - 1) * $registros_por_pagina;
 
 $localityWhere = $filter_locality ? " AND sales.client_locality = :locality" : "";
 
-// 1. Consultar Total de Registros para el contador
-$sqlCount = "SELECT COUNT(*) FROM sales WHERE status IN ('aprobado', 'entregado')" . $localityWhere;
-$stmtCount = $pdo->prepare($sqlCount);
-if ($filter_locality) $stmtCount->bindValue(':locality', $filter_locality);
-$stmtCount->execute();
-$total_registros = (int)$stmtCount->fetchColumn();
+// Contadores para badges de cada tab
+$stmtCountPend = $pdo->prepare("SELECT COUNT(*) FROM sales WHERE status = 'aprobado'" . $localityWhere);
+if ($filter_locality) $stmtCountPend->bindValue(':locality', $filter_locality);
+$stmtCountPend->execute();
+$total_pendientes = (int)$stmtCountPend->fetchColumn();
 
-// 2. Consultar Registros para PANTALLA (Paginados)
+$stmtCountEntr = $pdo->prepare("SELECT COUNT(*) FROM sales WHERE status = 'entregado'" . $localityWhere);
+if ($filter_locality) $stmtCountEntr->bindValue(':locality', $filter_locality);
+$stmtCountEntr->execute();
+$total_entregadas = (int)$stmtCountEntr->fetchColumn();
+
+$total_registros = ($tab === 'pendientes') ? $total_pendientes : $total_entregadas;
+
+// Orden según tab
+$orderBy = ($tab === 'pendientes')
+    ? "ORDER BY sales.created_at ASC"
+    : "ORDER BY sales.delivered_at DESC";
+
+// 1. Consultar Registros para PANTALLA (Paginados)
 $sql = "SELECT sales.*, users.name as seller_name
         FROM sales
         JOIN users ON sales.user_id = users.id
-        WHERE sales.status IN ('aprobado', 'entregado')" . $localityWhere . "
-        ORDER BY
-            FIELD(sales.status, 'aprobado', 'entregado') ASC,
-            CASE WHEN sales.status = 'aprobado' THEN sales.created_at END ASC,
-            CASE WHEN sales.status = 'entregado' THEN sales.delivered_at END DESC
+        WHERE sales.status = :status" . $localityWhere . "
+        $orderBy
         LIMIT :offset, :limit";
 
 $stmt = $pdo->prepare($sql);
+$stmt->bindValue(':status', $statusFilter);
 if ($filter_locality) $stmt->bindValue(':locality', $filter_locality);
 $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 $stmt->bindValue(':limit', $registros_por_pagina, PDO::PARAM_INT);
 $stmt->execute();
 $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// 3. Consultar TODOS para PDF (Sin límite de página, respeta filtro)
+// 2. Consultar TODOS para PDF (respeta tab + filtro, sin paginación)
 $sqlFull = "SELECT sales.*, users.name as seller_name
             FROM sales
             JOIN users ON sales.user_id = users.id
-            WHERE sales.status IN ('aprobado', 'entregado')" . $localityWhere . "
-            ORDER BY
-                FIELD(sales.status, 'aprobado', 'entregado') ASC,
-                CASE WHEN sales.status = 'aprobado' THEN sales.created_at END ASC,
-                CASE WHEN sales.status = 'entregado' THEN sales.delivered_at END DESC";
+            WHERE sales.status = :status" . $localityWhere . "
+            $orderBy";
 $stmtFull = $pdo->prepare($sqlFull);
+$stmtFull->bindValue(':status', $statusFilter);
 if ($filter_locality) $stmtFull->bindValue(':locality', $filter_locality);
 $stmtFull->execute();
 $allOrders = $stmtFull->fetchAll(PDO::FETCH_ASSOC);
@@ -90,30 +101,56 @@ include 'includes/header.php';
 
 <main class="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 fade-in">
 
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
         <div class="flex items-center gap-4">
             <a href="dashboard.php" class="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white transition border border-slate-700">
                 <i data-lucide="chevron-left"></i>
             </a>
             <div>
                 <h1 class="text-2xl font-bold text-white tracking-tight">Gestión de Entregas</h1>
-                <p class="text-sm text-slate-500 font-medium">Control de logística y despachos. (Total: <?= $total_registros ?> registros)</p>
+                <p class="text-sm text-slate-500 font-medium">Control de logística y despachos.</p>
             </div>
         </div>
+        <!-- Botón PDF contextual según tab activo -->
+        <?php if ($tab === 'pendientes'): ?>
+        <button onclick="exportarPDF('pendientes')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl transition flex items-center gap-2 text-sm font-bold shadow-lg shadow-blue-900/30 shrink-0">
+            <i data-lucide="file-text" class="w-4 h-4"></i> Exportar PDF
+        </button>
+        <?php else: ?>
+        <button onclick="exportarPDF('entregados')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl transition flex items-center gap-2 text-sm font-bold shadow-lg shadow-emerald-900/30 shrink-0">
+            <i data-lucide="file-text" class="w-4 h-4"></i> Exportar PDF
+        </button>
+        <?php endif; ?>
+    </div>
 
-        <!-- Botones de Reporte PDF -->
-        <div class="flex gap-2">
-            <button onclick="exportarPDF('pendientes')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl transition flex items-center gap-2 text-sm font-bold shadow-lg shadow-blue-900/30">
-                <i data-lucide="package" class="w-4 h-4"></i> PDF Pendientes
-            </button>
-            <button onclick="exportarPDF('entregados')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl transition flex items-center gap-2 text-sm font-bold shadow-lg shadow-emerald-900/30">
-                <i data-lucide="check-circle" class="w-4 h-4"></i> PDF Entregados
-            </button>
-        </div>
+    <!-- Tabs -->
+    <?php
+    $tabBase = 'entregas.php?tab=';
+    $tabLocality = $filter_locality ? '&locality=' . urlencode($filter_locality) : '';
+    ?>
+    <div class="flex gap-1 bg-slate-900 border border-slate-800 rounded-2xl p-1.5 mb-6 w-fit shadow-lg">
+        <a href="<?= $tabBase ?>pendientes<?= $tabLocality ?>"
+           class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition <?= $tab === 'pendientes' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800' ?>">
+            <i data-lucide="package" class="w-4 h-4"></i>
+            Pendientes
+            <span class="<?= $tab === 'pendientes' ? 'bg-blue-500/40' : 'bg-slate-800' ?> text-[10px] font-bold px-2 py-0.5 rounded-full <?= $total_pendientes > 0 && $tab !== 'pendientes' ? 'text-yellow-400' : '' ?>">
+                <?= $total_pendientes ?>
+            </span>
+        </a>
+        <a href="<?= $tabBase ?>entregadas<?= $tabLocality ?>"
+           class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition <?= $tab === 'entregadas' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800' ?>">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+            Entregadas
+            <span class="<?= $tab === 'entregadas' ? 'bg-emerald-500/40' : 'bg-slate-800' ?> text-[10px] font-bold px-2 py-0.5 rounded-full">
+                <?= $total_entregadas ?>
+            </span>
+        </a>
     </div>
 
     <!-- Filtro por Localidad -->
     <form method="GET" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-3 items-end shadow-lg">
+        <input type="hidden" name="tab" value="<?= htmlspecialchars($tab) ?>">
         <div class="flex-1">
             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1 tracking-widest">Filtrar por localidad</label>
             <select name="locality" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 outline-none transition text-sm">
@@ -124,11 +161,11 @@ include 'includes/header.php';
             </select>
         </div>
         <div class="flex gap-2 shrink-0">
-            <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 shadow-lg">
+            <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2">
                 <i data-lucide="filter" class="w-4 h-4"></i> Filtrar
             </button>
             <?php if ($filter_locality): ?>
-            <a href="entregas.php" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl font-bold text-sm transition border border-slate-700 flex items-center gap-1" title="Limpiar filtro">
+            <a href="entregas.php?tab=<?= $tab ?>" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl font-bold text-sm transition border border-slate-700 flex items-center gap-1" title="Limpiar filtro">
                 <i data-lucide="x" class="w-4 h-4"></i>
             </a>
             <?php endif; ?>
@@ -291,7 +328,11 @@ include 'includes/header.php';
 
         <!-- PAGINACIÓN GLOBAL -->
         <div id="paginationContainer">
-            <?= renderPagination($total_registros, $registros_por_pagina, $pagina_actual, $filter_locality ? ['locality' => $filter_locality] : []); ?>
+            <?php
+            $extraParams = ['tab' => $tab];
+            if ($filter_locality) $extraParams['locality'] = $filter_locality;
+            echo renderPagination($total_registros, $registros_por_pagina, $pagina_actual, $extraParams);
+            ?>
         </div>
     </div>
 </main>
@@ -305,23 +346,18 @@ include 'includes/header.php';
         const doc = new jsPDF('p', 'mm', 'a4');
         const pageWidth = doc.internal.pageSize.getWidth();
 
-        let filteredData = [];
-        let title = "";
-        let headRow = [];
-        let columnStylesConfig = {};
+        // Los datos ya vienen filtrados por tab y localidad desde el servidor
+        const filteredData = allDeliveryData;
+        let title, headRow, columnStylesConfig;
 
         if (tipo === 'pendientes') {
-            filteredData = allDeliveryData.filter(row => row.status === 'Aprobado');
-            filteredData.sort((a, b) => new Date(a.raw_date) - new Date(b.raw_date));
             title = "Hoja de Ruta - Entregas Pendientes";
             headRow = [['#', 'ID', 'F. Carga', 'Cliente', 'Dirección', 'Celular', 'Artículo', 'Vendedor']];
             columnStylesConfig = {
                 0: { cellWidth: 7, fontStyle: 'bold', halign: 'center' },
                 1: { cellWidth: 10 }, 2: { cellWidth: 18 }, 3: { cellWidth: 25 }, 4: { cellWidth: 40 }, 5: { cellWidth: 22 }, 6: { cellWidth: 35 }, 7: { cellWidth: 20 }
             };
-        } else if (tipo === 'entregados') {
-            filteredData = allDeliveryData.filter(row => row.status === 'Entregado');
-            filteredData.sort((a, b) => new Date(b.raw_delivered_at) - new Date(a.raw_delivered_at));
+        } else {
             title = "Reporte de Entregas Realizadas";
             headRow = [['#', 'ID', 'F. Carga', 'F. Entrega', 'Cliente', 'Dirección', 'Celular', 'Artículo']];
             columnStylesConfig = {
@@ -335,11 +371,10 @@ include 'includes/header.php';
             return;
         }
 
-        // Diseño del PDF
         doc.setFontSize(18);
         doc.setFont("helvetica", "bold");
         doc.text(title, pageWidth / 2, 15, { align: 'center' });
-        
+
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
         const meta = "Generado: " + new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString();
