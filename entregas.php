@@ -1,96 +1,157 @@
 <?php
 require 'includes/db.php';
-require_once 'includes/functions.php'; // Requerimiento de funciones globales
+require_once 'includes/functions.php';
 
-// SEGURIDAD: Permitir acceso a Admin, Supervisor, Verificador y Entregador
 if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'supervisor', 'verificador', 'entregador'])) {
     header("Location: dashboard.php");
     exit;
 }
 
 $role = $_SESSION['role'];
-
-// Variable para saber si puede ver el perfil del vendedor (solo admin/supervisor)
 $can_view_profile = in_array($role, ['admin', 'supervisor', 'verificador']);
 
-// --- TAB ACTIVO ---
-$tab = (isset($_GET['tab']) && $_GET['tab'] === 'entregadas') ? 'entregadas' : 'pendientes';
+// --- TAB ---
+$tab          = (isset($_GET['tab']) && $_GET['tab'] === 'entregadas') ? 'entregadas' : 'pendientes';
 $statusFilter = ($tab === 'pendientes') ? 'aprobado' : 'entregado';
+$dateField    = ($tab === 'pendientes') ? 'sales.created_at' : 'sales.delivered_at';
 
-// --- FILTRO DE LOCALIDAD ---
-$localidades_disponibles = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Concepción','Famaillá','Lules','Manantial','Monteros','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Villa Carmela','Yerba Buena'];
+// --- LOCALIDADES (ordenadas por cantidad de pedidos del tab activo) ---
+$stmtLoc = $pdo->prepare(
+    "SELECT client_locality, COUNT(*) as total
+     FROM sales
+     WHERE status = :status AND client_locality != ''
+     GROUP BY client_locality
+     ORDER BY total DESC"
+);
+$stmtLoc->execute([':status' => $statusFilter]);
+$localidades_con_conteo = $stmtLoc->fetchAll(PDO::FETCH_ASSOC);
+$localidades_disponibles = array_column($localidades_con_conteo, 'client_locality');
+
+// --- FILTROS ---
 $filter_locality = isset($_GET['locality']) && in_array($_GET['locality'], $localidades_disponibles) ? $_GET['locality'] : '';
+$filter_search   = isset($_GET['search']) ? trim($_GET['search']) : '';
+$filter_from     = isset($_GET['date_from']) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date_from']) ? $_GET['date_from'] : '';
+$filter_to       = isset($_GET['date_to'])   && preg_match('/^\d{4}-\d{2}-\d{2}$/', $_GET['date_to'])   ? $_GET['date_to']   : '';
 
-// --- CONFIGURACIÓN DE PAGINACIÓN ---
+// --- ORDENAMIENTO ---
+$sort_map     = ['fecha' => $dateField, 'cliente' => 'sales.client_name', 'localidad' => 'sales.client_locality', 'monto' => 'sales.total_amount'];
+$sort_key     = (isset($_GET['sort']) && array_key_exists($_GET['sort'], $sort_map)) ? $_GET['sort'] : null;
+$sort_dir     = (isset($_GET['dir']) && $_GET['dir'] === 'desc') ? 'DESC' : 'ASC';
+$orderBy      = $sort_key
+    ? "ORDER BY " . $sort_map[$sort_key] . " $sort_dir"
+    : (($tab === 'pendientes') ? "ORDER BY sales.created_at ASC" : "ORDER BY sales.delivered_at DESC");
+
+// --- PAGINACIÓN ---
 $registros_por_pagina = 15;
-$pagina_actual = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-if ($pagina_actual < 1) $pagina_actual = 1;
+$pagina_actual = max(1, (int)($_GET['page'] ?? 1));
 $offset = ($pagina_actual - 1) * $registros_por_pagina;
 
-$localityWhere = $filter_locality ? " AND sales.client_locality = :locality" : "";
+// --- CONTADORES DE TABS (unificado, solo filtro localidad) ---
+$localityWhere = $filter_locality ? " AND client_locality = :locality_count" : "";
+$stmtCounts = $pdo->prepare(
+    "SELECT SUM(CASE WHEN status='aprobado' THEN 1 ELSE 0 END) as pendientes,
+            SUM(CASE WHEN status='entregado' THEN 1 ELSE 0 END) as entregadas
+     FROM sales WHERE status IN ('aprobado','entregado')" . $localityWhere
+);
+if ($filter_locality) $stmtCounts->bindValue(':locality_count', $filter_locality);
+$stmtCounts->execute();
+$counts = $stmtCounts->fetch(PDO::FETCH_ASSOC);
+$total_pendientes = (int)($counts['pendientes'] ?? 0);
+$total_entregadas = (int)($counts['entregadas'] ?? 0);
 
-// Contadores para badges de cada tab
-$stmtCountPend = $pdo->prepare("SELECT COUNT(*) FROM sales WHERE status = 'aprobado'" . $localityWhere);
-if ($filter_locality) $stmtCountPend->bindValue(':locality', $filter_locality);
-$stmtCountPend->execute();
-$total_pendientes = (int)$stmtCountPend->fetchColumn();
+// --- WHERE PRINCIPAL (todos los filtros) ---
+$conditions  = ["sales.status = :status"];
+$queryParams = [':status' => $statusFilter];
 
-$stmtCountEntr = $pdo->prepare("SELECT COUNT(*) FROM sales WHERE status = 'entregado'" . $localityWhere);
-if ($filter_locality) $stmtCountEntr->bindValue(':locality', $filter_locality);
-$stmtCountEntr->execute();
-$total_entregadas = (int)$stmtCountEntr->fetchColumn();
+if ($filter_locality) {
+    $conditions[]           = "sales.client_locality = :locality";
+    $queryParams[':locality'] = $filter_locality;
+}
+if ($filter_search !== '') {
+    $conditions[]           = "(sales.client_name LIKE :search OR sales.client_dni LIKE :search2)";
+    $queryParams[':search']  = '%' . $filter_search . '%';
+    $queryParams[':search2'] = '%' . $filter_search . '%';
+}
+if ($filter_from) {
+    $conditions[]               = "$dateField >= :date_from";
+    $queryParams[':date_from']   = $filter_from;
+}
+if ($filter_to) {
+    $conditions[]               = "$dateField <= :date_to";
+    $queryParams[':date_to']     = $filter_to . ' 23:59:59';
+}
 
-$total_registros = ($tab === 'pendientes') ? $total_pendientes : $total_entregadas;
+$whereClause = "WHERE " . implode(" AND ", $conditions);
 
-// Orden según tab
-$orderBy = ($tab === 'pendientes')
-    ? "ORDER BY sales.created_at ASC"
-    : "ORDER BY sales.delivered_at DESC";
+$baseJoin = "FROM sales
+             JOIN users ON sales.user_id = users.id
+             LEFT JOIN users AS deliverer ON sales.delivered_by = deliverer.id";
 
-// 1. Consultar Registros para PANTALLA (Paginados)
-$sql = "SELECT sales.*, users.name as seller_name
-        FROM sales
-        JOIN users ON sales.user_id = users.id
-        WHERE sales.status = :status" . $localityWhere . "
+// --- TOTAL PARA PAGINACIÓN ---
+$stmtCount = $pdo->prepare("SELECT COUNT(*) FROM sales $whereClause");
+foreach ($queryParams as $k => $v) $stmtCount->bindValue($k, $v);
+$stmtCount->execute();
+$total_registros = (int)$stmtCount->fetchColumn();
+
+// --- QUERY PANTALLA (paginado) ---
+$sql = "SELECT sales.*, users.name as seller_name, deliverer.name as deliverer_name
+        $baseJoin
+        $whereClause
         $orderBy
         LIMIT :offset, :limit";
-
 $stmt = $pdo->prepare($sql);
-$stmt->bindValue(':status', $statusFilter);
-if ($filter_locality) $stmt->bindValue(':locality', $filter_locality);
+foreach ($queryParams as $k => $v) $stmt->bindValue($k, $v);
 $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-$stmt->bindValue(':limit', $registros_por_pagina, PDO::PARAM_INT);
+$stmt->bindValue(':limit',  $registros_por_pagina, PDO::PARAM_INT);
 $stmt->execute();
 $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// 2. Consultar TODOS para PDF (respeta tab + filtro, sin paginación)
-$sqlFull = "SELECT sales.*, users.name as seller_name
-            FROM sales
-            JOIN users ON sales.user_id = users.id
-            WHERE sales.status = :status" . $localityWhere . "
+// --- QUERY PDF (sin paginación) ---
+$sqlFull = "SELECT sales.*, users.name as seller_name, deliverer.name as deliverer_name
+            $baseJoin
+            $whereClause
             $orderBy";
 $stmtFull = $pdo->prepare($sqlFull);
-$stmtFull->bindValue(':status', $statusFilter);
-if ($filter_locality) $stmtFull->bindValue(':locality', $filter_locality);
+foreach ($queryParams as $k => $v) $stmtFull->bindValue($k, $v);
 $stmtFull->execute();
 $allOrders = $stmtFull->fetchAll(PDO::FETCH_ASSOC);
 
-// --- PREPARAR DATOS PARA PDF (JSON) ---
+// --- DATOS PDF ---
 $pdfData = array_map(function($order) {
     return [
-        'id' => $order['id'],
-        'raw_date' => $order['created_at'],
-        'raw_delivered_at' => $order['delivered_at'],
-        'date_loaded' => date('d/m/Y', strtotime($order['created_at'])),
+        'id'             => $order['id'],
+        'raw_date'       => $order['created_at'],
+        'raw_delivered'  => $order['delivered_at'],
+        'date_loaded'    => date('d/m/Y', strtotime($order['created_at'])),
         'date_delivered' => $order['delivered_at'] ? date('d/m/Y', strtotime($order['delivered_at'])) : '-',
-        'client' => $order['client_name'],
-        'address' => $order['client_address'] . ' (' . $order['client_locality'] . ')',
-        'phone' => $order['client_whatsapp'],
-        'item' => $order['item'],
-        'seller' => $order['seller_name'],
-        'status' => ucfirst($order['status'])
+        'client'         => $order['client_name'],
+        'address'        => $order['client_address'] . ' (' . $order['client_locality'] . ')',
+        'locality'       => $order['client_locality'],
+        'phone'          => $order['client_whatsapp'],
+        'item'           => $order['item'],
+        'seller'         => $order['seller_name'],
+        'deliverer'      => $order['deliverer_name'] ?? '-',
+        'status'         => ucfirst($order['status']),
     ];
 }, $allOrders);
+
+// --- HELPER: URL de sort preservando filtros actuales ---
+function sortUrl(string $col, string $currentSort, string $currentDir, string $tab, string $locality, string $search, string $from, string $to): string {
+    $dir = ($currentSort === $col && $currentDir === 'ASC') ? 'desc' : 'asc';
+    $p   = array_filter(['tab' => $tab, 'sort' => $col, 'dir' => $dir, 'locality' => $locality, 'search' => $search, 'date_from' => $from, 'date_to' => $to]);
+    return 'entregas.php?' . http_build_query($p);
+}
+function sortIcon(string $col, ?string $currentSort, string $currentDir): string {
+    if ($currentSort !== $col) return '<i data-lucide="chevrons-up-down" class="w-3 h-3 opacity-30"></i>';
+    return $currentDir === 'ASC'
+        ? '<i data-lucide="chevron-up" class="w-3 h-3 text-blue-400"></i>'
+        : '<i data-lucide="chevron-down" class="w-3 h-3 text-blue-400"></i>';
+}
+
+// --- EXTRA PARAMS para paginación ---
+$extraParams = array_filter(['tab' => $tab, 'locality' => $filter_locality, 'search' => $filter_search, 'date_from' => $filter_from, 'date_to' => $filter_to, 'sort' => $sort_key, 'dir' => $sort_key ? strtolower($sort_dir) : null]);
+
+$hasFilters = $filter_locality || $filter_search || $filter_from || $filter_to;
 
 include 'includes/header.php';
 ?>
@@ -112,7 +173,6 @@ include 'includes/header.php';
                 <p class="text-sm text-slate-500 font-medium">Control de logística y despachos.</p>
             </div>
         </div>
-        <!-- Botón PDF contextual según tab activo -->
         <?php if ($tab === 'pendientes'): ?>
         <button onclick="exportarPDF('pendientes')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl transition flex items-center gap-2 text-sm font-bold shadow-lg shadow-blue-900/30 shrink-0">
             <i data-lucide="file-text" class="w-4 h-4"></i> Exportar PDF
@@ -126,130 +186,203 @@ include 'includes/header.php';
 
     <!-- Tabs -->
     <?php
-    $tabBase = 'entregas.php?tab=';
     $tabLocality = $filter_locality ? '&locality=' . urlencode($filter_locality) : '';
     ?>
     <div class="flex gap-1 bg-slate-900 border border-slate-800 rounded-2xl p-1.5 mb-6 w-fit shadow-lg">
-        <a href="<?= $tabBase ?>pendientes<?= $tabLocality ?>"
+        <a href="entregas.php?tab=pendientes<?= $tabLocality ?>"
            class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition <?= $tab === 'pendientes' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800' ?>">
             <i data-lucide="package" class="w-4 h-4"></i>
             Pendientes
-            <span class="<?= $tab === 'pendientes' ? 'bg-blue-500/40' : 'bg-slate-800' ?> text-[10px] font-bold px-2 py-0.5 rounded-full <?= $total_pendientes > 0 && $tab !== 'pendientes' ? 'text-yellow-400' : '' ?>">
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full <?= $tab === 'pendientes' ? 'bg-blue-500/40' : ($total_pendientes > 0 ? 'bg-slate-800 text-yellow-400' : 'bg-slate-800 text-slate-400') ?>">
                 <?= $total_pendientes ?>
             </span>
         </a>
-        <a href="<?= $tabBase ?>entregadas<?= $tabLocality ?>"
+        <a href="entregas.php?tab=entregadas<?= $tabLocality ?>"
            class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition <?= $tab === 'entregadas' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white hover:bg-slate-800' ?>">
             <i data-lucide="check-circle" class="w-4 h-4"></i>
             Entregadas
-            <span class="<?= $tab === 'entregadas' ? 'bg-emerald-500/40' : 'bg-slate-800' ?> text-[10px] font-bold px-2 py-0.5 rounded-full">
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full <?= $tab === 'entregadas' ? 'bg-emerald-500/40' : 'bg-slate-800 text-slate-400' ?>">
                 <?= $total_entregadas ?>
             </span>
         </a>
     </div>
 
-    <!-- Filtro por Localidad -->
-    <form method="GET" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-3 items-end shadow-lg">
+    <!-- Filtros -->
+    <form method="GET" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6 shadow-lg">
         <input type="hidden" name="tab" value="<?= htmlspecialchars($tab) ?>">
-        <div class="flex-1">
-            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1 tracking-widest">Filtrar por localidad</label>
-            <select name="locality" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 outline-none transition text-sm">
-                <option value="">Todas las localidades</option>
-                <?php foreach ($localidades_disponibles as $loc): ?>
-                <option value="<?= htmlspecialchars($loc) ?>" <?= $filter_locality === $loc ? 'selected' : '' ?>><?= htmlspecialchars($loc) ?></option>
-                <?php endforeach; ?>
-            </select>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+            <!-- Búsqueda -->
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1 tracking-widest">Buscar cliente</label>
+                <div class="relative">
+                    <i data-lucide="search" class="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"></i>
+                    <input type="text" name="search" value="<?= htmlspecialchars($filter_search) ?>" placeholder="Nombre o DNI..."
+                           class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-9 pr-4 py-2.5 text-white focus:border-blue-500 outline-none transition text-sm">
+                </div>
+            </div>
+            <!-- Localidad -->
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1 tracking-widest">Localidad</label>
+                <select name="locality" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 outline-none transition text-sm">
+                    <option value="">Todas las localidades</option>
+                    <?php foreach ($localidades_con_conteo as $loc_row): ?>
+                    <option value="<?= htmlspecialchars($loc_row['client_locality']) ?>" <?= $filter_locality === $loc_row['client_locality'] ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($loc_row['client_locality']) ?> (<?= $loc_row['total'] ?>)
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <!-- Desde -->
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1 tracking-widest">
+                    <?= $tab === 'pendientes' ? 'Cargado desde' : 'Entregado desde' ?>
+                </label>
+                <input type="date" name="date_from" value="<?= htmlspecialchars($filter_from) ?>"
+                       class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 outline-none transition text-sm">
+            </div>
+            <!-- Hasta -->
+            <div>
+                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1 tracking-widest">
+                    <?= $tab === 'pendientes' ? 'Cargado hasta' : 'Entregado hasta' ?>
+                </label>
+                <input type="date" name="date_to" value="<?= htmlspecialchars($filter_to) ?>"
+                       class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 outline-none transition text-sm">
+            </div>
         </div>
-        <div class="flex gap-2 shrink-0">
-            <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2">
-                <i data-lucide="filter" class="w-4 h-4"></i> Filtrar
-            </button>
-            <?php if ($filter_locality): ?>
-            <a href="entregas.php?tab=<?= $tab ?>" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl font-bold text-sm transition border border-slate-700 flex items-center gap-1" title="Limpiar filtro">
-                <i data-lucide="x" class="w-4 h-4"></i>
+        <div class="flex gap-2 justify-end">
+            <?php if ($hasFilters): ?>
+            <a href="entregas.php?tab=<?= $tab ?>" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl font-bold text-sm transition border border-slate-700 flex items-center gap-1.5">
+                <i data-lucide="x" class="w-4 h-4"></i> Limpiar
             </a>
             <?php endif; ?>
+            <button type="submit" class="bg-slate-700 hover:bg-slate-600 text-white px-5 py-2 rounded-xl font-bold text-sm transition flex items-center gap-2">
+                <i data-lucide="filter" class="w-4 h-4"></i> Filtrar
+            </button>
         </div>
     </form>
 
-    <!-- Contenedor de Tabla -->
-    <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col min-h-[600px]">
+    <!-- Tabla -->
+    <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col min-h-[500px]">
         <div class="overflow-x-auto flex-1">
             <table class="w-full text-left text-sm border-collapse">
                 <thead class="bg-slate-950/50 text-slate-500 uppercase text-[10px] font-bold tracking-widest border-b border-slate-800">
                     <tr>
-                        <th class="p-5 pl-6">#</th>
-                        <th class="p-5">ID</th>
-                        <th class="p-5">Fechas</th>
-                        <th class="p-5">Cliente / Dirección</th>
-                        <th class="p-5">Artículo / Monto</th>
-                        <th class="p-5">Vendedor</th>
-                        <th class="p-5">Estado</th>
-                        <th class="p-5 text-right">Gestión</th>
+                        <th class="p-4 pl-5 hidden sm:table-cell w-10">#</th>
+                        <th class="p-4 hidden sm:table-cell w-16">ID</th>
+                        <?php if ($tab === 'entregadas'): ?>
+                        <th class="p-4 whitespace-nowrap">
+                            <a href="<?= sortUrl('fecha', $sort_key ?? '', $sort_dir, $tab, $filter_locality, $filter_search, $filter_from, $filter_to) ?>"
+                               class="flex items-center gap-1 hover:text-white transition">
+                                Fechas <?= sortIcon('fecha', $sort_key, $sort_dir) ?>
+                            </a>
+                        </th>
+                        <?php endif; ?>
+                        <th class="p-4">
+                            <a href="<?= sortUrl('cliente', $sort_key ?? '', $sort_dir, $tab, $filter_locality, $filter_search, $filter_from, $filter_to) ?>"
+                               class="flex items-center gap-1 hover:text-white transition">
+                                Cliente <?= sortIcon('cliente', $sort_key, $sort_dir) ?>
+                            </a>
+                        </th>
+                        <th class="p-4">Artículo / Monto</th>
+                        <th class="p-4 hidden lg:table-cell">Vendedor</th>
+                        <th class="p-4">
+                            <?php if ($tab === 'pendientes'): ?>
+                                <a href="<?= sortUrl('fecha', $sort_key ?? '', $sort_dir, $tab, $filter_locality, $filter_search, $filter_from, $filter_to) ?>"
+                                   class="flex items-center gap-1 hover:text-white transition">
+                                    Espera <?= sortIcon('fecha', $sort_key, $sort_dir) ?>
+                                </a>
+                            <?php else: ?>
+                                Entregado por
+                            <?php endif; ?>
+                        </th>
+                        <th class="p-4 text-right">Gestión</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-800/50">
                     <?php if (empty($orders)): ?>
                         <tr>
-                            <td colspan="8" class="p-20 text-center text-slate-500 italic flex flex-col items-center justify-center w-full col-span-8">
-                                <div class="bg-slate-800/50 p-4 rounded-full mb-4">
-                                    <i data-lucide="truck" class="w-10 h-10 text-slate-600"></i>
+                            <td colspan="8" class="p-20 text-center">
+                                <div class="flex flex-col items-center gap-4">
+                                    <div class="bg-slate-800/50 p-5 rounded-2xl border border-slate-700/50">
+                                        <i data-lucide="<?= $tab === 'pendientes' ? 'package' : 'check-circle' ?>" class="w-10 h-10 text-slate-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-slate-400 font-semibold text-base">
+                                            <?= $tab === 'pendientes' ? 'No hay pedidos pendientes de entrega' : 'Aún no hay entregas registradas' ?>
+                                        </p>
+                                        <?php if ($hasFilters): ?>
+                                        <p class="text-slate-600 text-sm mt-1">Probá ajustando los filtros aplicados.</p>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
-                                <span class="text-lg">No hay entregas pendientes ni recientes.</span>
                             </td>
                         </tr>
                     <?php else: ?>
-                        <?php 
-                        $counter = $offset + 1; 
-                        foreach ($orders as $order): 
+                        <?php $counter = $offset + 1; foreach ($orders as $order): ?>
+                        <?php
+                            // Indicador de antigüedad (solo Pendientes)
+                            $refDate    = !empty($order['approved_at']) ? $order['approved_at'] : $order['created_at'];
+                            $days_wait  = (int)floor((time() - strtotime($refDate)) / 86400);
+                            if ($days_wait === 0)      { $waitClass = 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'; $waitLabel = 'Hoy'; }
+                            elseif ($days_wait <= 2)   { $waitClass = 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20';   $waitLabel = $days_wait . ' día' . ($days_wait > 1 ? 's' : ''); }
+                            else                       { $waitClass = 'bg-red-500/10 text-red-400 border-red-500/20';            $waitLabel = $days_wait . ' días'; }
                         ?>
-                        <tr class="hover:bg-slate-800/30 transition-colors group">
-                            <td class="p-5 pl-6 font-bold text-slate-600"><?= $counter++ ?></td>
-                            <td class="p-5 font-mono text-slate-500">#<?= $order['id'] ?></td>
-                            
-                            <!-- Columna Fechas -->
-                            <td class="p-5 text-slate-300 whitespace-nowrap">
+                        <tr class="hover:bg-slate-800/30 transition-colors group <?= ($tab === 'pendientes' && $days_wait > 3) ? 'border-l-2 border-l-red-500/40' : '' ?>">
+                            <td class="p-4 pl-5 font-bold text-slate-600 hidden sm:table-cell"><?= $counter++ ?></td>
+                            <td class="p-4 font-mono text-slate-600 text-xs hidden sm:table-cell">#<?= $order['id'] ?></td>
+
+                            <?php if ($tab === 'entregadas'): ?>
+                            <!-- Fechas (solo en tab Entregadas) -->
+                            <td class="p-4 text-slate-300 whitespace-nowrap">
                                 <div class="flex flex-col gap-1">
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-[9px] px-1.5 py-0.5 rounded bg-slate-800 text-slate-500 font-bold uppercase">Carga</span>
                                         <span class="text-xs"><?= date('d/m/Y', strtotime($order['created_at'])) ?></span>
                                     </div>
-                                    <?php if ($order['status'] === 'entregado'): ?>
-                                        <div class="flex items-center gap-1.5 mt-0.5">
-                                            <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 font-bold uppercase">Entrega</span>
-                                            <span class="text-xs text-emerald-400"><?= !empty($order['delivered_at']) ? date('d/m/Y', strtotime($order['delivered_at'])) : '-' ?></span>
-                                        </div>
-                                    <?php endif; ?>
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 font-bold uppercase">Entrega</span>
+                                        <span class="text-xs text-emerald-400"><?= !empty($order['delivered_at']) ? date('d/m/Y', strtotime($order['delivered_at'])) : '-' ?></span>
+                                    </div>
                                 </div>
                             </td>
+                            <?php endif; ?>
 
-                            <!-- Columna Cliente y Ubicación -->
-                            <td class="p-5">
+                            <!-- Cliente + Dirección + Localidad -->
+                            <td class="p-4">
                                 <div class="font-bold text-white"><?= htmlspecialchars($order['client_name']) ?></div>
-                                <div class="text-xs text-slate-500 flex items-center gap-1 mt-1">
-                                    <i data-lucide="map-pin" class="w-3 h-3 text-slate-600"></i> 
+                                <div class="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
+                                    <i data-lucide="map-pin" class="w-3 h-3 text-slate-600 shrink-0"></i>
                                     <?= htmlspecialchars($order['client_address']) ?>
                                 </div>
-                                <?php if(!empty($order['client_map_link'])): ?>
-                                    <a href="<?= htmlspecialchars($order['client_map_link']) ?>" target="_blank" class="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1 mt-1.5 transition">
-                                        <i data-lucide="external-link" class="w-2.5 h-2.5"></i> Ver en Google Maps
-                                    </a>
+                                <div class="flex items-center gap-1.5 mt-1">
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                                        <?= htmlspecialchars($order['client_locality']) ?>
+                                    </span>
+                                </div>
+                                <?php if (!empty($order['client_map_link'])): ?>
+                                <a href="<?= htmlspecialchars($order['client_map_link']) ?>" target="_blank"
+                                   class="text-[10px] text-blue-400 hover:text-blue-300 flex items-center gap-1 mt-1 transition">
+                                    <i data-lucide="external-link" class="w-2.5 h-2.5"></i> Ver en Maps
+                                </a>
+                                <?php endif; ?>
+                                <?php if ($tab === 'pendientes'): ?>
+                                <div class="text-[10px] text-slate-500 mt-0.5 sm:hidden">Carga: <?= date('d/m/Y', strtotime($order['created_at'])) ?></div>
                                 <?php endif; ?>
                             </td>
 
-                            <!-- Columna Artículo y Financiero -->
-                            <td class="p-5">
+                            <!-- Artículo / Monto -->
+                            <td class="p-4">
                                 <div class="text-blue-300 font-medium"><?= htmlspecialchars($order['item']) ?></div>
-                                <div class="flex items-center gap-2 mt-1">
+                                <div class="flex items-center gap-2 mt-1 flex-wrap">
                                     <span class="text-xs font-bold text-emerald-500">$<?= number_format($order['total_amount'], 0, ',', '.') ?></span>
                                     <span class="text-[10px] text-slate-600 italic"><?= $order['installments_count'] ?> x $<?= number_format($order['installment_amount'], 0, ',', '.') ?></span>
                                 </div>
                             </td>
 
-                            <!-- Columna Vendedor -->
-                            <td class="p-5 text-slate-400">
+                            <!-- Vendedor (oculto en mobile) -->
+                            <td class="p-4 text-slate-400 hidden lg:table-cell">
                                 <?php if ($can_view_profile): ?>
-                                    <a href="perfil_vendedor.php?id=<?= $order['user_id'] ?>" class="hover:text-blue-400 hover:underline transition flex items-center gap-1 group/seller" title="Ficha del Vendedor">
+                                    <a href="perfil_vendedor.php?id=<?= $order['user_id'] ?>" class="hover:text-blue-400 hover:underline transition flex items-center gap-1 group/seller">
                                         <?= htmlspecialchars($order['seller_name']) ?>
                                         <i data-lucide="external-link" class="w-3 h-3 opacity-0 group-hover/seller:opacity-100 transition-opacity"></i>
                                     </a>
@@ -258,38 +391,44 @@ include 'includes/header.php';
                                 <?php endif; ?>
                             </td>
 
-                            <!-- Columna Estado -->
-                            <td class="p-5">
-                                <?php if ($order['status'] === 'aprobado'): ?>
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-sm shadow-emerald-950/20">
-                                        <i data-lucide="package" class="w-3 h-3"></i> Pendiente
+                            <!-- Días de espera (Pendientes) / Entregado por (Entregadas) -->
+                            <td class="p-4">
+                                <?php if ($tab === 'pendientes'): ?>
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border <?= $waitClass ?>">
+                                        <i data-lucide="clock" class="w-3 h-3"></i> <?= $waitLabel ?>
                                     </span>
                                 <?php else: ?>
-                                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border bg-blue-500/10 text-blue-400 border-blue-500/20 shadow-sm shadow-blue-950/20">
-                                        <i data-lucide="check-circle" class="w-3 h-3"></i> Entregado
-                                    </span>
+                                    <?php if (!empty($order['deliverer_name'])): ?>
+                                    <div class="flex items-center gap-1.5 text-slate-400 text-xs">
+                                        <i data-lucide="user-check" class="w-3.5 h-3.5 text-emerald-500 shrink-0"></i>
+                                        <?= htmlspecialchars($order['deliverer_name']) ?>
+                                    </div>
+                                    <?php else: ?>
+                                    <span class="text-slate-600 text-xs">—</span>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </td>
 
-                            <!-- Columna Acciones -->
-                            <td class="p-5 text-right">
-                                <div class="flex justify-end gap-2 items-center">
-                                    <a href="ver_ficha.php?id=<?= $order['id'] ?>" class="p-2 rounded-lg bg-slate-800 hover:bg-blue-600 text-blue-400 hover:text-white transition border border-slate-700 shadow-sm" title="Ver Ficha">
+                            <!-- Gestión -->
+                            <td class="p-4 text-right">
+                                <div class="flex justify-end gap-1.5 items-center">
+                                    <a href="ver_ficha.php?id=<?= $order['id'] ?>"
+                                       class="p-2 rounded-lg bg-slate-800 hover:bg-blue-600 text-blue-400 hover:text-white transition border border-slate-700 shadow-sm" title="Ver Ficha">
                                         <i data-lucide="search" class="w-4 h-4"></i>
                                     </a>
 
                                     <?php if ($order['status'] === 'aprobado'): ?>
-                                        <!-- Botón Entregar -->
                                         <form method="POST" action="update_status.php" class="inline">
                                             <?= csrf_field() ?>
                                             <input type="hidden" name="id" value="<?= $order['id'] ?>">
                                             <input type="hidden" name="status" value="entregado">
-                                            <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-lg shadow-blue-900/30">
-                                                <i data-lucide="truck" class="w-3.5 h-3.5"></i> Entregar
+                                            <button type="submit"
+                                                    class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-lg shadow-blue-900/30 <?= $days_wait > 3 ? 'ring-1 ring-red-500/50' : '' ?>">
+                                                <i data-lucide="truck" class="w-3.5 h-3.5"></i>
+                                                <span class="hidden sm:inline">Entregar</span>
                                             </button>
                                         </form>
 
-                                        <!-- Opciones extras solo para Admin/Sup -->
                                         <?php if (in_array($role, ['admin', 'supervisor'])): ?>
                                         <form method="POST" action="update_status.php" class="inline">
                                             <?= csrf_field() ?>
@@ -299,15 +438,17 @@ include 'includes/header.php';
                                                 <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
                                             </button>
                                         </form>
-                                        <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="p-2 rounded-lg bg-slate-800 hover:bg-red-600 text-red-500 hover:text-white transition border border-slate-700 shadow-sm" title="Rechazar / Cancelar" onclick="return confirm('¿Confirma que desea rechazar esta venta?')">
+                                        <a href="rechazar_venta.php?id=<?= $order['id'] ?>"
+                                           class="p-2 rounded-lg bg-slate-800 hover:bg-red-600 text-red-500 hover:text-white transition border border-slate-700 shadow-sm" title="Rechazar"
+                                           onclick="return confirm('¿Confirma que desea rechazar esta venta?')">
                                             <i data-lucide="x" class="w-4 h-4"></i>
                                         </a>
                                         <?php endif; ?>
 
                                     <?php else: ?>
-                                        <!-- Botón para Anular Entrega (Solo Admin/Sup) -->
                                         <?php if (in_array($role, ['admin', 'supervisor', 'entregador'])): ?>
-                                        <form method="POST" action="update_status.php" class="inline" onsubmit="return confirm('¿Confirma anular la entrega? El pedido volverá a estado pendiente.');">
+                                        <form method="POST" action="update_status.php" class="inline"
+                                              onsubmit="return confirm('¿Confirma anular la entrega? El pedido volverá a estado pendiente.');">
                                             <?= csrf_field() ?>
                                             <input type="hidden" name="id" value="<?= $order['id'] ?>">
                                             <input type="hidden" name="status" value="aprobado">
@@ -326,77 +467,63 @@ include 'includes/header.php';
             </table>
         </div>
 
-        <!-- PAGINACIÓN GLOBAL -->
-        <div id="paginationContainer">
-            <?php
-            $extraParams = ['tab' => $tab];
-            if ($filter_locality) $extraParams['locality'] = $filter_locality;
-            echo renderPagination($total_registros, $registros_por_pagina, $pagina_actual, $extraParams);
-            ?>
+        <div>
+            <?= renderPagination($total_registros, $registros_por_pagina, $pagina_actual, $extraParams) ?>
         </div>
     </div>
+
 </main>
 
-<!-- Lógica de Exportación PDF -->
 <script>
     const allDeliveryData = <?= json_encode($pdfData) ?>;
 
     function exportarPDF(tipo) {
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4');
+        const doc       = new jsPDF('p', 'mm', 'a4');
         const pageWidth = doc.internal.pageSize.getWidth();
+        const data      = allDeliveryData;
 
-        // Los datos ya vienen filtrados por tab y localidad desde el servidor
-        const filteredData = allDeliveryData;
-        let title, headRow, columnStylesConfig;
-
-        if (tipo === 'pendientes') {
-            title = "Hoja de Ruta - Entregas Pendientes";
-            headRow = [['#', 'ID', 'F. Carga', 'Cliente', 'Dirección', 'Celular', 'Artículo', 'Vendedor']];
-            columnStylesConfig = {
-                0: { cellWidth: 7, fontStyle: 'bold', halign: 'center' },
-                1: { cellWidth: 10 }, 2: { cellWidth: 18 }, 3: { cellWidth: 25 }, 4: { cellWidth: 40 }, 5: { cellWidth: 22 }, 6: { cellWidth: 35 }, 7: { cellWidth: 20 }
-            };
-        } else {
-            title = "Reporte de Entregas Realizadas";
-            headRow = [['#', 'ID', 'F. Carga', 'F. Entrega', 'Cliente', 'Dirección', 'Celular', 'Artículo']];
-            columnStylesConfig = {
-                0: { cellWidth: 7, fontStyle: 'bold', halign: 'center' },
-                1: { cellWidth: 10 }, 2: { cellWidth: 18 }, 3: { cellWidth: 18 }, 4: { cellWidth: 25 }, 5: { cellWidth: 40 }, 6: { cellWidth: 22 }, 7: { cellWidth: 'auto' }
-            };
-        }
-
-        if (filteredData.length === 0) {
+        if (data.length === 0) {
             alert("No hay registros disponibles para generar este reporte.");
             return;
         }
 
-        doc.setFontSize(18);
-        doc.setFont("helvetica", "bold");
+        let title, headRow, columnStyles, tableBody;
+
+        if (tipo === 'pendientes') {
+            title        = "Hoja de Ruta - Entregas Pendientes";
+            headRow      = [['#', 'ID', 'F. Carga', 'Cliente', 'Dirección', 'Localidad', 'Celular', 'Artículo', 'Vendedor']];
+            columnStyles = {
+                0: { cellWidth: 6, halign: 'center', fontStyle: 'bold' },
+                1: { cellWidth: 8 }, 2: { cellWidth: 16 }, 3: { cellWidth: 24 },
+                4: { cellWidth: 35 }, 5: { cellWidth: 22 }, 6: { cellWidth: 20 },
+                7: { cellWidth: 30 }, 8: { cellWidth: 18 }
+            };
+            tableBody = data.map((r, i) => [i + 1, r.id, r.date_loaded, r.client, r.address, r.locality, r.phone, r.item, r.seller]);
+        } else {
+            title        = "Reporte de Entregas Realizadas";
+            headRow      = [['#', 'ID', 'F. Carga', 'F. Entrega', 'Cliente', 'Dirección', 'Localidad', 'Artículo', 'Entregó']];
+            columnStyles = {
+                0: { cellWidth: 6, halign: 'center', fontStyle: 'bold' },
+                1: { cellWidth: 8 }, 2: { cellWidth: 16 }, 3: { cellWidth: 16 },
+                4: { cellWidth: 24 }, 5: { cellWidth: 30 }, 6: { cellWidth: 20 },
+                7: { cellWidth: 28 }, 8: { cellWidth: 20 }
+            };
+            tableBody = data.map((r, i) => [i + 1, r.id, r.date_loaded, r.date_delivered, r.client, r.address, r.locality, r.item, r.deliverer]);
+        }
+
+        doc.setFontSize(18); doc.setFont("helvetica", "bold");
         doc.text(title, pageWidth / 2, 15, { align: 'center' });
+        doc.setFontSize(9); doc.setFont("helvetica", "normal");
+        doc.text("Generado: " + new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString(), pageWidth / 2, 22, { align: 'center' });
 
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        const meta = "Generado: " + new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString();
-        doc.text(meta, pageWidth / 2, 22, { align: 'center' });
-
-        const tableBody = filteredData.map((row, i) => {
-            if (tipo === 'pendientes') {
-                return [i + 1, row.id, row.date_loaded, row.client, row.address, row.phone, row.item, row.seller];
-            } else {
-                return [i + 1, row.id, row.date_loaded, row.date_delivered, row.client, row.address, row.phone, row.item];
-            }
-        });
-
-        doc.autoTable({ 
-            head: headRow, 
-            body: tableBody, 
-            startY: 30, 
-            theme: 'grid', 
-            styles: { fontSize: 7, cellPadding: 2, lineColor: [0, 0, 0], lineWidth: 0.1, textColor: [0, 0, 0], overflow: 'linebreak' },
-            headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], fontStyle: 'bolditalic', lineWidth: 0.1, lineColor: [0, 0, 0] },
-            columnStyles: columnStylesConfig,
-            margin: { top: 30, right: 14, bottom: 20, left: 14 }
+        doc.autoTable({
+            head: headRow, body: tableBody, startY: 28,
+            theme: 'grid',
+            styles: { fontSize: 7, cellPadding: 2, lineColor: [0,0,0], lineWidth: 0.1, textColor: [0,0,0], overflow: 'linebreak' },
+            headStyles: { fillColor: [255,255,255], textColor: [0,0,0], fontStyle: 'bolditalic', lineWidth: 0.1 },
+            columnStyles: columnStyles,
+            margin: { top: 28, right: 10, bottom: 20, left: 10 }
         });
 
         window.open(doc.output('bloburl'), '_blank');
