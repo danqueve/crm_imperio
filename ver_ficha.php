@@ -407,7 +407,16 @@ include 'includes/header.php';
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1">Localidad</label>
-                            <input type="text" name="client_locality" value="<?= htmlspecialchars($order['client_locality'] ?? '') ?>" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 outline-none transition">
+                            <?php
+                            $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Concepción','Famaillá','Lules','Manantial','Monteros','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Villa Carmela','Yerba Buena'];
+                            $cur_loc = $order['client_locality'] ?? '';
+                            ?>
+                            <select name="client_locality" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 outline-none transition">
+                                <option value="" disabled <?= $cur_loc === '' ? 'selected' : '' ?>>Seleccionar localidad...</option>
+                                <?php foreach ($localidades as $loc): ?>
+                                <option value="<?= htmlspecialchars($loc) ?>" <?= $cur_loc === $loc ? 'selected' : '' ?>><?= htmlspecialchars($loc) ?></option>
+                                <?php endforeach; ?>
+                            </select>
                         </div>
                         <div class="col-span-2">
                             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1 text-emerald-400">Enlace Google Maps</label>

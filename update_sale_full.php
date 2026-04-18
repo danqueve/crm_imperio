@@ -43,11 +43,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $client_locality     = trim($_POST['client_locality'] ?? '');
     $client_map_link     = trim($_POST['client_map_link'] ?? '');
 
+    // Validar URL del mapa (si se proporcionó)
+    if (!empty($client_map_link)) {
+        $parsed_url = parse_url($client_map_link);
+        if (!$parsed_url || !in_array($parsed_url['scheme'] ?? '', ['http', 'https'])) {
+            $client_map_link = '';
+        }
+    }
+
     // 3. CAPTURA DE DATOS - SECCIÓN LABORAL
     $job_type            = trim($_POST['job_type'] ?? '');
     $job_occupation      = trim($_POST['job_occupation'] ?? '');
     $job_name            = trim($_POST['job_name'] ?? '');
     $job_address         = trim($_POST['job_address'] ?? '');
+
+    // Validar formato DNI y teléfonos
+    if (!empty($client_dni) && !preg_match('/^\d{7,8}$/', $client_dni)) {
+        $client_dni = preg_replace('/\D/', '', $client_dni);
+    }
+    if (!empty($client_whatsapp) && !preg_match('/^\d{7,15}$/', $client_whatsapp)) {
+        $client_whatsapp = preg_replace('/\D/', '', $client_whatsapp);
+    }
+    if (!empty($client_phone) && !preg_match('/^\d{7,15}$/', $client_phone)) {
+        $client_phone = preg_replace('/\D/', '', $client_phone);
+    }
 
     // 4. CAPTURA DE DATOS - PLAN DE PAGO
     $item                = trim($_POST['item'] ?? '');
@@ -56,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $installments        = (int)($_POST['installments'] ?? 0);
     $amount              = (float)($_POST['amount'] ?? 0);
     $total               = $installments * $amount;
-    $down_payment        = (float)($_POST['down_payment'] ?? 0);
+    $down_payment        = max(0, (float)($_POST['down_payment'] ?? 0));
     $observations        = trim($_POST['observations'] ?? '');
 
     try {

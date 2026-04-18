@@ -16,11 +16,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'create') {
-    $dni = trim($_POST['dni']);
-    $nombre = trim($_POST['nombre']);
-    $apellido = trim($_POST['apellido']);
-    $celular = trim($_POST['celular']);
-    $role = $_POST['role'];
+    $dni              = trim($_POST['dni']);
+    $nombre           = trim($_POST['nombre']);
+    $apellido         = trim($_POST['apellido']);
+    $celular          = trim($_POST['celular']);
+    $role             = $_POST['role'];
+    $commission_rate  = max(0, min(100, (float)($_POST['commission_rate'] ?? 5.00)));
 
     if (empty($dni) || empty($nombre) || empty($apellido) || empty($role)) {
         $error = "DNI, Nombre, Apellido y Rol son obligatorios.";
@@ -32,15 +33,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         } else {
             $full_name = $apellido . ', ' . $nombre;
             $hashed_password = password_hash($dni, PASSWORD_DEFAULT);
-            $sql = "INSERT INTO users (name, username, password, role, phone) VALUES (?, ?, ?, ?, ?)";
+            $sql = "INSERT INTO users (name, username, password, role, phone, commission_rate) VALUES (?, ?, ?, ?, ?, ?)";
             $stmt = $pdo->prepare($sql);
-            
-            if ($stmt->execute([$full_name, $dni, $hashed_password, $role, $celular])) {
+            if ($stmt->execute([$full_name, $dni, $hashed_password, $role, $celular, $commission_rate])) {
                 $message = "¡Usuario registrado!";
             } else {
                 $error = "Error al registrar.";
             }
         }
+    }
+}
+
+// --- ACTUALIZAR COMISIÓN ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_commission') {
+    $target_user_id  = (int)$_POST['user_id'];
+    $new_commission  = max(0, min(100, (float)($_POST['commission_rate'] ?? 5.00)));
+
+    $stmt = $pdo->prepare("UPDATE users SET commission_rate = ? WHERE id = ?");
+    if ($stmt->execute([$new_commission, $target_user_id])) {
+        $message = "Comisión actualizada.";
+    } else {
+        $error = "Error al actualizar comisión.";
     }
 }
 
@@ -135,18 +148,27 @@ include 'includes/header.php';
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">Rol / Permisos</label>
-                        <div class="relative">
-                            <select name="role" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 pl-10 text-white focus:border-blue-500 outline-none appearance-none cursor-pointer transition hover:bg-slate-900">
-                                <option value="vendedor">Vendedor</option>
-                                <option value="entregador">Entregador</option>
-                                <option value="verificador">Verificador</option>
-                                <option value="supervisor">Supervisor</option>
-                                <option value="admin">Administrador</option>
-                            </select>
-                            <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"><i data-lucide="shield" class="w-4 h-4"></i></div>
-                            <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"><i data-lucide="chevron-down" class="w-4 h-4"></i></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="col-span-2 sm:col-span-1">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">Rol / Permisos</label>
+                            <div class="relative">
+                                <select name="role" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 pl-10 text-white focus:border-blue-500 outline-none appearance-none cursor-pointer transition hover:bg-slate-900">
+                                    <option value="vendedor">Vendedor</option>
+                                    <option value="entregador">Entregador</option>
+                                    <option value="verificador">Verificador</option>
+                                    <option value="supervisor">Supervisor</option>
+                                    <option value="admin">Administrador</option>
+                                </select>
+                                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"><i data-lucide="shield" class="w-4 h-4"></i></div>
+                                <div class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"><i data-lucide="chevron-down" class="w-4 h-4"></i></div>
+                            </div>
+                        </div>
+                        <div class="col-span-2 sm:col-span-1">
+                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">% Comisión</label>
+                            <div class="relative">
+                                <input type="number" name="commission_rate" value="5" min="0" max="100" step="0.5" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 pl-10 text-white focus:border-blue-500 outline-none transition font-mono">
+                                <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"><i data-lucide="percent" class="w-4 h-4"></i></div>
+                            </div>
                         </div>
                     </div>
 
@@ -170,7 +192,8 @@ include 'includes/header.php';
                         <thead class="bg-slate-950 text-slate-400 font-bold text-xs uppercase sticky top-0 z-10">
                             <tr>
                                 <th class="p-4">Nombre / DNI</th>
-                                <th class="p-4">Contacto</th>
+                                <th class="p-4 hidden sm:table-cell">Contacto</th>
+                                <th class="p-4 hidden md:table-cell text-center">% Comis.</th>
                                 <th class="p-4 text-right">Rol</th>
                             </tr>
                         </thead>
@@ -188,7 +211,7 @@ include 'includes/header.php';
                                         <span class="flex items-center gap-1 font-mono"><i data-lucide="credit-card" class="w-3 h-3"></i> <?= htmlspecialchars($u['username']) ?></span>
                                     </div>
                                 </td>
-                                <td class="p-4">
+                                <td class="p-4 hidden sm:table-cell">
                                     <div class="text-xs text-slate-400">
                                         <?php if (!empty($u['phone'])): ?>
                                             <div class="flex items-center gap-1"><i data-lucide="phone" class="w-3 h-3"></i> <?= htmlspecialchars($u['phone']) ?></div>
@@ -196,6 +219,22 @@ include 'includes/header.php';
                                             <span class="text-slate-600">-</span>
                                         <?php endif; ?>
                                     </div>
+                                </td>
+                                <td class="p-4 hidden md:table-cell text-center">
+                                    <?php if ($u['id'] != $_SESSION['user_id']): ?>
+                                    <form method="POST" class="flex items-center justify-center gap-1">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="action" value="update_commission">
+                                        <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                                        <input type="number" name="commission_rate" value="<?= number_format((float)($u['commission_rate'] ?? 5), 1) ?>" min="0" max="100" step="0.5"
+                                               class="w-16 bg-slate-950 border border-slate-700 rounded text-xs text-white py-1 px-2 text-center font-mono focus:border-blue-500 outline-none">
+                                        <button type="submit" class="p-1 bg-slate-800 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded border border-slate-700 transition" title="Guardar comisión">
+                                            <i data-lucide="percent" class="w-3 h-3"></i>
+                                        </button>
+                                    </form>
+                                    <?php else: ?>
+                                        <span class="text-xs text-slate-500 font-mono"><?= number_format((float)($u['commission_rate'] ?? 5), 1) ?>%</span>
+                                    <?php endif; ?>
                                 </td>
                                 <td class="p-4 text-right">
                                     <?php if ($u['id'] == $_SESSION['user_id']): ?>

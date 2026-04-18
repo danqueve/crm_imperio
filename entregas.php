@@ -13,44 +13,55 @@ $role = $_SESSION['role'];
 // Variable para saber si puede ver el perfil del vendedor (solo admin/supervisor)
 $can_view_profile = in_array($role, ['admin', 'supervisor', 'verificador']);
 
+// --- FILTRO DE LOCALIDAD ---
+$localidades_disponibles = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Concepción','Famaillá','Lules','Manantial','Monteros','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Villa Carmela','Yerba Buena'];
+$filter_locality = isset($_GET['locality']) && in_array($_GET['locality'], $localidades_disponibles) ? $_GET['locality'] : '';
+
 // --- CONFIGURACIÓN DE PAGINACIÓN ---
 $registros_por_pagina = 15;
 $pagina_actual = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($pagina_actual < 1) $pagina_actual = 1;
 $offset = ($pagina_actual - 1) * $registros_por_pagina;
 
+$localityWhere = $filter_locality ? " AND sales.client_locality = :locality" : "";
+
 // 1. Consultar Total de Registros para el contador
-$sqlCount = "SELECT COUNT(*) FROM sales WHERE status IN ('aprobado', 'entregado')";
-$total_registros = $pdo->query($sqlCount)->fetchColumn();
+$sqlCount = "SELECT COUNT(*) FROM sales WHERE status IN ('aprobado', 'entregado')" . $localityWhere;
+$stmtCount = $pdo->prepare($sqlCount);
+if ($filter_locality) $stmtCount->bindValue(':locality', $filter_locality);
+$stmtCount->execute();
+$total_registros = (int)$stmtCount->fetchColumn();
 
 // 2. Consultar Registros para PANTALLA (Paginados)
-// Ordenamiento: 'aprobado' (pendientes) primero, luego 'entregado'.
-$sql = "SELECT sales.*, users.name as seller_name 
-        FROM sales 
-        JOIN users ON sales.user_id = users.id 
-        WHERE sales.status IN ('aprobado', 'entregado') 
-        ORDER BY 
-            FIELD(sales.status, 'aprobado', 'entregado') ASC, 
+$sql = "SELECT sales.*, users.name as seller_name
+        FROM sales
+        JOIN users ON sales.user_id = users.id
+        WHERE sales.status IN ('aprobado', 'entregado')" . $localityWhere . "
+        ORDER BY
+            FIELD(sales.status, 'aprobado', 'entregado') ASC,
             CASE WHEN sales.status = 'aprobado' THEN sales.created_at END ASC,
             CASE WHEN sales.status = 'entregado' THEN sales.delivered_at END DESC
         LIMIT :offset, :limit";
 
 $stmt = $pdo->prepare($sql);
+if ($filter_locality) $stmt->bindValue(':locality', $filter_locality);
 $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 $stmt->bindValue(':limit', $registros_por_pagina, PDO::PARAM_INT);
 $stmt->execute();
 $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// 3. Consultar TODOS para PDF (Sin límite de página)
-$sqlFull = "SELECT sales.*, users.name as seller_name 
-            FROM sales 
-            JOIN users ON sales.user_id = users.id 
-            WHERE sales.status IN ('aprobado', 'entregado') 
-            ORDER BY 
-                FIELD(sales.status, 'aprobado', 'entregado') ASC, 
+// 3. Consultar TODOS para PDF (Sin límite de página, respeta filtro)
+$sqlFull = "SELECT sales.*, users.name as seller_name
+            FROM sales
+            JOIN users ON sales.user_id = users.id
+            WHERE sales.status IN ('aprobado', 'entregado')" . $localityWhere . "
+            ORDER BY
+                FIELD(sales.status, 'aprobado', 'entregado') ASC,
                 CASE WHEN sales.status = 'aprobado' THEN sales.created_at END ASC,
                 CASE WHEN sales.status = 'entregado' THEN sales.delivered_at END DESC";
-$stmtFull = $pdo->query($sqlFull);
+$stmtFull = $pdo->prepare($sqlFull);
+if ($filter_locality) $stmtFull->bindValue(':locality', $filter_locality);
+$stmtFull->execute();
 $allOrders = $stmtFull->fetchAll(PDO::FETCH_ASSOC);
 
 // --- PREPARAR DATOS PARA PDF (JSON) ---
@@ -100,6 +111,29 @@ include 'includes/header.php';
             </button>
         </div>
     </div>
+
+    <!-- Filtro por Localidad -->
+    <form method="GET" class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-6 flex flex-col sm:flex-row gap-3 items-end shadow-lg">
+        <div class="flex-1">
+            <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1 tracking-widest">Filtrar por localidad</label>
+            <select name="locality" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 outline-none transition text-sm">
+                <option value="">Todas las localidades</option>
+                <?php foreach ($localidades_disponibles as $loc): ?>
+                <option value="<?= htmlspecialchars($loc) ?>" <?= $filter_locality === $loc ? 'selected' : '' ?>><?= htmlspecialchars($loc) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="flex gap-2 shrink-0">
+            <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition flex items-center gap-2 shadow-lg">
+                <i data-lucide="filter" class="w-4 h-4"></i> Filtrar
+            </button>
+            <?php if ($filter_locality): ?>
+            <a href="entregas.php" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl font-bold text-sm transition border border-slate-700 flex items-center gap-1" title="Limpiar filtro">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </a>
+            <?php endif; ?>
+        </div>
+    </form>
 
     <!-- Contenedor de Tabla -->
     <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col min-h-[600px]">
@@ -228,14 +262,14 @@ include 'includes/header.php';
                                                 <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
                                             </button>
                                         </form>
-                                        <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="p-2 rounded-lg bg-slate-800 hover:bg-red-600 text-red-500 hover:text-white transition border border-slate-700 shadow-sm" title="Rechazar / Cancelar">
+                                        <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="p-2 rounded-lg bg-slate-800 hover:bg-red-600 text-red-500 hover:text-white transition border border-slate-700 shadow-sm" title="Rechazar / Cancelar" onclick="return confirm('¿Confirma que desea rechazar esta venta?')">
                                             <i data-lucide="x" class="w-4 h-4"></i>
                                         </a>
                                         <?php endif; ?>
 
                                     <?php else: ?>
                                         <!-- Botón para Anular Entrega (Solo Admin/Sup) -->
-                                        <?php if (in_array($role, ['admin', 'supervisor'])): ?>
+                                        <?php if (in_array($role, ['admin', 'supervisor', 'entregador'])): ?>
                                         <form method="POST" action="update_status.php" class="inline" onsubmit="return confirm('¿Confirma anular la entrega? El pedido volverá a estado pendiente.');">
                                             <?= csrf_field() ?>
                                             <input type="hidden" name="id" value="<?= $order['id'] ?>">
@@ -257,7 +291,7 @@ include 'includes/header.php';
 
         <!-- PAGINACIÓN GLOBAL -->
         <div id="paginationContainer">
-            <?= renderPagination($total_registros, $registros_por_pagina, $pagina_actual); ?>
+            <?= renderPagination($total_registros, $registros_por_pagina, $pagina_actual, $filter_locality ? ['locality' => $filter_locality] : []); ?>
         </div>
     </div>
 </main>

@@ -35,6 +35,13 @@ $can_manage_deliveries = in_array($role, ['admin', 'supervisor', 'verificador', 
 // Permiso para ver comisiones GLOBALES (Solo Admin y Supervisor)
 $can_see_commissions = in_array($role, ['admin', 'supervisor']);
 
+// Contador de ventas pendientes (solo para roles que aprueban)
+$pending_count = 0;
+if (in_array($role, ['admin', 'supervisor', 'verificador']) && isset($pdo)) {
+    $stmtPending = $pdo->query("SELECT COUNT(*) FROM sales WHERE status = 'revision'");
+    $pending_count = (int)$stmtPending->fetchColumn();
+}
+
 // Permiso para gestión de usuarios (Solo Admin)
 $is_admin = ($role === 'admin');
 
@@ -111,6 +118,9 @@ $avatarInitial  = strtoupper(mb_substr($_SESSION['name'] ?? 'U', 0, 1));
                         
                         <a href="dashboard.php" class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all <?= getLinkClass('dashboard.php') ?>">
                             <i data-lucide="home" class="w-4 h-4"></i> Panel
+                            <?php if ($pending_count > 0): ?>
+                            <span class="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold bg-red-500 text-white rounded-full leading-none"><?= $pending_count > 99 ? '99+' : $pending_count ?></span>
+                            <?php endif; ?>
                         </a>
                         
                         <a href="cargar_venta.php" class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all <?= getLinkClass('cargar_venta.php') ?>">

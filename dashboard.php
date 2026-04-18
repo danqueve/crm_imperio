@@ -12,45 +12,51 @@ $is_vendedor = ($role === 'vendedor');
 $is_entregador = ($role === 'entregador');
 $is_limited_view = ($is_vendedor || $is_entregador); // Roles que solo ven sus propias ventas
 $can_manage = in_array($role, ['admin', 'supervisor', 'verificador']);
+$is_admin   = ($role === 'admin');
 
-// --- 1. ESTADÍSTICAS PARA TARJETAS ---
-$sqlStats = "SELECT status, COUNT(*) as total FROM sales";
-$paramsStats = [];
-if ($is_limited_view) {
-    $sqlStats .= " WHERE user_id = ?";
-    $paramsStats[] = $user_id;
+// --- BLOQUE ADMIN: estadísticas, gráficos y filtro de período ---
+if ($is_admin) {
+    $start = $_GET['start'] ?? date('Y-m-01');
+    $end   = $_GET['end']   ?? date('Y-m-d');
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $start)) $start = date('Y-m-01');
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $end))   $end   = date('Y-m-d');
+    if ($start > $end) [$start, $end] = [$end, $start];
+    $startSql = $start . ' 00:00:00';
+    $endSql   = $end   . ' 23:59:59';
+
+    $stmtStats = $pdo->prepare(
+        "SELECT status, COUNT(*) as total, SUM(total_amount) as monto
+         FROM sales WHERE created_at BETWEEN ? AND ? GROUP BY status"
+    );
+    $stmtStats->execute([$startSql, $endSql]);
+    $statsRaw = $stmtStats->fetchAll(PDO::FETCH_ASSOC);
+
+    $stats = ['revision' => 0, 'aprobado' => 0, 'entregado' => 0, 'rechazado' => 0];
+    $statsMonto = ['revision' => 0, 'aprobado' => 0, 'entregado' => 0, 'rechazado' => 0];
+    foreach ($statsRaw as $row) {
+        $stats[$row['status']]      = (int)$row['total'];
+        $statsMonto[$row['status']] = (float)$row['monto'];
+    }
+    $total_periodo = array_sum($stats);
+
+    $stmtMonthly = $pdo->prepare(
+        "SELECT DATE_FORMAT(created_at, '%b %y') as label,
+                COUNT(*) as total,
+                SUM(CASE WHEN status = 'entregado' THEN 1 ELSE 0 END) as entregadas
+         FROM sales WHERE created_at BETWEEN ? AND ?
+         GROUP BY DATE_FORMAT(created_at, '%Y-%m') ORDER BY MIN(created_at) ASC"
+    );
+    $stmtMonthly->execute([$startSql, $endSql]);
+    $monthlyStats = $stmtMonthly->fetchAll(PDO::FETCH_ASSOC);
+
+    $labelsMonths   = json_encode(array_column($monthlyStats, 'label'));
+    $dataMonths     = json_encode(array_column($monthlyStats, 'total'));
+    $dataEntregadas = json_encode(array_column($monthlyStats, 'entregadas'));
+    $dataStatus     = json_encode(array_values($stats));
+
+    $denominador = $stats['entregado'] + $stats['rechazado'];
+    $efectividad = $denominador > 0 ? round($stats['entregado'] / $denominador * 100) : 0;
 }
-$sqlStats .= " GROUP BY status";
-
-$stmtStats = $pdo->prepare($sqlStats);
-$stmtStats->execute($paramsStats);
-$statsData = $stmtStats->fetchAll(PDO::FETCH_KEY_PAIR);
-
-$stats = [
-    'revision' => $statsData['revision'] ?? 0,
-    'aprobado' => $statsData['aprobado'] ?? 0,
-    'entregado' => $statsData['entregado'] ?? 0,
-    'rechazado' => $statsData['rechazado'] ?? 0
-];
-
-// --- 2. DATOS PARA GRÁFICOS ---
-$monthlySql = "SELECT DATE_FORMAT(created_at, '%b %y') as label, COUNT(*) as total
-               FROM sales";
-$paramsMonthly = [];
-if ($is_limited_view) {
-    $monthlySql .= " WHERE user_id = ?";
-    $paramsMonthly[] = $user_id;
-}
-$monthlySql .= " GROUP BY DATE_FORMAT(created_at, '%Y-%m')
-                 ORDER BY created_at ASC
-                 LIMIT 6";
-$stmtMonthly = $pdo->prepare($monthlySql);
-$stmtMonthly->execute($paramsMonthly);
-$monthlyStats = $stmtMonthly->fetchAll(PDO::FETCH_ASSOC);
-
-$labelsMonths = json_encode(array_column($monthlyStats, 'label'));
-$dataMonths = json_encode(array_column($monthlyStats, 'total'));
-$dataStatus = json_encode(array_values($stats));
 
 // --- 3. LISTADO DE TABLA (BANDEJA DE ENTRADA) ---
 if ($is_limited_view) {
@@ -110,12 +116,11 @@ include 'includes/header.php';
     <?php endif; ?>
 
     <!-- Cabecera -->
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div>
             <h2 class="text-3xl font-bold text-white tracking-tight uppercase">Panel de Control</h2>
             <p class="text-slate-400 text-sm mt-1 tracking-wide">Bienvenido, <span class="text-blue-400 font-bold"><?= htmlspecialchars($name) ?></span>.</p>
         </div>
-        
         <div class="flex flex-wrap gap-3">
             <button onclick="exportarPDF()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 text-sm font-bold shadow-lg shadow-rose-900/30">
                 <i data-lucide="file-down" class="w-4 h-4"></i> PDF PENDIENTES
@@ -128,8 +133,119 @@ include 'includes/header.php';
         </div>
     </div>
 
+    <?php if ($is_admin): ?>
+    <!-- Filtro de Período -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-8 shadow-lg">
+        <form method="GET" class="flex flex-col sm:flex-row gap-3 items-end">
+            <div class="flex items-center gap-2 text-slate-400 shrink-0 mb-1 sm:mb-0">
+                <i data-lucide="calendar-range" class="w-4 h-4 text-blue-400"></i>
+                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Período de análisis</span>
+            </div>
+            <div class="flex gap-3 flex-1 flex-wrap">
+                <div class="flex-1 min-w-[140px]">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1 tracking-widest">Desde</label>
+                    <input type="date" name="start" value="<?= $start ?>" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-blue-500 outline-none transition text-sm">
+                </div>
+                <div class="flex-1 min-w-[140px]">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1 tracking-widest">Hasta</label>
+                    <input type="date" name="end" value="<?= $end ?>" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-blue-500 outline-none transition text-sm">
+                </div>
+            </div>
+            <div class="flex gap-2 shrink-0">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-xl font-bold text-sm transition flex items-center gap-2 shadow-lg">
+                    <i data-lucide="filter" class="w-4 h-4"></i> Aplicar
+                </button>
+                <a href="dashboard.php" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl font-bold text-sm transition border border-slate-700 flex items-center gap-1" title="Resetear al mes actual">
+                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                </a>
+            </div>
+        </form>
+        <?php if ($total_periodo > 0 || $start !== date('Y-m-01') || $end !== date('Y-m-d')): ?>
+        <div class="mt-3 pt-3 border-t border-slate-800/70 flex flex-wrap gap-4 text-xs text-slate-500">
+            <span class="flex items-center gap-1.5"><i data-lucide="calendar" class="w-3 h-3"></i> <?= date('d/m/Y', strtotime($start)) ?> — <?= date('d/m/Y', strtotime($end)) ?></span>
+            <span class="flex items-center gap-1.5"><i data-lucide="bar-chart-2" class="w-3 h-3"></i> <span class="text-white font-bold"><?= $total_periodo ?></span> ventas en el período</span>
+            <span class="flex items-center gap-1.5 text-emerald-400"><i data-lucide="dollar-sign" class="w-3 h-3"></i> $<?= number_format($statsMonto['entregado'], 0, ',', '.') ?> entregado</span>
+            <?php if ($efectividad > 0): ?>
+            <span class="flex items-center gap-1.5 text-blue-400"><i data-lucide="target" class="w-3 h-3"></i> <?= $efectividad ?>% efectividad</span>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- 2. RESUMEN NUMÉRICO (TARJETAS) — filtradas por período -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="p-5 rounded-2xl border border-yellow-500/20 bg-slate-900/50 flex items-center justify-between transition-all duration-300 hover:shadow-xl hover:shadow-yellow-500/10 hover:border-yellow-500/40 hover:-translate-y-0.5 cursor-default group">
+            <div>
+                <p class="text-[10px] uppercase font-bold text-yellow-500 tracking-widest mb-1">En Revisión</p>
+                <p class="text-3xl font-bold text-white stat-counter" data-target="<?= $stats['revision'] ?>">0</p>
+                <?php if ($statsMonto['revision'] > 0): ?>
+                <p class="text-[10px] text-slate-500 mt-1 font-mono">$<?= number_format($statsMonto['revision'], 0, ',', '.') ?></p>
+                <?php endif; ?>
+            </div>
+            <div class="p-2.5 rounded-xl bg-yellow-500/10 text-yellow-400 group-hover:bg-yellow-500/20 transition-colors"><i data-lucide="clock" class="w-5 h-5"></i></div>
+        </div>
+        <div class="p-5 rounded-2xl border border-emerald-500/20 bg-slate-900/50 flex items-center justify-between transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-0.5 cursor-default group">
+            <div>
+                <p class="text-[10px] uppercase font-bold text-emerald-500 tracking-widest mb-1">Aprobadas</p>
+                <p class="text-3xl font-bold text-white stat-counter" data-target="<?= $stats['aprobado'] ?>">0</p>
+                <?php if ($statsMonto['aprobado'] > 0): ?>
+                <p class="text-[10px] text-slate-500 mt-1 font-mono">$<?= number_format($statsMonto['aprobado'], 0, ',', '.') ?></p>
+                <?php endif; ?>
+            </div>
+            <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20 transition-colors"><i data-lucide="check" class="w-5 h-5"></i></div>
+        </div>
+        <div class="p-5 rounded-2xl border border-blue-500/20 bg-slate-900/50 flex items-center justify-between transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-500/40 hover:-translate-y-0.5 cursor-default group">
+            <div>
+                <p class="text-[10px] uppercase font-bold text-blue-500 tracking-widest mb-1">Entregadas</p>
+                <p class="text-3xl font-bold text-white stat-counter" data-target="<?= $stats['entregado'] ?>">0</p>
+                <?php if ($statsMonto['entregado'] > 0): ?>
+                <p class="text-[10px] text-emerald-400/70 mt-1 font-mono font-bold">$<?= number_format($statsMonto['entregado'], 0, ',', '.') ?></p>
+                <?php endif; ?>
+            </div>
+            <div class="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20 transition-colors"><i data-lucide="truck" class="w-5 h-5"></i></div>
+        </div>
+        <div class="p-5 rounded-2xl border border-red-500/20 bg-slate-900/50 flex items-center justify-between transition-all duration-300 hover:shadow-xl hover:shadow-red-500/10 hover:border-red-500/40 hover:-translate-y-0.5 cursor-default group">
+            <div>
+                <p class="text-[10px] uppercase font-bold text-red-500 tracking-widest mb-1">Rechazadas</p>
+                <p class="text-3xl font-bold text-white stat-counter" data-target="<?= $stats['rechazado'] ?>">0</p>
+                <?php if ($efectividad > 0): ?>
+                <p class="text-[10px] text-slate-500 mt-1">efectiv. <span class="text-blue-400 font-bold"><?= $efectividad ?>%</span></p>
+                <?php endif; ?>
+            </div>
+            <div class="p-2.5 rounded-xl bg-red-500/10 text-red-400 group-hover:bg-red-500/20 transition-colors"><i data-lucide="x-circle" class="w-5 h-5"></i></div>
+        </div>
+    </div>
+
+    <!-- 3. GRÁFICOS ESTADÍSTICOS -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2 bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-white font-bold flex items-center gap-2 uppercase text-xs tracking-widest">
+                    <i data-lucide="trending-up" class="w-4 h-4 text-blue-400"></i> Desempeño mensual
+                </h3>
+                <span class="text-[10px] text-slate-500 font-mono bg-slate-800 px-2 py-1 rounded border border-slate-700">
+                    <?= date('d/m/Y', strtotime($start)) ?> – <?= date('d/m/Y', strtotime($end)) ?>
+                </span>
+            </div>
+            <div class="h-[250px] w-full"><canvas id="monthlyChart"></canvas></div>
+        </div>
+
+        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-white font-bold flex items-center gap-2 uppercase text-xs tracking-widest">
+                    <i data-lucide="pie-chart" class="w-4 h-4 text-purple-400"></i> Distribución
+                </h3>
+                <?php if ($total_periodo > 0): ?>
+                <span class="text-[10px] text-slate-500 font-mono bg-slate-800 px-2 py-1 rounded border border-slate-700"><?= $total_periodo ?> total</span>
+                <?php endif; ?>
+            </div>
+            <div class="h-[220px] w-full flex items-center justify-center"><canvas id="statusChart"></canvas></div>
+        </div>
+    </div>
+    <?php endif; // fin bloque admin ?>
+
     <!-- 1. BANDEJA DE ENTRADA (TABLA) -->
-    <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden mb-12">
+    <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden <?= $is_admin ? 'mt-8' : '' ?>">
         <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950/30">
             <h3 class="font-bold text-lg text-white flex items-center gap-2 uppercase tracking-wider">
                 <i data-lucide="inbox" class="w-5 h-5 text-blue-500"></i>
@@ -181,7 +297,6 @@ include 'includes/header.php';
                             <td class="p-5 text-slate-400 hidden lg:table-cell">
                                 <div class="flex items-center gap-1.5">
                                     <i data-lucide="user-edit" class="w-3.5 h-3.5 text-slate-500"></i>
-                                    <!-- Nombre del vendedor convertido en enlace a su perfil -->
                                     <a href="perfil_vendedor.php?id=<?= $order['user_id'] ?>" class="hover:text-blue-400 hover:underline transition flex items-center gap-1 group/seller">
                                         <?= isset($order['seller_name']) ? htmlspecialchars($order['seller_name']) : 'Yo' ?>
                                         <i data-lucide="external-link" class="w-2.5 h-2.5 opacity-0 group-hover/seller:opacity-100 transition-opacity"></i>
@@ -212,7 +327,7 @@ include 'includes/header.php';
                                                 <i data-lucide="check" class="w-4 h-4"></i>
                                             </button>
                                         </form>
-                                        <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="w-10 h-10 flex items-center justify-center bg-red-500/10 text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition border border-red-500/20" title="Cancelar/Rechazar Venta">
+                                        <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="w-10 h-10 flex items-center justify-center bg-red-500/10 text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition border border-red-500/20" title="Cancelar/Rechazar Venta" onclick="return confirm('¿Confirma que desea rechazar esta venta?')">
                                             <i data-lucide="x" class="w-4 h-4"></i>
                                         </a>
                                     <?php endif; ?>
@@ -232,76 +347,45 @@ include 'includes/header.php';
             </table>
         </div>
     </div>
-
-    <!-- 2. RESUMEN NUMÉRICO (TARJETAS) -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="p-5 rounded-2xl border border-yellow-500/20 bg-slate-900/50 flex items-center justify-between transition-all duration-300 hover:shadow-xl hover:shadow-yellow-500/10 hover:border-yellow-500/40 hover:-translate-y-0.5 cursor-default group">
-            <div>
-                <p class="text-[10px] uppercase font-bold text-yellow-500 tracking-widest mb-1">En Revisión</p>
-                <p class="text-3xl font-bold text-white stat-counter" data-target="<?= $stats['revision'] ?>">0</p>
-            </div>
-            <div class="p-2.5 rounded-xl bg-yellow-500/10 text-yellow-400 group-hover:bg-yellow-500/20 transition-colors"><i data-lucide="clock" class="w-5 h-5"></i></div>
-        </div>
-        <div class="p-5 rounded-2xl border border-emerald-500/20 bg-slate-900/50 flex items-center justify-between transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-0.5 cursor-default group">
-            <div>
-                <p class="text-[10px] uppercase font-bold text-emerald-500 tracking-widest mb-1">Aprobadas</p>
-                <p class="text-3xl font-bold text-white stat-counter" data-target="<?= $stats['aprobado'] ?>">0</p>
-            </div>
-            <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20 transition-colors"><i data-lucide="check" class="w-5 h-5"></i></div>
-        </div>
-        <div class="p-5 rounded-2xl border border-blue-500/20 bg-slate-900/50 flex items-center justify-between transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-500/40 hover:-translate-y-0.5 cursor-default group">
-            <div>
-                <p class="text-[10px] uppercase font-bold text-blue-500 tracking-widest mb-1">Entregadas</p>
-                <p class="text-3xl font-bold text-white stat-counter" data-target="<?= $stats['entregado'] ?>">0</p>
-            </div>
-            <div class="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20 transition-colors"><i data-lucide="truck" class="w-5 h-5"></i></div>
-        </div>
-        <div class="p-5 rounded-2xl border border-red-500/20 bg-slate-900/50 flex items-center justify-between transition-all duration-300 hover:shadow-xl hover:shadow-red-500/10 hover:border-red-500/40 hover:-translate-y-0.5 cursor-default group">
-            <div>
-                <p class="text-[10px] uppercase font-bold text-red-500 tracking-widest mb-1">Rechazadas</p>
-                <p class="text-3xl font-bold text-white stat-counter" data-target="<?= $stats['rechazado'] ?>">0</p>
-            </div>
-            <div class="p-2.5 rounded-xl bg-red-500/10 text-red-400 group-hover:bg-red-500/20 transition-colors"><i data-lucide="x-circle" class="w-5 h-5"></i></div>
-        </div>
-    </div>
-
-    <!-- 3. GRÁFICOS ESTADÍSTICOS -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-2 bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
-            <h3 class="text-white font-bold mb-6 flex items-center gap-2 uppercase text-xs tracking-widest">
-                <i data-lucide="trending-up" class="w-4 h-4 text-blue-400"></i> Desempeño mensual
-            </h3>
-            <div class="h-[250px] w-full"><canvas id="monthlyChart"></canvas></div>
-        </div>
-
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
-            <h3 class="text-white font-bold mb-6 flex items-center gap-2 uppercase text-xs tracking-widest">
-                <i data-lucide="pie-chart" class="w-4 h-4 text-purple-400"></i> Distribución
-            </h3>
-            <div class="h-[250px] w-full flex items-center justify-center"><canvas id="statusChart"></canvas></div>
-        </div>
-    </div>
 </main>
 
 <script>
-    // Configuración Gráficos
+    <?php if ($is_admin): ?>
+    // Configuración Gráficos (solo admin)
     const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
     new Chart(ctxMonthly, {
         type: 'line',
         data: {
             labels: <?= $labelsMonths ?>,
-            datasets: [{
-                data: <?= $dataMonths ?>,
-                borderColor: '#3b82f6',
-                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                borderWidth: 3, tension: 0.4, fill: true, pointBackgroundColor: '#3b82f6'
-            }]
+            datasets: [
+                {
+                    label: 'Cargadas',
+                    data: <?= $dataMonths ?>,
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                    borderWidth: 2.5, tension: 0.4, fill: true, pointBackgroundColor: '#3b82f6', pointRadius: 4
+                },
+                {
+                    label: 'Entregadas',
+                    data: <?= $dataEntregadas ?>,
+                    borderColor: '#10b981',
+                    backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                    borderWidth: 2.5, tension: 0.4, fill: false, pointBackgroundColor: '#10b981', pointRadius: 4, borderDash: []
+                }
+            ]
         },
         options: {
             responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    align: 'end',
+                    labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 12, padding: 12, usePointStyle: true }
+                }
+            },
             scales: {
-                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', precision: 0 } },
                 x: { grid: { display: false }, ticks: { color: '#64748b' } }
             }
         }
@@ -333,12 +417,13 @@ include 'includes/header.php';
         const startTime = performance.now();
         function update(now) {
             const progress = Math.min((now - startTime) / duration, 1);
-            const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+            const eased = 1 - Math.pow(1 - progress, 3);
             el.textContent = Math.round(eased * target);
             if (progress < 1) requestAnimationFrame(update);
         }
         requestAnimationFrame(update);
     });
+    <?php endif; ?>
 
     // Lógica Exportación PDF
     const salesData = <?= json_encode($pdfData) ?>;

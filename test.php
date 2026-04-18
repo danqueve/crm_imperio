@@ -1,4 +1,11 @@
 <?php
+// Solo accesible desde localhost
+$allowed_ips = ['127.0.0.1', '::1'];
+if (!in_array($_SERVER['REMOTE_ADDR'] ?? '', $allowed_ips)) {
+    http_response_code(404);
+    exit;
+}
+
 echo "<h1>Diagnóstico del Servidor</h1>";
 
 // 1. Verificar Versión de PHP

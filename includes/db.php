@@ -22,6 +22,11 @@ try {
     die("Error de conexión con la base de datos. Contacte al administrador.");
 }
 
+// Headers de seguridad HTTP
+header('X-Frame-Options: SAMEORIGIN');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+
 // Iniciar la sesión PHP si no está iniciada ya
 if (session_status() == PHP_SESSION_NONE) {
     session_start();

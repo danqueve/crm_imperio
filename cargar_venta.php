@@ -38,7 +38,7 @@ include 'includes/header.php';
                     if ($_GET['error'] == 'missing_data') {
                         echo "Faltan campos obligatorios. Por favor, asegúrese de completar DNI, Nombre del Cliente y el Artículo.";
                     } elseif ($_GET['error'] == 'db_error') {
-                        echo "Error de base de datos. Esto suele suceder si faltan columnas en la tabla 'sales'. <br><small class='opacity-70 font-mono'>Detalle: " . htmlspecialchars($_GET['msg'] ?? 'Desconocido') . "</small>";
+                        echo "Error interno al guardar la venta. Por favor intente nuevamente o contacte al administrador.";
                     } else {
                         echo "Ocurrió un error inesperado al procesar la solicitud.";
                     }
@@ -48,7 +48,7 @@ include 'includes/header.php';
     </div>
     <?php endif; ?>
 
-    <form action="save_sale.php" method="POST" enctype="multipart/form-data" class="space-y-8">
+    <form action="save_sale.php" method="POST" enctype="multipart/form-data" class="space-y-8" id="ventaForm">
         <?= csrf_field() ?>
 
         <!-- Sección 1: Datos del Cliente -->
@@ -83,8 +83,29 @@ include 'includes/header.php';
 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Localidad</label>
-                    <input type="text" name="client_locality" required placeholder="Ciudad / Localidad" 
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                    <select name="client_locality" required
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                        <option value="" disabled selected>Seleccionar localidad...</option>
+                        <option value="Acheral">Acheral</option>
+                        <option value="Aguilares">Aguilares</option>
+                        <option value="Alderete">Alderete</option>
+                        <option value="Banda del Río Salí">Banda del Río Salí</option>
+                        <option value="Bella Vista">Bella Vista</option>
+                        <option value="Burruyacu">Burruyacu</option>
+                        <option value="Concepción">Concepción</option>
+                        <option value="Famaillá">Famaillá</option>
+                        <option value="Lules">Lules</option>
+                        <option value="Manantial">Manantial</option>
+                        <option value="Monteros">Monteros</option>
+                        <option value="Río Colorado">Río Colorado</option>
+                        <option value="San Miguel de Tucumán">San Miguel de Tucumán</option>
+                        <option value="Simoca">Simoca</option>
+                        <option value="Tafí del Valle">Tafí del Valle</option>
+                        <option value="Tafí Viejo">Tafí Viejo</option>
+                        <option value="Termas">Termas</option>
+                        <option value="Villa Carmela">Villa Carmela</option>
+                        <option value="Yerba Buena">Yerba Buena</option>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">WhatsApp</label>
@@ -263,6 +284,14 @@ include 'includes/header.php';
             lucide.createIcons();
         }
     }
+
+    // Loading state al enviar el formulario
+    document.getElementById('ventaForm').addEventListener('submit', function() {
+        const btn = this.querySelector('[type=submit]');
+        btn.disabled = true;
+        btn.classList.add('opacity-75', 'cursor-not-allowed');
+        btn.innerHTML = '<svg class="animate-spin w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg> Guardando...';
+    });
 </script>
 
 <?php include 'includes/footer.php'; ?>

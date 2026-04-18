@@ -11,16 +11,18 @@ if (!isset($_SESSION['user_id'])) {
 $role = $_SESSION['role'];
 $user_id = $_SESSION['user_id'];
 
-// --- 1. FILTROS (Fechas y Búsqueda) ---
-$start = $_GET['start'] ?? date('Y-m-01'); // Primer día del mes actual
-$end = $_GET['end'] ?? date('Y-m-d');
-$search = $_GET['search'] ?? ''; 
+// --- 1. FILTROS (Fechas, Búsqueda, Estado, Vendedor) ---
+$start         = $_GET['start']       ?? date('Y-m-01');
+$end           = $_GET['end']         ?? date('Y-m-d');
+$search        = $_GET['search']      ?? '';
+$filter_status = $_GET['status']      ?? '';
+$filter_seller = (int)($_GET['seller_id'] ?? 0);
 
 $startSql = $start . ' 00:00:00';
-$endSql = $end . ' 23:59:59';
+$endSql   = $end   . ' 23:59:59';
 
-// Construcción base del WHERE 
-$whereClause = "WHERE s.status IN ('rechazado', 'entregado') 
+// Construcción base del WHERE
+$whereClause = "WHERE s.status IN ('rechazado', 'entregado')
                 AND s.created_at BETWEEN :start AND :end";
 $params = [':start' => $startSql, ':end' => $endSql];
 
@@ -28,6 +30,15 @@ $params = [':start' => $startSql, ':end' => $endSql];
 if ($role === 'vendedor' || $role === 'entregador') {
     $whereClause .= " AND s.user_id = :user_id";
     $params[':user_id'] = $user_id;
+} elseif ($filter_seller > 0) {
+    $whereClause .= " AND s.user_id = :seller_id";
+    $params[':seller_id'] = $filter_seller;
+}
+
+// Filtro por estado
+if (!empty($filter_status) && in_array($filter_status, ['entregado', 'rechazado'])) {
+    $whereClause = str_replace("s.status IN ('rechazado', 'entregado')", "s.status = :filter_status", $whereClause);
+    $params[':filter_status'] = $filter_status;
 }
 
 // Filtro de búsqueda por Nombre o DNI
@@ -36,8 +47,14 @@ if (!empty($search)) {
     $params[':search'] = "%$search%";
 }
 
+// Lista de vendedores para el selector (solo para roles gestores)
+$sellers = [];
+if (in_array($role, ['admin', 'supervisor', 'verificador'])) {
+    $sellers = $pdo->query("SELECT id, name FROM users WHERE role = 'vendedor' ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+}
+
 // Preparamos los parámetros de URL para que la paginación los mantenga
-$filtrosParams = ['start' => $start, 'end' => $end, 'search' => $search];
+$filtrosParams = ['start' => $start, 'end' => $end, 'search' => $search, 'status' => $filter_status, 'seller_id' => $filter_seller ?: ''];
 
 // --- 2. LÓGICA DE PAGINACIÓN ---
 $registros_por_pagina = 20;
@@ -145,9 +162,21 @@ if (isset($_GET['ajax'])) {
                     <?php endif; ?>
                 </td>
                 <td class="p-5 text-right">
-                    <a href="ver_ficha.php?id=<?= $h['id'] ?>" class="inline-flex items-center justify-center p-2 rounded-lg bg-slate-800 hover:bg-blue-600 text-blue-400 hover:text-white transition border border-slate-700 shadow-sm" title="Ver Ficha">
-                        <i data-lucide="eye" class="w-4 h-4"></i>
-                    </a>
+                    <div class="flex justify-end gap-2 items-center">
+                        <a href="ver_ficha.php?id=<?= $h['id'] ?>" class="inline-flex items-center justify-center p-2 rounded-lg bg-slate-800 hover:bg-blue-600 text-blue-400 hover:text-white transition border border-slate-700 shadow-sm" title="Ver Ficha">
+                            <i data-lucide="eye" class="w-4 h-4"></i>
+                        </a>
+                        <?php if ($h['status'] === 'rechazado' && in_array($role, ['admin', 'supervisor'])): ?>
+                        <form method="POST" action="update_status.php" class="inline" onsubmit="return confirm('¿Devolver esta venta al panel de revisión?');">
+                            <?= csrf_field() ?>
+                            <input type="hidden" name="id" value="<?= $h['id'] ?>">
+                            <input type="hidden" name="status" value="revision">
+                            <button type="submit" class="inline-flex items-center justify-center p-2 rounded-lg bg-slate-800 hover:bg-yellow-600 text-yellow-500 hover:text-white transition border border-slate-700 shadow-sm" title="Volver a Revisión">
+                                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                            </button>
+                        </form>
+                        <?php endif; ?>
+                    </div>
                 </td>
             </tr>
             <?php
@@ -189,7 +218,7 @@ include 'includes/header.php';
 
     <!-- Barra de Filtros -->
     <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg mb-8">
-        <form id="filterForm" class="flex flex-col xl:flex-row gap-4 items-end">
+        <form id="filterForm" class="flex flex-col xl:flex-row gap-4 items-end flex-wrap">
             <div class="flex gap-4 w-full xl:w-auto">
                 <div class="flex-1 min-w-[140px]">
                     <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1 tracking-widest">Desde</label>
@@ -207,13 +236,37 @@ include 'includes/header.php';
                     <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"><i data-lucide="search" class="w-4 h-4"></i></div>
                 </div>
             </div>
+            <div class="flex gap-4 w-full xl:w-auto">
+                <div class="flex-1 min-w-[130px]">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1 tracking-widest">Estado</label>
+                    <select name="status" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:border-blue-500 outline-none transition text-sm">
+                        <option value="">Todos</option>
+                        <option value="entregado" <?= $filter_status === 'entregado' ? 'selected' : '' ?>>Entregado</option>
+                        <option value="rechazado" <?= $filter_status === 'rechazado' ? 'selected' : '' ?>>Rechazado</option>
+                    </select>
+                </div>
+                <?php if (!empty($sellers)): ?>
+                <div class="flex-1 min-w-[160px]">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1 tracking-widest">Vendedor</label>
+                    <select name="seller_id" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:border-blue-500 outline-none transition text-sm">
+                        <option value="">Todos</option>
+                        <?php foreach ($sellers as $s): ?>
+                        <option value="<?= $s['id'] ?>" <?= $filter_seller === (int)$s['id'] ? 'selected' : '' ?>><?= htmlspecialchars($s['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <?php endif; ?>
+            </div>
             <div class="flex gap-2 w-full xl:w-auto">
                 <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2 text-sm">
                     <i data-lucide="filter" class="w-4 h-4"></i> Filtrar
                 </button>
-                <button type="button" onclick="exportarPDF()" class="bg-rose-600 hover:bg-rose-500 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2 text-sm">
-                    <i data-lucide="file-down" class="w-4 h-4"></i> Exportar PDF
+                <button type="button" onclick="exportarPDF()" class="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2 text-sm" title="Exportar PDF">
+                    <i data-lucide="file-down" class="w-4 h-4"></i> PDF
                 </button>
+                <a href="export_csv.php?<?= http_build_query(['start' => $start, 'end' => $end, 'search' => $search, 'status' => $filter_status, 'seller_id' => $filter_seller ?: '']) ?>" class="bg-emerald-700 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2 text-sm" title="Exportar CSV para Excel">
+                    <i data-lucide="sheet" class="w-4 h-4"></i> CSV
+                </a>
             </div>
         </form>
     </div>
@@ -230,7 +283,7 @@ include 'includes/header.php';
                         <th class="p-5">Detalle Venta</th>
                         <th class="p-5">Estado</th>
                         <th class="p-5">Auditoría</th>
-                        <th class="p-5 text-right">Ficha</th>
+                        <th class="p-5 text-right">Acciones</th>
                     </tr>
                 </thead>
                 <tbody id="historyTableBody" class="divide-y divide-slate-800/50">
@@ -268,9 +321,21 @@ include 'includes/header.php';
                                 <?php endif; ?>
                             </td>
                             <td class="p-5 text-right">
-                                <a href="ver_ficha.php?id=<?= $h['id'] ?>" class="inline-flex items-center justify-center p-2 rounded-lg bg-slate-800 hover:bg-blue-600 text-blue-400 hover:text-white transition border border-slate-700 shadow-sm" title="Ver Ficha">
-                                    <i data-lucide="eye" class="w-4 h-4"></i>
-                                </a>
+                                <div class="flex justify-end gap-2 items-center">
+                                    <a href="ver_ficha.php?id=<?= $h['id'] ?>" class="inline-flex items-center justify-center p-2 rounded-lg bg-slate-800 hover:bg-blue-600 text-blue-400 hover:text-white transition border border-slate-700 shadow-sm" title="Ver Ficha">
+                                        <i data-lucide="eye" class="w-4 h-4"></i>
+                                    </a>
+                                    <?php if ($h['status'] === 'rechazado' && in_array($role, ['admin', 'supervisor'])): ?>
+                                    <form method="POST" action="update_status.php" class="inline" onsubmit="return confirm('¿Devolver esta venta al panel de revisión?');">
+                                        <?= csrf_field() ?>
+                                        <input type="hidden" name="id" value="<?= $h['id'] ?>">
+                                        <input type="hidden" name="status" value="revision">
+                                        <button type="submit" class="inline-flex items-center justify-center p-2 rounded-lg bg-slate-800 hover:bg-yellow-600 text-yellow-500 hover:text-white transition border border-slate-700 shadow-sm" title="Volver a Revisión">
+                                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                                        </button>
+                                    </form>
+                                    <?php endif; ?>
+                                </div>
                             </td>
                         </tr>
                         <?php endforeach; ?>

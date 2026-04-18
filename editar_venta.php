@@ -113,9 +113,17 @@ include 'includes/header.php';
 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Localidad <span class="text-red-400">*</span></label>
-                    <input type="text" name="client_locality" required
-                           value="<?= htmlspecialchars($order['client_locality'] ?? '') ?>"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                    <?php
+                    $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Concepción','Famaillá','Lules','Manantial','Monteros','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Villa Carmela','Yerba Buena'];
+                    $current_locality = $order['client_locality'] ?? '';
+                    ?>
+                    <select name="client_locality" required
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                        <option value="" disabled <?= $current_locality === '' ? 'selected' : '' ?>>Seleccionar localidad...</option>
+                        <?php foreach ($localidades as $loc): ?>
+                        <option value="<?= htmlspecialchars($loc) ?>" <?= $current_locality === $loc ? 'selected' : '' ?>><?= htmlspecialchars($loc) ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">WhatsApp <span class="text-red-400">*</span></label>

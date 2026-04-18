@@ -61,10 +61,13 @@ if (!function_exists('renderPagination')) {
 
         ob_start();
         ?>
+        <?php
+        $from = min(($pagina_actual - 1) * $registros_por_pagina + 1, $total_registros);
+        $to   = min($pagina_actual * $registros_por_pagina, $total_registros);
+        ?>
         <div class="p-4 border-t border-slate-800 bg-slate-950/30 flex justify-between items-center mt-auto">
             <div class="text-xs text-slate-500">
-                Página <span class="font-bold text-slate-400"><?= $pagina_actual ?></span> de <span class="font-bold text-slate-400"><?= $total_paginas ?></span> 
-                (Total: <?= $total_registros ?> registros)
+                Mostrando <span class="font-bold text-slate-400"><?= $from ?>–<?= $to ?></span> de <span class="font-bold text-slate-400"><?= $total_registros ?></span> registros
             </div>
             <div class="flex gap-2">
                 <?php if ($pagina_actual > 1): ?>
@@ -85,6 +88,27 @@ if (!function_exists('renderPagination')) {
         <script>if(window.lucide) { lucide.createIcons(); }</script>
         <?php
         return ob_get_clean();
+    }
+}
+
+// --- Control de Acceso ---
+
+if (!function_exists('require_role')) {
+    function require_role(array $roles, string $redirect = 'dashboard.php'): void {
+        if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $roles)) {
+            header("Location: $redirect");
+            exit;
+        }
+    }
+}
+
+// --- Paginación ---
+
+if (!function_exists('getPaginationParams')) {
+    function getPaginationParams(int $perPage = 20): array {
+        $page   = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+        $offset = ($page - 1) * $perPage;
+        return [$page, $offset, $perPage];
     }
 }
 

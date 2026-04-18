@@ -22,9 +22,12 @@ $endSql = $end . ' 23:59:59';
 $filtros = ['start' => $start, 'end' => $end];
 
 // --- 2. OBTENER TOTALES GENERALES DEL PERIODO (Para las tarjetas de resumen) ---
-// Consultamos todas las ventas entregadas en el rango para calcular los montos totales del periodo
-$sqlTotals = "SELECT SUM(total_amount) as total_ventas, SUM(total_amount * 0.05) as total_comisiones, COUNT(*) as total_registros 
-              FROM sales WHERE status = 'entregado' AND delivered_at BETWEEN ? AND ?";
+$sqlTotals = "SELECT SUM(s.total_amount) as total_ventas,
+                     SUM(s.total_amount * (u.commission_rate / 100)) as total_comisiones,
+                     COUNT(*) as total_registros
+              FROM sales s
+              JOIN users u ON s.user_id = u.id
+              WHERE s.status = 'entregado' AND s.delivered_at BETWEEN ? AND ?";
 $stmtT = $pdo->prepare($sqlTotals);
 $stmtT->execute([$startSql, $endSql]);
 $summary = $stmtT->fetch();
@@ -40,19 +43,25 @@ if ($pagina_actual < 1) $pagina_actual = 1;
 $offset = ($pagina_actual - 1) * $registros_por_pagina;
 
 // --- 4. OBTENER DATOS PAGINADOS PARA LA TABLA ---
-$sqlTable = "SELECT sales.*, users.name as seller_name, (sales.total_amount * 0.05) as commission 
-             FROM sales JOIN users ON sales.user_id = users.id 
-             WHERE status = 'entregado' AND delivered_at BETWEEN ? AND ?
+$sqlTable = "SELECT sales.*, users.name as seller_name, users.commission_rate,
+                    (sales.total_amount * (users.commission_rate / 100)) as commission
+             FROM sales JOIN users ON sales.user_id = users.id
+             WHERE status = 'entregado' AND delivered_at BETWEEN :start AND :end
              ORDER BY delivered_at DESC
-             LIMIT $offset, $registros_por_pagina";
+             LIMIT :limit OFFSET :offset";
 
 $stmtTable = $pdo->prepare($sqlTable);
-$stmtTable->execute([$startSql, $endSql]);
+$stmtTable->bindValue(':start', $startSql);
+$stmtTable->bindValue(':end', $endSql);
+$stmtTable->bindValue(':limit', $registros_por_pagina, PDO::PARAM_INT);
+$stmtTable->bindValue(':offset', $offset, PDO::PARAM_INT);
+$stmtTable->execute();
 $displaySales = $stmtTable->fetchAll(PDO::FETCH_ASSOC);
 
 // --- 5. OBTENER TODO EL PERIODO PARA EL PDF ---
-$sqlFull = "SELECT sales.*, users.name as seller_name, (sales.total_amount * 0.05) as commission 
-            FROM sales JOIN users ON sales.user_id = users.id 
+$sqlFull = "SELECT sales.*, users.name as seller_name, users.commission_rate,
+                   (sales.total_amount * (users.commission_rate / 100)) as commission
+            FROM sales JOIN users ON sales.user_id = users.id
             WHERE status = 'entregado' AND delivered_at BETWEEN ? AND ?
             ORDER BY seller_name ASC, delivered_at DESC";
 $stmtFull = $pdo->prepare($sqlFull);

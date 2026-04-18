@@ -25,8 +25,8 @@ if (!in_array($status, $allowed_statuses)) {
     exit;
 }
 
-// RESTRICCIÓN DE ENTREGADOR: Solo puede marcar como 'entregado'
-if ($_SESSION['role'] === 'entregador' && $status !== 'entregado') {
+// RESTRICCIÓN DE ENTREGADOR: Solo puede marcar como 'entregado' o anular entrega ('aprobado')
+if ($_SESSION['role'] === 'entregador' && !in_array($status, ['entregado', 'aprobado'])) {
     header("Location: entregas.php");
     exit;
 }
@@ -69,15 +69,26 @@ if ($id && $status) {
         $stmt->execute($params);
         log_audit($pdo, $status, 'sale', $id, "Estado cambiado a: $status");
     } catch (PDOException $e) {
-        die("Error al actualizar estado: " . $e->getMessage());
+        error_log("update_status [id={$id}]: " . $e->getMessage());
+        header("Location: dashboard.php");
+        exit;
     }
 }
 
-// Redirección inteligente: Vuelve a la página donde estaba el usuario
+// Redirección segura: solo se permite volver a páginas internas del CRM
+$redirect = 'dashboard.php';
+$allowed_pages = ['dashboard.php', 'ver_ficha.php', 'entregas.php', 'historial_ventas.php'];
 if (isset($_SERVER['HTTP_REFERER'])) {
-    header("Location: " . $_SERVER['HTTP_REFERER']);
-} else {
-    header("Location: dashboard.php");
+    $referer_file = basename(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_PATH) ?? '');
+    if (in_array($referer_file, $allowed_pages)) {
+        $redirect = $referer_file;
+        // Preservar query string si viene de ver_ficha.php o historial_ventas.php
+        if (in_array($referer_file, ['ver_ficha.php', 'historial_ventas.php'])) {
+            $referer_query = parse_url($_SERVER['HTTP_REFERER'], PHP_URL_QUERY) ?? '';
+            if ($referer_query) $redirect .= '?' . $referer_query;
+        }
+    }
 }
+header("Location: " . $redirect);
 exit;
 ?>

@@ -45,11 +45,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $total_amount        = (float)($_POST['total_amount'] ?? ($installments_count * $installment_amount));
     $observations        = trim($_POST['observations'] ?? '');
 
+    // Validar URL del mapa (si se proporcionó)
+    if (!empty($client_map_link)) {
+        $parsed_url = parse_url($client_map_link);
+        if (!$parsed_url || !in_array($parsed_url['scheme'] ?? '', ['http', 'https'])) {
+            $client_map_link = '';
+        }
+    }
+
     // --- VALIDACIÓN DE DATOS OBLIGATORIOS ---
     $errors = [];
     if (empty($client_dni)) $errors[] = "dni";
+    if (!empty($client_dni) && !preg_match('/^\d{7,8}$/', $client_dni)) $errors[] = "dni_formato";
     if (empty($client_name)) $errors[] = "nombre";
+    if (!empty($client_whatsapp) && !preg_match('/^\d{7,15}$/', $client_whatsapp)) $errors[] = "whatsapp_formato";
+    if (!empty($client_phone) && !preg_match('/^\d{7,15}$/', $client_phone)) $errors[] = "telefono_formato";
     if (empty($item)) $errors[] = "articulo";
+    if ($installment_amount <= 0) $errors[] = "monto";
+    if ($installments_count <= 0) $errors[] = "cuotas";
     if ($total_amount <= 0) $errors[] = "monto";
 
     // Si hay errores, redirigir con los códigos de error
@@ -163,8 +176,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($pdo->inTransaction()) {
             $pdo->rollBack();
         }
-        // Enviar el error a cargar_venta para debugging
-        header("Location: cargar_venta.php?error=db_error&msg=" . urlencode($e->getMessage()));
+        error_log("save_sale [user_id={$user_id}]: " . $e->getMessage());
+        header("Location: cargar_venta.php?error=db_error");
         exit;
     }
 } else {

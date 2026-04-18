@@ -57,9 +57,10 @@ try {
     // Eliminar registro de BD
     $pdo->prepare("DELETE FROM sale_files WHERE id = ?")->execute([$file_id]);
 
-    // Eliminar archivo del disco
-    $disk_path = __DIR__ . '/uploads/' . $file['file_path'];
-    if (file_exists($disk_path)) {
+    // Eliminar archivo del disco con validación de path traversal
+    $uploads_dir = realpath(__DIR__ . '/uploads');
+    $disk_path   = realpath(__DIR__ . '/uploads/' . $file['file_path']);
+    if ($disk_path && $uploads_dir && strpos($disk_path, $uploads_dir . DIRECTORY_SEPARATOR) === 0 && file_exists($disk_path)) {
         unlink($disk_path);
     }
 
