@@ -26,18 +26,35 @@ include 'includes/header.php';
     </div>
 
     <!-- BLOQUE DE ERRORES MEJORADO -->
-    <?php if (isset($_GET['error'])): ?>
-    <div class="mb-8 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl flex items-start gap-3 shadow-lg animate-pulse">
-        <div class="bg-red-500/20 p-2 rounded-lg">
+    <?php if (isset($_GET['error'])):
+        $field_messages = [
+            'dni'              => 'DNI es obligatorio.',
+            'dni_formato'      => 'El DNI debe tener 7 u 8 dígitos numéricos.',
+            'nombre'           => 'El nombre del cliente es obligatorio.',
+            'whatsapp_formato' => 'El WhatsApp debe contener solo dígitos (7 a 15 caracteres).',
+            'telefono_formato' => 'El teléfono alternativo tiene un formato inválido.',
+            'articulo'         => 'El artículo es obligatorio.',
+            'monto'            => 'El monto por cuota debe ser mayor a cero.',
+            'cuotas'           => 'La cantidad de cuotas debe ser mayor a cero.',
+        ];
+        $fields = array_filter(explode(',', $_GET['fields'] ?? ''));
+        $specific_msgs = array_filter(array_map(fn($f) => $field_messages[$f] ?? null, $fields));
+    ?>
+    <div class="mb-8 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl flex items-start gap-3 shadow-lg">
+        <div class="bg-red-500/20 p-2 rounded-lg shrink-0">
             <i data-lucide="alert-circle" class="w-5 h-5"></i>
         </div>
         <div>
             <span class="font-bold block text-base">Atención: No se pudo guardar la venta</span>
             <p class="text-sm opacity-90 mt-1">
-                <?php 
-                    if ($_GET['error'] == 'missing_data') {
+                <?php
+                    if ($_GET['error'] === 'csrf') {
+                        echo "La sesión expiró mientras completaba el formulario. Por favor vuelva a ingresar los datos.";
+                    } elseif ($_GET['error'] === 'missing_data' && !empty($specific_msgs)) {
+                        echo implode(' ', $specific_msgs);
+                    } elseif ($_GET['error'] === 'missing_data') {
                         echo "Faltan campos obligatorios. Por favor, asegúrese de completar DNI, Nombre del Cliente y el Artículo.";
-                    } elseif ($_GET['error'] == 'db_error') {
+                    } elseif ($_GET['error'] === 'db_error') {
                         echo "Error interno al guardar la venta. Por favor intente nuevamente o contacte al administrador.";
                     } else {
                         echo "Ocurrió un error inesperado al procesar la solicitud.";

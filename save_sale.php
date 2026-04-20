@@ -13,7 +13,12 @@ if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    csrf_verify();
+    // Bug 3 fix: CSRF con redirect en lugar de die() para no perder contexto de sesión expirada
+    $csrf_token = $_POST['csrf_token'] ?? '';
+    if (!hash_equals(csrf_token(), $csrf_token)) {
+        header("Location: cargar_venta.php?error=csrf");
+        exit;
+    }
 
     $user_id = $_SESSION['user_id'];
 
@@ -23,8 +28,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $client_address      = trim($_POST['client_address'] ?? '');
     $client_neighborhood = trim($_POST['client_neighborhood'] ?? '');
     $client_locality     = trim($_POST['client_locality'] ?? '');
-    $client_whatsapp     = trim($_POST['client_whatsapp'] ?? '');
-    $client_phone        = trim($_POST['client_phone'] ?? '');
+    // Bug 2 fix: normalizar teléfonos antes de validar (quitar +, espacios, guiones)
+    $client_whatsapp     = preg_replace('/[\s\+\-\(\)]/', '', trim($_POST['client_whatsapp'] ?? ''));
+    $client_phone        = preg_replace('/[\s\+\-\(\)]/', '', trim($_POST['client_phone'] ?? ''));
     $client_map_link    = trim($_POST['client_map_link'] ?? '');
 
     // 3. CAPTURA DE DATOS - SECCIÓN LABORAL
@@ -41,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $payment_frequency   = $_POST['payment_frequency'] ?? 'semanal';
     $down_payment        = (float)($_POST['down_payment'] ?? 0);
     
-    // El total se toma del input hidden/readonly o se recalcula por seguridad
-    $total_amount        = (float)($_POST['total_amount'] ?? ($installments_count * $installment_amount));
+    // Bug 1 fix: siempre recalcular server-side, no confiar en el valor enviado por JS
+    $total_amount        = $installments_count * $installment_amount;
     $observations        = trim($_POST['observations'] ?? '');
 
     // Validar URL del mapa (si se proporcionó)
@@ -63,7 +69,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($item)) $errors[] = "articulo";
     if ($installment_amount <= 0) $errors[] = "monto";
     if ($installments_count <= 0) $errors[] = "cuotas";
-    if ($total_amount <= 0) $errors[] = "monto";
 
     // Si hay errores, redirigir con los códigos de error
     if (!empty($errors)) {
@@ -115,7 +120,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $files               = $_FILES['sale_files'];
             $allowed_extensions  = ['jpg', 'jpeg', 'png', 'pdf', 'jfif'];
-            $allowed_mime_types  = ['image/jpeg', 'image/png', 'application/pdf'];
+            // Bug 5 fix: agregar image/jfif que algunos sistemas reportan para archivos .jfif
+            $allowed_mime_types  = ['image/jpeg', 'image/png', 'application/pdf', 'image/jfif'];
             $max_file_size       = 5 * 1024 * 1024; // 5 MB por archivo
 
             for ($i = 0; $i < count($files['name']); $i++) {
