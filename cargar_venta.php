@@ -120,6 +120,7 @@ include 'includes/header.php';
                         <option value="Tafí del Valle">Tafí del Valle</option>
                         <option value="Tafí Viejo">Tafí Viejo</option>
                         <option value="Termas">Termas</option>
+                        <option value="Sgo">Sgo del Estero</option>
                         <option value="Villa Carmela">Villa Carmela</option>
                         <option value="Yerba Buena">Yerba Buena</option>
                     </select>
