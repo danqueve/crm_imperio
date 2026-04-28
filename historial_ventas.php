@@ -12,11 +12,12 @@ $role = $_SESSION['role'];
 $user_id = $_SESSION['user_id'];
 
 // --- 1. FILTROS (Fechas, Búsqueda, Estado, Vendedor) ---
-$start         = $_GET['start']       ?? date('Y-m-01');
-$end           = $_GET['end']         ?? date('Y-m-d');
-$search        = $_GET['search']      ?? '';
-$filter_status = $_GET['status']      ?? '';
-$filter_seller = (int)($_GET['seller_id'] ?? 0);
+$start            = $_GET['start']       ?? date('Y-m-01');
+$end              = $_GET['end']         ?? date('Y-m-d');
+$search           = $_GET['search']      ?? '';
+$filter_status    = $_GET['status']      ?? '';
+$filter_seller    = (int)($_GET['seller_id']   ?? 0);
+$filter_approver  = (int)($_GET['approver_id'] ?? 0);
 
 $startSql = $start . ' 00:00:00';
 $endSql   = $end   . ' 23:59:59';
@@ -35,6 +36,12 @@ if ($role === 'vendedor' || $role === 'entregador') {
     $params[':seller_id'] = $filter_seller;
 }
 
+// Filtro por quien aprobó/verificó
+if ($filter_approver > 0) {
+    $whereClause .= " AND s.approved_by = :approver_id";
+    $params[':approver_id'] = $filter_approver;
+}
+
 // Filtro por estado
 if (!empty($filter_status) && in_array($filter_status, ['entregado', 'rechazado'])) {
     $whereClause = str_replace("s.status IN ('rechazado', 'entregado')", "s.status = :filter_status", $whereClause);
@@ -49,12 +56,14 @@ if (!empty($search)) {
 
 // Lista de vendedores para el selector (solo para roles gestores)
 $sellers = [];
+$approvers = [];
 if (in_array($role, ['admin', 'supervisor', 'verificador'])) {
-    $sellers = $pdo->query("SELECT id, name FROM users WHERE role = 'vendedor' ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+    $sellers   = $pdo->query("SELECT id, name FROM users WHERE role = 'vendedor' ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
+    $approvers = $pdo->query("SELECT id, name FROM users WHERE role IN ('admin', 'supervisor', 'verificador') ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 }
 
 // Preparamos los parámetros de URL para que la paginación los mantenga
-$filtrosParams = ['start' => $start, 'end' => $end, 'search' => $search, 'status' => $filter_status, 'seller_id' => $filter_seller ?: ''];
+$filtrosParams = ['start' => $start, 'end' => $end, 'search' => $search, 'status' => $filter_status, 'seller_id' => $filter_seller ?: '', 'approver_id' => $filter_approver ?: ''];
 
 // --- 2. LÓGICA DE PAGINACIÓN ---
 $registros_por_pagina = 20;
@@ -73,11 +82,13 @@ $sqlPage = "SELECT
                 s.*, 
                 u_seller.name as seller_name,
                 u_rej.name as rejected_by_name,
-                u_del.name as delivered_by_name
+                u_del.name as delivered_by_name,
+                u_apr.name as approved_by_name
             FROM sales s
             LEFT JOIN users u_seller ON s.user_id = u_seller.id
             LEFT JOIN users u_rej ON s.rejected_by = u_rej.id
             LEFT JOIN users u_del ON s.delivered_by = u_del.id
+            LEFT JOIN users u_apr ON s.approved_by = u_apr.id
             $whereClause
             ORDER BY s.created_at DESC
             LIMIT :offset, :limit";
@@ -94,11 +105,13 @@ $sqlFull = "SELECT
                 s.*, 
                 u_seller.name as seller_name,
                 u_rej.name as rejected_by_name,
-                u_del.name as delivered_by_name
+                u_del.name as delivered_by_name,
+                u_apr.name as approved_by_name
             FROM sales s
             LEFT JOIN users u_seller ON s.user_id = u_seller.id
             LEFT JOIN users u_rej ON s.rejected_by = u_rej.id
             LEFT JOIN users u_del ON s.delivered_by = u_del.id
+            LEFT JOIN users u_apr ON s.approved_by = u_apr.id
             $whereClause
             ORDER BY s.created_at DESC";
 
@@ -109,8 +122,9 @@ $allHistory = $stmtFull->fetchAll(PDO::FETCH_ASSOC);
 
 // Preparar array de datos simplificados para que JavaScript genere el PDF
 $pdfData = array_map(function($h) {
+    $approvedStr = !empty($h['approved_by_name']) ? " | Aprobado por: " . $h['approved_by_name'] : '';
     $auditDetail = ($h['status'] === 'entregado')
-        ? "Entregado por: " . ($h['delivered_by_name'] ?? 'S/D') . " el " . (!empty($h['delivered_at']) ? date('d/m/Y', strtotime($h['delivered_at'])) : '-')
+        ? "Entregado por: " . ($h['delivered_by_name'] ?? 'S/D') . " el " . (!empty($h['delivered_at']) ? date('d/m/Y', strtotime($h['delivered_at'])) : '-') . $approvedStr
         : "Rechazado por: " . ($h['rejected_by_name'] ?? 'Admin') . ". Motivo: " . ($h['rejected_reason'] ?? '-');
 
     return [
@@ -152,6 +166,13 @@ if (isset($_GET['ajax'])) {
                             <span class="block font-bold text-blue-400/80 mb-0.5 uppercase tracking-tighter">Entregado por:</span>
                             <span class="flex items-center gap-1"><i data-lucide="user-check" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($h['delivered_by_name'] ?? 'S/D') ?></span>
                             <span class="text-slate-600 block mt-0.5 font-mono"><?= !empty($h['delivered_at']) ? date('d/m/Y', strtotime($h['delivered_at'])) : '-' ?></span>
+                            <?php if (!empty($h['approved_by_name'])): ?>
+                            <span class="block font-bold text-violet-400/80 mt-1.5 mb-0.5 uppercase tracking-tighter">Aprobado por:</span>
+                            <span class="flex items-center gap-1"><i data-lucide="shield-check" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($h['approved_by_name']) ?></span>
+                            <?php if (!empty($h['approved_at'])): ?>
+                            <span class="text-slate-600 block mt-0.5 font-mono"><?= date('d/m/Y', strtotime($h['approved_at'])) ?></span>
+                            <?php endif; ?>
+                            <?php endif; ?>
                         </div>
                     <?php else: ?>
                         <div class="text-[10px] text-slate-400 max-w-[200px]">
@@ -256,6 +277,17 @@ include 'includes/header.php';
                     </select>
                 </div>
                 <?php endif; ?>
+                <?php if (!empty($approvers)): ?>
+                <div class="flex-1 min-w-[160px]">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1 tracking-widest">Verificó / Aprobó</label>
+                    <select name="approver_id" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2.5 text-white focus:border-blue-500 outline-none transition text-sm">
+                        <option value="">Todos</option>
+                        <?php foreach ($approvers as $a): ?>
+                        <option value="<?= $a['id'] ?>" <?= $filter_approver === (int)$a['id'] ? 'selected' : '' ?>><?= htmlspecialchars($a['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <?php endif; ?>
             </div>
             <div class="flex gap-2 w-full xl:w-auto">
                 <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2 text-sm">
@@ -264,7 +296,7 @@ include 'includes/header.php';
                 <button type="button" onclick="exportarPDF()" class="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2 text-sm" title="Exportar PDF">
                     <i data-lucide="file-down" class="w-4 h-4"></i> PDF
                 </button>
-                <a href="export_csv.php?<?= http_build_query(['start' => $start, 'end' => $end, 'search' => $search, 'status' => $filter_status, 'seller_id' => $filter_seller ?: '']) ?>" class="bg-emerald-700 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2 text-sm" title="Exportar CSV para Excel">
+                <a href="export_csv.php?<?= http_build_query(['start' => $start, 'end' => $end, 'search' => $search, 'status' => $filter_status, 'seller_id' => $filter_seller ?: '', 'approver_id' => $filter_approver ?: '']) ?>" class="bg-emerald-700 hover:bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2 text-sm" title="Exportar CSV para Excel">
                     <i data-lucide="sheet" class="w-4 h-4"></i> CSV
                 </a>
             </div>
@@ -311,6 +343,13 @@ include 'includes/header.php';
                                         <span class="block font-bold text-blue-400/80 mb-0.5 uppercase tracking-tighter">Entregado por:</span> 
                                         <span class="flex items-center gap-1"><i data-lucide="user-check" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($h['delivered_by_name'] ?? 'S/D') ?></span>
                                         <span class="text-slate-600 block mt-0.5 font-mono"><?= !empty($h['delivered_at']) ? date('d/m/Y', strtotime($h['delivered_at'])) : '-' ?></span>
+                                        <?php if (!empty($h['approved_by_name'])): ?>
+                                        <span class="block font-bold text-violet-400/80 mt-1.5 mb-0.5 uppercase tracking-tighter">Aprobado por:</span>
+                                        <span class="flex items-center gap-1"><i data-lucide="shield-check" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($h['approved_by_name']) ?></span>
+                                        <?php if (!empty($h['approved_at'])): ?>
+                                        <span class="text-slate-600 block mt-0.5 font-mono"><?= date('d/m/Y', strtotime($h['approved_at'])) ?></span>
+                                        <?php endif; ?>
+                                        <?php endif; ?>
                                     </div>
                                 <?php else: ?>
                                     <div class="text-[10px] text-slate-400 max-w-[200px]">

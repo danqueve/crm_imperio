@@ -114,7 +114,7 @@ include 'includes/header.php';
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Localidad <span class="text-red-400">*</span></label>
                     <?php
-                    $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Concepción','Famaillá','Lules','Manantial','Monteros','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Villa Carmela','Yerba Buena'];
+                    $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Concepción','Famaillá','Lules','Manantial','Monteros','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Sgo del Estero','Villa Carmela','Yerba Buena'];
                     $current_locality = $order['client_locality'] ?? '';
                     ?>
                     <select name="client_locality" required
