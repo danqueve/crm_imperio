@@ -8,13 +8,18 @@
 require_once dirname(__DIR__) . '/config.php';
 
 // Base URL del proyecto — calculada desde la ubicación real del archivo en disco.
-// Más robusto que contar slashes en la URL: funciona sin importar en qué
-// subdirectorio esté desplegado el proyecto (raíz, /crm/, /apps/crm/, etc.).
+// Funciona en raíz (/), subdirectorio (/crm/) o subdirectorio anidado (/apps/crm/).
 if (!defined('ASSET_BASE')) {
     $__docRoot = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/');
     $__appRoot = rtrim(str_replace('\\', '/', dirname(__DIR__)), '/');
-    define('ASSET_BASE', '/' . ltrim(str_replace($__docRoot, '', $__appRoot), '/') . '/');
-    unset($__docRoot, $__appRoot);
+    if ($__appRoot === $__docRoot) {
+        // Caso VPS: app en la raíz del dominio → ASSET_BASE = '/'
+        define('ASSET_BASE', '/');
+    } else {
+        $__rel = trim(str_replace($__docRoot, '', $__appRoot), '/');
+        define('ASSET_BASE', '/' . $__rel . '/');
+    }
+    unset($__docRoot, $__appRoot, $__rel);
 }
 
 try {
