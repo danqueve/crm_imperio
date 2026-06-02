@@ -43,7 +43,7 @@ include 'includes/header.php';
 
     <!-- Cabecera -->
     <div class="flex items-center gap-4 mb-8">
-        <a href="ver_ficha.php?id=<?= $sale_id ?>" class="w-10 h-10 flex items-center justify-center bg-slate-800 rounded-full text-slate-400 hover:text-white transition border border-slate-700 shrink-0">
+        <a href="ver_ficha.php?id=<?= $sale_id ?>" class="w-10 h-10 flex items-center justify-center rounded-full shrink-0 transition" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-3);" onmouseover="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--ink-3)'"  >
             <i data-lucide="arrow-left"></i>
         </a>
         <div>
@@ -78,47 +78,47 @@ include 'includes/header.php';
         <input type="hidden" name="sale_id" value="<?= $sale_id ?>">
 
         <!-- ── SECCIÓN 1: DATOS DEL CLIENTE ── -->
-        <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 md:p-8 shadow-2xl">
-            <div class="flex items-center gap-3 mb-6 text-blue-400 border-b border-slate-800 pb-4">
+        <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+            <div class="flex items-center gap-3 mb-6 pb-4" style="color:var(--accent);border-bottom:1.5px solid var(--line);">
                 <i data-lucide="user"></i>
                 <h2 class="font-bold text-lg text-white tracking-tight uppercase">Datos del Cliente</h2>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">DNI <span class="text-red-400">*</span></label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">DNI <span class="text-red-400">*</span></label>
                     <input type="text" name="client_dni" required
                            value="<?= htmlspecialchars($order['client_dni'] ?? '') ?>"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition font-mono">
+                           class="w-full input-light px-4 py-3 font-mono">
                 </div>
                 <div class="md:col-span-1 lg:col-span-2">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Apellido y Nombre <span class="text-red-400">*</span></label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Apellido y Nombre <span class="text-red-400">*</span></label>
                     <input type="text" name="client_name" required
                            value="<?= htmlspecialchars($order['client_name'] ?? '') ?>"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Domicilio <span class="text-red-400">*</span></label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Domicilio <span class="text-red-400">*</span></label>
                     <input type="text" name="client_address" required
                            value="<?= htmlspecialchars($order['client_address'] ?? '') ?>"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Barrio <span class="text-red-400">*</span></label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Barrio <span class="text-red-400">*</span></label>
                     <input type="text" name="client_neighborhood" required
                            value="<?= htmlspecialchars($order['client_neighborhood'] ?? '') ?>"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Localidad <span class="text-red-400">*</span></label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Localidad <span class="text-red-400">*</span></label>
                     <?php
                     $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Concepción','Famaillá','Lules','Manantial','Monteros','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Sgo del Estero','Villa Carmela','Yerba Buena'];
                     $current_locality = $order['client_locality'] ?? '';
                     ?>
                     <select name="client_locality" required
-                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                            class="w-full input-light px-4 py-3">
                         <option value="" disabled <?= $current_locality === '' ? 'selected' : '' ?>>Seleccionar localidad...</option>
                         <?php foreach ($localidades as $loc): ?>
                         <option value="<?= htmlspecialchars($loc) ?>" <?= $current_locality === $loc ? 'selected' : '' ?>><?= htmlspecialchars($loc) ?></option>
@@ -126,25 +126,25 @@ include 'includes/header.php';
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">WhatsApp <span class="text-red-400">*</span></label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">WhatsApp <span class="text-red-400">*</span></label>
                     <input type="text" name="client_whatsapp" required
                            value="<?= htmlspecialchars($order['client_whatsapp'] ?? '') ?>"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition font-mono">
+                           class="w-full input-light px-4 py-3 font-mono">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Nro Llamada (Opcional)</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Nro Llamada (Opcional)</label>
                     <input type="text" name="client_phone"
                            value="<?= htmlspecialchars($order['client_phone'] ?? '') ?>"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition font-mono">
+                           class="w-full input-light px-4 py-3 font-mono">
                 </div>
 
                 <div class="md:col-span-2 lg:col-span-3">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Ubicación Google Maps</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Ubicación Google Maps</label>
                     <div class="relative">
                         <input type="text" name="client_map_link"
                                value="<?= htmlspecialchars($order['client_map_link'] ?? '') ?>"
                                placeholder="Pegue el enlace aquí (https://maps...)"
-                               class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 pr-10 text-white focus:border-emerald-500 outline-none transition">
+                               class="w-full input-light px-4 py-3 pr-10">
                         <div class="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none">
                             <i data-lucide="map-pin" class="w-4 h-4"></i>
                         </div>
@@ -154,72 +154,72 @@ include 'includes/header.php';
         </div>
 
         <!-- ── SECCIÓN 2: DATOS LABORALES ── -->
-        <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 md:p-8 shadow-2xl">
-            <div class="flex items-center gap-3 mb-6 text-indigo-400 border-b border-slate-800 pb-4">
+        <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+            <div class="flex items-center gap-3 mb-6 pb-4" style="color:#4f46e5;border-bottom:1.5px solid var(--line);">
                 <i data-lucide="briefcase"></i>
                 <h2 class="font-bold text-lg text-white tracking-tight uppercase">Datos Laborales</h2>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Tipo de Empleo</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Tipo de Empleo</label>
                     <input type="text" name="job_type"
                            value="<?= htmlspecialchars($order['job_type'] ?? '') ?>"
                            placeholder="Ej: Rel. Dependencia, Monotributo"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Ocupación</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Ocupación</label>
                     <input type="text" name="job_occupation"
                            value="<?= htmlspecialchars($order['job_occupation'] ?? '') ?>"
                            placeholder="Ej: Empleado de comercio"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Nombre del Trabajo</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Nombre del Trabajo</label>
                     <input type="text" name="job_name"
                            value="<?= htmlspecialchars($order['job_name'] ?? '') ?>"
                            placeholder="Nombre de la empresa o lugar"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Domicilio Laboral</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Domicilio Laboral</label>
                     <input type="text" name="job_address"
                            value="<?= htmlspecialchars($order['job_address'] ?? '') ?>"
                            placeholder="Dirección del trabajo"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
             </div>
         </div>
 
         <!-- ── SECCIÓN 3: DETALLE DE LA VENTA ── -->
-        <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 md:p-8 shadow-2xl">
-            <div class="flex items-center gap-3 mb-6 text-emerald-400 border-b border-slate-800 pb-4">
+        <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+            <div class="flex items-center gap-3 mb-6 pb-4" style="color:#059669;border-bottom:1.5px solid var(--line);">
                 <i data-lucide="dollar-sign"></i>
                 <h2 class="font-bold text-lg text-white uppercase tracking-tight">Detalle de la Venta</h2>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Artículo <span class="text-red-400">*</span></label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Artículo <span class="text-red-400">*</span></label>
                     <input type="text" name="item" required
                            value="<?= htmlspecialchars($order['item'] ?? '') ?>"
                            placeholder="Producto vendido"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Día de Cobro <span class="text-red-400">*</span></label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Día de Cobro <span class="text-red-400">*</span></label>
                     <select name="payment_day" required
-                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none cursor-pointer">
+                            class="w-full input-light px-4 py-3 cursor-pointer">
                         <?php foreach (['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'] as $dia): ?>
                             <option value="<?= $dia ?>" <?= ($order['payment_day'] ?? '') === $dia ? 'selected' : '' ?>><?= $dia ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Frecuencia <span class="text-red-400">*</span></label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Frecuencia <span class="text-red-400">*</span></label>
                     <select name="payment_frequency" required
-                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none">
+                            class="w-full input-light px-4 py-3 cursor-pointer">
                         <?php foreach (['semanal' => 'Semanal', 'quincenal' => 'Quincenal', 'mensual' => 'Mensual'] as $val => $label): ?>
                             <option value="<?= $val ?>" <?= ($order['payment_frequency'] ?? 'semanal') === $val ? 'selected' : '' ?>><?= $label ?></option>
                         <?php endforeach; ?>
@@ -229,24 +229,24 @@ include 'includes/header.php';
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Cuotas <span class="text-red-400">*</span></label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Cuotas <span class="text-red-400">*</span></label>
                     <input type="number" name="installments" id="edit_cuotas" required min="1"
                            value="<?= (int)($order['installments_count'] ?? 0) ?>"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none transition"
+                           class="w-full input-light px-4 py-3"
                            oninput="recalcTotal()">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Monto por cuota ($) <span class="text-red-400">*</span></label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Monto por cuota ($) <span class="text-red-400">*</span></label>
                     <input type="number" name="amount" id="edit_monto" required min="0"
                            value="<?= (float)($order['installment_amount'] ?? 0) ?>"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none transition"
+                           class="w-full input-light px-4 py-3"
                            oninput="recalcTotal()">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Adelanto ($)</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Adelanto ($)</label>
                     <input type="number" name="down_payment" min="0" step="0.01"
                            value="<?= (float)($order['down_payment'] ?? 0) ?>"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
             </div>
 
@@ -263,8 +263,8 @@ include 'includes/header.php';
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
             <!-- Archivos adjuntos -->
-            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 md:p-8 shadow-2xl">
-                <div class="flex items-center gap-3 mb-6 text-purple-400 border-b border-slate-800 pb-4">
+            <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+                <div class="flex items-center gap-3 mb-6 pb-4" style="color:#7c3aed;border-bottom:1.5px solid var(--line);">
                     <i data-lucide="files"></i>
                     <h2 class="font-bold text-lg text-white tracking-tight uppercase">Documentación Adjunta</h2>
                 </div>
@@ -277,7 +277,7 @@ include 'includes/header.php';
                         <?php foreach ($files as $f):
                             $isPdf = str_ends_with(strtolower($f['file_path']), '.pdf');
                         ?>
-                        <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-400" id="chip-<?= $f['id'] ?>">
+                        <div class="flex items-center gap-2 rounded-xl px-3 py-2 text-xs" id="chip-<?= $f['id'] ?>" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-2);">
                             <i data-lucide="<?= $isPdf ? 'file-text' : 'image' ?>" class="w-4 h-4 text-purple-400 shrink-0"></i>
                             <a href="uploads/<?= htmlspecialchars($f['file_path']) ?>" target="_blank"
                                class="truncate max-w-[130px] hover:text-purple-300 transition">
@@ -299,7 +299,7 @@ include 'includes/header.php';
                 <?php endif; ?>
 
                 <!-- Zona de subida de nuevos archivos -->
-                <div class="bg-slate-950 border-2 border-dashed border-slate-800 rounded-2xl p-8 text-center group hover:border-purple-500/50 transition-colors">
+                <div class="rounded-2xl p-8 text-center group transition-colors" style="background:var(--paper);border:2px dashed var(--line);" onmouseover="this.style.borderColor='#7c3aed'" onmouseout="this.style.borderColor='var(--line)'">
                     <input type="hidden" name="MAX_FILE_SIZE" value="5242880">
                     <input type="file" name="sale_files[]" id="sale_files" multiple accept="image/*,.pdf"
                            class="hidden" onchange="previewNewFiles(this)">
@@ -313,21 +313,21 @@ include 'includes/header.php';
             </div>
 
             <!-- Observaciones -->
-            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 md:p-8 shadow-2xl">
-                <div class="flex items-center gap-3 mb-6 text-yellow-400 border-b border-slate-800 pb-4">
+            <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+                <div class="flex items-center gap-3 mb-6 pb-4" style="color:var(--rev-ink);border-bottom:1.5px solid var(--line);">
                     <i data-lucide="message-square"></i>
                     <h2 class="font-bold text-lg text-white tracking-tight uppercase">Observaciones</h2>
                 </div>
                 <textarea name="observations" rows="5"
                           placeholder="Horarios de entrega, aclaraciones del crédito, etc."
-                          class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-4 text-white focus:border-yellow-500 outline-none transition resize-none h-[185px]"><?= htmlspecialchars($order['observations'] ?? '') ?></textarea>
+                          class="w-full input-light px-4 py-4 resize-none h-[185px]"><?= htmlspecialchars($order['observations'] ?? '') ?></textarea>
             </div>
         </div>
 
         <!-- Botones -->
         <div class="flex flex-col sm:flex-row gap-4">
             <a href="ver_ficha.php?id=<?= $sale_id ?>"
-               class="flex-1 sm:flex-none text-center px-8 py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl transition border border-slate-700">
+               class="flex-1 sm:flex-none text-center px-8 py-4 font-bold rounded-2xl transition" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-2);"
                 Cancelar
             </a>
             <button type="submit"
@@ -359,7 +359,7 @@ include 'includes/header.php';
         if (input.files) {
             Array.from(input.files).forEach(file => {
                 const span = document.createElement('span');
-                span.className = 'bg-slate-800 text-slate-400 text-[10px] px-2 py-1 rounded border border-slate-700 flex items-center gap-1';
+                span.className = 'text-[10px] px-2 py-1 rounded flex items-center gap-1'; span.style.cssText = 'background:var(--paper);color:var(--ink-2);border:1px solid var(--line);';
                 span.innerHTML = `<i data-lucide="file" class="w-3 h-3"></i> ${file.name}`;
                 list.appendChild(span);
             });

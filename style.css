@@ -1,0 +1,198 @@
+/* ============================================================
+   CRM Imperio — Design System (tema claro / pastel)
+   Basado en wireframes de Claude Design
+   ============================================================ */
+
+/* ---- Fuentes ---- */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap');
+
+/* ---- Tokens de diseño ---- */
+:root {
+  --accent:      #6366f1;
+  --accent-soft: #e0e7ff;
+  --accent-ink:  #3730a3;
+
+  --ink:   #2b2b3a;
+  --ink-2: #6b6b80;
+  --ink-3: #9a9aae;
+  --line:  #e2e1ec;
+
+  --paper: #f6f5f1;
+  --card:  #ffffff;
+
+  --rev-bg:  #fdeccb; --rev-ink:  #8a5a08;
+  --apr-bg:  #cdeedd; --apr-ink:  #0b6b46;
+  --ent-bg:  #e0e7ff; --ent-ink:  #3730a3;
+  --rec-bg:  #fad9da; --rec-ink:  #9f1239;
+
+  --shadow-card: 0 2px 12px rgba(43,43,58,.08);
+  --radius: 16px;
+  --font-ui:   'Outfit', system-ui, sans-serif;
+  --font-hand: 'Caveat', cursive;
+}
+
+/* ---- Base ---- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  font-family: var(--font-ui);
+  color: var(--ink);
+  background-color: var(--paper);
+  background-image: radial-gradient(rgba(43,43,58,.055) 1.1px, transparent 1.1px);
+  background-size: 22px 22px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #ece9f5; }
+::-webkit-scrollbar-thumb { background: #c4c1d8; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #a8a4c0; }
+
+/* ---- Animación de entrada ---- */
+.fade-in { animation: fadeIn 0.3s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Ocultar scrollbar en móvil */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Espacio reservado para el bottom nav fijo en mobile (≈ 52px + safe area) */
+@media (max-width: 767px) {
+  main, body > footer {
+    padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+/* ---- Residuales del tema oscuro — remapeados para fondo claro ---- */
+/* text-slate-300 (#cbd5e1) sobre blanco = 1.8:1 → ilegible */
+/* text-slate-400 (#94a3b8) sobre blanco = 2.9:1 → falla WCAG AA */
+/* text-slate-500 (#64748b) sobre blanco = 4.5:1 → límite aceptable pero inconsistente */
+.text-slate-300 { color: var(--ink)   !important; }
+.text-slate-400 { color: var(--ink-2) !important; }
+.text-slate-500 { color: var(--ink-3) !important; }
+
+/* ---- Touch targets mínimos (Apple HIG / Material: 44px) ---- */
+/* Botones redondos de "Volver" e iconos interactivos en tablas */
+a.rounded-full, button.rounded-full,
+a.w-11, button.w-11,
+a.w-10, button.w-10 {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- Cards ---- */
+.card {
+  background: var(--card);
+  border: 1.6px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+}
+
+/* ---- Status chips (usados por status_badge()) ---- */
+.chip-revision  { background: var(--rev-bg); color: var(--rev-ink); border-color: rgba(138,90,8,.2); }
+.chip-aprobado  { background: var(--apr-bg); color: var(--apr-ink); border-color: rgba(11,107,70,.2); }
+.chip-entregado { background: var(--ent-bg); color: var(--ent-ink); border-color: rgba(55,48,163,.2); }
+.chip-rechazado { background: var(--rec-bg); color: var(--rec-ink); border-color: rgba(159,18,57,.2); }
+
+/* ---- KPI dot col ---- */
+.kpi-dot-revision  { background: var(--rev-ink); }
+.kpi-dot-aprobado  { background: var(--apr-ink); }
+.kpi-dot-entregado { background: var(--ent-ink); }
+.kpi-dot-rechazado { background: var(--rec-ink); }
+
+/* ---- Nav pills ---- */
+.navpill-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f0f6;
+  padding: 5px;
+  border-radius: 999px;
+  border: 1.5px solid var(--line);
+}
+.navpill-item {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  padding: 6px 14px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background .15s, color .15s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.navpill-item:hover { background: rgba(99,102,241,.08); color: var(--accent-ink); }
+.navpill-item.active { background: var(--accent); color: #fff; }
+.navpill-item .dot-badge {
+  width: 17px; height: 17px;
+  border-radius: 50%;
+  background: var(--rec-bg);
+  color: var(--rec-ink);
+  font-size: 9px; font-weight: 800;
+  display: grid; place-items: center;
+}
+
+/* ---- Avatar ---- */
+.nav-avatar {
+  width: 36px; height: 36px;
+  border-radius: 11px;
+  display: grid; place-items: center;
+  font-weight: 800; font-size: 14px;
+  border: 1.5px solid var(--accent);
+  flex-shrink: 0;
+}
+
+/* ---- Table light ---- */
+.table-light thead th {
+  background: #f8f7fc;
+  color: var(--ink-3);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 800;
+  padding: 12px 18px;
+  border-bottom: 1.6px solid var(--line);
+}
+.table-light tbody td { padding: 13px 18px; border-bottom: 1px dashed #e7e6ee; }
+.table-light tbody tr { border-left: 4px solid transparent; transition: background .12s; }
+.table-light tbody tr:hover { background: rgba(99,102,241,.04); }
+.table-light tbody tr.row-revision { border-left-color: var(--rev-ink); }
+.table-light tbody tr.row-aprobado { border-left-color: var(--apr-ink); }
+
+/* ---- Inputs light ---- */
+.input-light {
+  background: #fbfbfd;
+  border: 1.6px solid var(--line);
+  border-radius: 11px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color .15s;
+}
+.input-light:focus { border-color: var(--accent); }
+.input-light::placeholder { color: var(--ink-3) !important; }
+
+/* ---- Buttons ---- */
+.btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn-primary:hover { background: #4f46e5; }
+.btn-ghost-light {
+  background: transparent;
+  border: 1.6px solid var(--line);
+  color: var(--ink-2);
+  border-radius: 10px;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-weight: 600; font-size: 13px; cursor: pointer;
+  padding: 7px 14px; transition: background .12s, color .12s;
+}
+.btn-ghost-light:hover { background: var(--accent-soft); color: var(--accent-ink); border-color: var(--accent-soft); }
+
+/* ---- Separador dashed ---- */
+.divider-dashed { height: 1.5px; background: repeating-linear-gradient(90deg, var(--line) 0 8px, transparent 8px 16px); border: 0; margin: 16px 0; }
+
+/* ---- Toast ---- */
+@keyframes slideInToast { from { transform: translateX(110%) scale(0.9); opacity:0; } to { transform: translateX(0) scale(1); opacity:1; } }

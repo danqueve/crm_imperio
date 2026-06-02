@@ -57,40 +57,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Rechazar Venta</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-950 text-gray-100 flex items-center justify-center min-h-screen p-4 font-sans">
-    
-    <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 max-w-md w-full shadow-2xl relative overflow-hidden">
-        
-        <!-- Decoración de fondo -->
-        <div class="absolute top-0 left-0 w-full h-1 bg-red-600"></div>
-        
-        <div class="flex items-center gap-3 mb-6">
-            <div class="bg-red-500/10 p-3 rounded-full">
-                <i data-lucide="alert-octagon" class="text-red-500 w-8 h-8"></i>
+<body style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px;">
+
+    <div class="max-w-md w-full relative overflow-hidden" style="background:var(--card);border:1.6px solid var(--line);border-radius:20px;box-shadow:0 8px 40px rgba(43,43,58,.1);">
+
+        <!-- Franja superior -->
+        <div style="height:5px;background:var(--rec-ink);"></div>
+
+        <div style="padding:32px;">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="p-3 rounded-full" style="background:var(--rec-bg);">
+                    <i data-lucide="alert-octagon" class="w-8 h-8" style="color:var(--rec-ink);"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold" style="color:var(--ink);">Rechazar Venta #<?= htmlspecialchars($id) ?></h2>
+                    <p class="text-sm" style="color:var(--ink-3);">Esta acción notificará al vendedor.</p>
+                </div>
             </div>
-            <div>
-                <h2 class="text-xl font-bold text-white">Rechazar Venta #<?= htmlspecialchars($id) ?></h2>
-                <p class="text-sm text-slate-500">Esta acción notificará al vendedor.</p>
-            </div>
+
+            <form method="POST" class="space-y-4">
+                <?= csrf_field() ?>
+                <input type="hidden" name="sale_id" value="<?= htmlspecialchars($id) ?>">
+
+                <div>
+                    <label class="block text-xs font-bold uppercase mb-1.5 ml-1" style="color:var(--ink-3);">Motivo del Rechazo</label>
+                    <textarea name="reason" rows="4" class="w-full input-light p-4 resize-none" placeholder="Ej: DNI ilegible, el cliente no atiende, dirección inexistente..." required autofocus></textarea>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <a href="dashboard.php" class="flex-1 py-2.5 rounded-xl text-center font-medium transition" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-2);" onmouseover="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--ink-2)'">Cancelar</a>
+                    <button type="submit" class="flex-1 py-2.5 text-white font-bold rounded-xl flex justify-center items-center gap-2 transition" style="background:var(--rec-ink);" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+                        Confirmar Rechazo
+                    </button>
+                </div>
+            </form>
         </div>
-        
-        <form method="POST" class="space-y-4">
-            <?= csrf_field() ?>
-            <input type="hidden" name="sale_id" value="<?= htmlspecialchars($id) ?>">
-            
-            <div>
-                <label class="block text-xs font-bold text-slate-400 uppercase mb-1.5 ml-1">Motivo del Rechazo</label>
-                <textarea name="reason" rows="4" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-4 text-white placeholder:text-slate-600 focus:border-red-500 focus:ring-1 focus:ring-red-500/50 outline-none transition resize-none" placeholder="Ej: DNI ilegible, el cliente no atiende, dirección inexistente..." required autofocus></textarea>
-            </div>
-            
-            <div class="flex gap-3 pt-2">
-                <a href="dashboard.php" class="flex-1 py-2.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition text-center font-medium border border-transparent hover:border-slate-700">Cancelar</a>
-                <button type="submit" class="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg shadow-lg shadow-red-900/20 transition transform hover:-translate-y-0.5 flex justify-center items-center gap-2">
-                    Confirmar Rechazo
-                </button>
-            </div>
-        </form>
     </div>
 
     <script>lucide.createIcons();</script>

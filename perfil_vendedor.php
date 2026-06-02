@@ -86,7 +86,7 @@ include 'includes/header.php';
 
     <!-- Cabecera y Volver -->
     <div class="flex items-center gap-4 mb-8">
-        <a href="dashboard.php" class="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white transition border border-slate-700">
+        <a href="dashboard.php" class="p-2 rounded-full transition" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-3);" onmouseover="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--ink-3)'">
             <i data-lucide="arrow-left"></i>
         </a>
         <div>
@@ -101,17 +101,17 @@ include 'includes/header.php';
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         
         <!-- Tarjeta de Perfil -->
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-lg">
+        <div class="p-6 rounded-2xl" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
             <div class="flex items-center gap-4 mb-4">
                 <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
                     <?= strtoupper(substr($seller['name'], 0, 1)) ?>
                 </div>
                 <div>
                     <h2 class="text-lg font-bold text-white"><?= htmlspecialchars($seller['name']) ?></h2>
-                    <span class="text-xs bg-slate-800 text-blue-400 px-2 py-1 rounded border border-slate-700 uppercase font-bold"><?= ucfirst($seller['role']) ?></span>
+                    <span class="text-xs px-2 py-1 rounded uppercase font-bold" style="background:var(--accent-soft);color:var(--accent-ink);border:1px solid rgba(99,102,241,.2);"><?= ucfirst($seller['role']) ?></span>
                 </div>
             </div>
-            <div class="space-y-2 text-sm text-slate-400 border-t border-slate-800 pt-4">
+            <div class="space-y-2 text-sm pt-4" style="color:var(--ink-2);border-top:1.5px solid var(--line);">
                 <div class="flex justify-between"><span>Usuario/DNI:</span> <span class="text-white font-mono"><?= htmlspecialchars($seller['username']) ?></span></div>
                 <div class="flex justify-between"><span>Celular:</span> <span class="text-white"><?= htmlspecialchars($seller['phone'] ?? '-') ?></span></div>
                 <div class="flex justify-between"><span>Alta:</span> <span class="text-white"><?= date('d/m/Y', strtotime($seller['created_at'])) ?></span></div>
@@ -119,10 +119,10 @@ include 'includes/header.php';
         </div>
 
         <!-- Tarjeta de Totales del Periodo -->
-        <div class="lg:col-span-2 bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-lg flex flex-col justify-between">
+        <div class="lg:col-span-2 p-6 rounded-2xl flex flex-col justify-between" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
             
             <!-- Filtro -->
-            <form class="flex flex-wrap gap-3 items-end mb-6 border-b border-slate-800 pb-6">
+            <form class="flex flex-wrap gap-3 items-end mb-6 pb-6" style="border-bottom:1.5px solid var(--line);">
                 <!-- Si es admin/sup y está viendo a OTRO, mantenemos el ID en el filtro -->
                 <?php if ($seller_id != $my_id): ?>
                     <input type="hidden" name="id" value="<?= $seller_id ?>">
@@ -130,18 +130,18 @@ include 'includes/header.php';
                 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Desde</label>
-                    <input type="date" name="start" value="<?= $start ?>" class="bg-slate-950 border border-slate-700 rounded p-2 text-white text-sm">
+                    <input type="date" name="start" value="<?= $start ?>" class="input-light p-2 text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Hasta</label>
-                    <input type="date" name="end" value="<?= $end ?>" class="bg-slate-950 border border-slate-700 rounded p-2 text-white text-sm">
+                    <input type="date" name="end" value="<?= $end ?>" class="input-light p-2 text-sm">
                 </div>
                 <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm font-bold shadow-lg transition">Filtrar Periodo</button>
             </form>
 
             <!-- Resultados Numéricos -->
             <div class="grid grid-cols-2 gap-4">
-                <div class="bg-slate-950/50 p-4 rounded-xl border border-slate-800">
+                <div class="p-4 rounded-xl" style="background:var(--paper);border:1.5px solid var(--line);">
                     <p class="text-xs text-slate-500 uppercase font-bold">Ventas Entregadas</p>
                     <p class="text-2xl font-bold text-white mt-1">$<?= number_format($totalVentas, 0, ',', '.') ?></p>
                     <p class="text-xs text-slate-600 mt-1"><?= count($sales) ?> operaciones</p>
@@ -156,13 +156,13 @@ include 'includes/header.php';
     </div>
 
     <!-- Listado de Ventas -->
-    <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
-        <div class="p-5 border-b border-slate-800">
-            <h3 class="font-bold text-white flex items-center gap-2"><i data-lucide="list" class="w-4 h-4 text-slate-500"></i> Detalle de Ventas del Periodo</h3>
+    <div class="rounded-2xl overflow-hidden" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+        <div class="p-5" style="border-bottom:1.5px solid var(--line);background:#f8f7fc;">
+            <h3 class="font-bold flex items-center gap-2" style="color:var(--ink);"><i data-lucide="list" class="w-4 h-4" style="color:var(--ink-3);"></i> Detalle de Ventas del Periodo</h3>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
-                <thead class="bg-slate-950/50 text-slate-400 uppercase text-xs font-bold tracking-wider border-b border-slate-800">
+                <thead class="uppercase text-xs font-bold tracking-wider" style="background:#f8f7fc;color:var(--ink-3);border-bottom:1.5px solid var(--line);">
                     <tr>
                         <th class="p-4">Fecha</th>
                         <th class="p-4">Cliente</th>
@@ -177,14 +177,14 @@ include 'includes/header.php';
                         <tr><td colspan="6" class="p-8 text-center text-slate-500 italic">No hay ventas entregadas en este rango de fechas.</td></tr>
                     <?php else: ?>
                         <?php foreach ($sales as $s): ?>
-                        <tr class="hover:bg-slate-800/30 transition">
+                        <tr class="transition" style="border-bottom:1px dashed var(--line);" onmouseover="this.style.background='rgba(99,102,241,.04)'" onmouseout="this.style.background=''">
                             <td class="p-4 text-slate-300"><?= date('d/m/Y', strtotime($s['delivered_at'])) ?></td>
                             <td class="p-4 font-medium text-white"><?= htmlspecialchars($s['client_name']) ?></td>
                             <td class="p-4 text-slate-400"><?= htmlspecialchars($s['item']) ?></td>
                             <td class="p-4 text-right font-mono">$<?= number_format($s['total_amount'], 0, ',', '.') ?></td>
                             <td class="p-4 text-right font-bold text-emerald-400">$<?= number_format($s['total_amount'] * 0.05, 0, ',', '.') ?></td>
                             <td class="p-4 text-center">
-                                <a href="ver_ficha.php?id=<?= $s['id'] ?>" class="text-blue-400 hover:text-white p-1.5 hover:bg-slate-700 rounded transition inline-block"><i data-lucide="eye" class="w-4 h-4"></i></a>
+                                <a href="ver_ficha.php?id=<?= $s['id'] ?>" class="p-1.5 rounded transition inline-block" style="color:var(--accent-ink);" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='var(--accent-ink)'"><i data-lucide="eye" class="w-4 h-4"></i></a>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -197,8 +197,8 @@ include 'includes/header.php';
 
     <!-- Cambio de Contraseña (solo visible para el propio usuario) -->
     <?php if ($seller_id == $my_id): ?>
-    <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl mt-6 overflow-hidden">
-        <div class="p-5 border-b border-slate-800 flex items-center gap-2">
+    <div class="rounded-2xl mt-6 overflow-hidden" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+        <div class="p-5 flex items-center gap-2" style="border-bottom:1.5px solid var(--line);background:#f8f7fc;">
             <i data-lucide="key-round" class="w-4 h-4 text-slate-500"></i>
             <h3 class="font-bold text-white">Cambiar Contraseña</h3>
         </div>
@@ -221,17 +221,17 @@ include 'includes/header.php';
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Contraseña Actual</label>
                     <input type="password" name="current_password" required
-                        class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-white text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition">
+                        class="w-full input-light px-3 py-2.5 text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Nueva Contraseña</label>
                     <input type="password" name="new_password" required minlength="6"
-                        class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-white text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition">
+                        class="w-full input-light px-3 py-2.5 text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Confirmar Contraseña</label>
                     <input type="password" name="confirm_password" required minlength="6"
-                        class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2.5 text-white text-sm focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 outline-none transition">
+                        class="w-full input-light px-3 py-2.5 text-sm">
                 </div>
                 <div class="sm:col-span-3 flex justify-end">
                     <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow-lg transition text-sm">

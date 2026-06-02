@@ -65,21 +65,21 @@ if (!function_exists('renderPagination')) {
         $from = min(($pagina_actual - 1) * $registros_por_pagina + 1, $total_registros);
         $to   = min($pagina_actual * $registros_por_pagina, $total_registros);
         ?>
-        <div class="p-4 border-t border-slate-800 bg-slate-950/30 flex justify-between items-center mt-auto">
-            <div class="text-xs text-slate-500">
-                Mostrando <span class="font-bold text-slate-400"><?= $from ?>–<?= $to ?></span> de <span class="font-bold text-slate-400"><?= $total_registros ?></span> registros
+        <div class="p-4 flex justify-between items-center mt-auto" style="border-top:1.5px solid var(--line);background:#f8f7fc;">
+            <div class="text-xs" style="color:var(--ink-3);">
+                Mostrando <span class="font-bold" style="color:var(--ink-2);"><?= $from ?>–<?= $to ?></span> de <span class="font-bold" style="color:var(--ink-2);"><?= $total_registros ?></span> registros
             </div>
             <div class="flex gap-2">
                 <?php if ($pagina_actual > 1): ?>
-                    <a href="<?= $baseUrl ?>page=<?= $pagina_actual - 1 ?>" 
-                       class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs rounded-lg transition flex items-center gap-1 border border-slate-700">
+                    <a href="<?= $baseUrl ?>page=<?= $pagina_actual - 1 ?>"
+                       class="px-3 py-1.5 text-xs rounded-lg transition flex items-center gap-1" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-2);" onmouseover="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--ink-2)'">
                         <i data-lucide="chevron-left" class="w-3 h-3"></i> Anterior
                     </a>
                 <?php endif; ?>
 
                 <?php if ($pagina_actual < $total_paginas): ?>
-                    <a href="<?= $baseUrl ?>page=<?= $pagina_actual + 1 ?>" 
-                       class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs rounded-lg transition flex items-center gap-1 border border-slate-700">
+                    <a href="<?= $baseUrl ?>page=<?= $pagina_actual + 1 ?>"
+                       class="px-3 py-1.5 text-xs rounded-lg transition flex items-center gap-1" style="background:var(--accent);color:#fff;" onmouseover="this.style.background='#4f46e5'" onmouseout="this.style.background='var(--accent)'">
                         Siguiente <i data-lucide="chevron-right" class="w-3 h-3"></i>
                     </a>
                 <?php endif; ?>
@@ -117,12 +117,12 @@ if (!function_exists('getPaginationParams')) {
 if (!function_exists('status_badge')) {
     function status_badge(string $status): string {
         $map = [
-            'revision'  => ['classes' => 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',   'label' => 'En Revisión', 'dot' => 'bg-yellow-400 animate-pulse'],
-            'aprobado'  => ['classes' => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20', 'label' => 'Aprobado',    'dot' => 'bg-emerald-400'],
-            'entregado' => ['classes' => 'bg-blue-500/10 text-blue-400 border-blue-500/20',          'label' => 'Entregado',   'dot' => 'bg-blue-400'],
-            'rechazado' => ['classes' => 'bg-red-500/10 text-red-400 border-red-500/20',             'label' => 'Rechazado',   'dot' => 'bg-red-400'],
+            'revision'  => ['classes' => 'chip-revision',  'label' => 'En Revisión', 'dot' => 'kpi-dot-revision animate-pulse'],
+            'aprobado'  => ['classes' => 'chip-aprobado',  'label' => 'Aprobado',    'dot' => 'kpi-dot-aprobado'],
+            'entregado' => ['classes' => 'chip-entregado', 'label' => 'Entregado',   'dot' => 'kpi-dot-entregado'],
+            'rechazado' => ['classes' => 'chip-rechazado', 'label' => 'Rechazado',   'dot' => 'kpi-dot-rechazado'],
         ];
-        $cfg = $map[$status] ?? ['classes' => 'bg-slate-800 text-slate-400 border-slate-700', 'label' => ucfirst($status), 'dot' => 'bg-slate-400'];
+        $cfg = $map[$status] ?? ['classes' => 'bg-gray-100 text-gray-500 border-gray-200', 'label' => ucfirst($status), 'dot' => 'bg-gray-400'];
         return sprintf(
             '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border %s"><span class="w-1.5 h-1.5 rounded-full shrink-0 %s"></span>%s</span>',
             $cfg['classes'],

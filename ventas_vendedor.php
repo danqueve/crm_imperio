@@ -73,7 +73,7 @@ include 'includes/header.php';
     
     <!-- Título y Regresar -->
     <div class="flex items-center gap-4 mb-8">
-        <a href="lista_vendedores.php" class="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white transition border border-slate-700">
+        <a href="lista_vendedores.php" class="p-2 rounded-full transition" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-3);" onmouseover="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--ink-3)'">
             <i data-lucide="chevron-left"></i>
         </a>
         <div>
@@ -83,13 +83,13 @@ include 'includes/header.php';
     </div>
 
     <!-- Barra de Filtros (Solo Buscador) -->
-    <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg mb-8">
+    <div class="p-5 rounded-2xl mb-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
         <form class="flex flex-col xl:flex-row gap-4 items-end">
             <input type="hidden" name="id" value="<?= $seller_id ?>">
             <div class="w-full xl:flex-1">
                 <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1 tracking-widest">Buscar Cliente (Nombre o DNI)</label>
                 <div class="relative">
-                    <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 pl-10 text-white focus:border-blue-500 outline-none transition text-sm" placeholder="Buscar cliente por nombre o dni...">
+                    <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" class="w-full input-light px-4 py-2.5 pl-10 text-sm" placeholder="Buscar cliente por nombre o dni...">
                     <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"><i data-lucide="search" class="w-4 h-4"></i></div>
                 </div>
             </div>
@@ -100,10 +100,10 @@ include 'includes/header.php';
     </div>
 
     <!-- Tabla Principal -->
-    <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col min-h-[500px]">
+    <div class="rounded-2xl overflow-hidden flex flex-col min-h-[500px]" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
         <div class="overflow-x-auto flex-1">
             <table class="w-full text-left text-sm">
-                <thead class="bg-slate-950/50 text-slate-500 uppercase text-[10px] font-bold tracking-widest border-b border-slate-800">
+                <thead class="uppercase text-[10px] font-bold tracking-widest" style="background:#f8f7fc;color:var(--ink-3);border-bottom:1.5px solid var(--line);">
                     <tr>
                         <th class="p-5 pl-6">#</th>
                         <th class="p-5">Fecha</th>
@@ -119,7 +119,7 @@ include 'includes/header.php';
                         <tr><td colspan="7" class="p-12 text-center text-slate-500 italic flex flex-col items-center justify-center w-full col-span-7"><i data-lucide="search-x" class="w-10 h-10 mb-2 opacity-50"></i>No se encontraron resultados para la búsqueda.</td></tr>
                     <?php else: ?>
                         <?php $counter = $offset + 1; foreach ($sales as $s): ?>
-                        <tr class="hover:bg-slate-800/30 transition border-b border-slate-800/50 last:border-0">
+                        <tr class="transition" style="border-bottom:1px dashed var(--line);" onmouseover="this.style.background='rgba(99,102,241,.04)'" onmouseout="this.style.background=''">
                             <td class="p-5 pl-6 font-bold text-slate-600"><?= $counter++ ?></td>
                             <td class="p-5 text-slate-400 font-mono text-xs whitespace-nowrap"><?= date('d/m/Y', strtotime($s['created_at'])) ?></td>
                             <td class="p-5">
@@ -142,7 +142,7 @@ include 'includes/header.php';
                                     <?php elseif ($s['status'] === 'rechazado'): ?>
                                         <span class="block font-bold text-red-400/80 mb-0.5 uppercase tracking-tighter">Rechazado por:</span> 
                                         <span class="flex items-center gap-1 mb-1"><i data-lucide="shield-alert" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($s['rejected_by_name'] ?? 'Admin') ?></span>
-                                        <div class="italic text-slate-500 border-l-2 border-slate-800 pl-2 line-clamp-1">"<?= htmlspecialchars($s['rejected_reason'] ?? 'Sin motivo') ?>"</div>
+                                        <div class="italic pl-2 line-clamp-1" style="color:var(--ink-3);border-left:2px solid var(--rev-bg);">"<?= htmlspecialchars($s['rejected_reason'] ?? 'Sin motivo') ?>"</div>
                                     <?php elseif ($s['status'] === 'aprobado'): ?>
                                         <span class="text-emerald-500/60 italic">Venta aprobada, pendiente de entrega.</span>
                                     <?php else: ?>
@@ -151,7 +151,7 @@ include 'includes/header.php';
                                 </div>
                             </td>
                             <td class="p-5 text-right">
-                                <a href="ver_ficha.php?id=<?= $s['id'] ?>" class="inline-flex items-center justify-center p-2 rounded-lg bg-slate-800 hover:bg-blue-600 text-blue-400 hover:text-white transition border border-slate-700 shadow-sm" title="Ver Ficha">
+                                <a href="ver_ficha.php?id=<?= $s['id'] ?>" class="inline-flex items-center justify-center w-11 h-11 rounded-lg transition" style="background:var(--accent-soft);color:var(--accent-ink);border:1.5px solid rgba(99,102,241,.2);" title="Ver Ficha" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'">
                                     <i data-lucide="eye" class="w-4 h-4"></i>
                                 </a>
                             </td>

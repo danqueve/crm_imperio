@@ -93,19 +93,18 @@ include 'includes/header.php';
 <main class="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 fade-in">
     
     <?php if (isset($_GET['msg']) && $_GET['msg'] == 'saved'): ?>
-    <div id="toast-success" class="fixed bottom-6 right-6 z-50 flex items-center gap-4 bg-slate-900 border border-emerald-500/30 text-white rounded-2xl shadow-2xl shadow-black/50 px-5 py-4" style="animation: slideInToast 0.4s cubic-bezier(0.34,1.56,0.64,1) both;">
-        <div class="bg-emerald-500/15 p-2.5 rounded-xl shrink-0 border border-emerald-500/20">
-            <i data-lucide="check-circle" class="w-5 h-5 text-emerald-400"></i>
+    <div id="toast-success" class="fixed bottom-6 right-6 z-50 flex items-center gap-4 rounded-2xl shadow-xl px-5 py-4" style="background:var(--card);border:1.5px solid var(--apr-bg);animation:slideInToast 0.4s cubic-bezier(0.34,1.56,0.64,1) both;box-shadow:0 8px 32px rgba(11,107,70,.12);">
+        <div style="background:var(--apr-bg);padding:10px;border-radius:12px;flex-shrink:0;">
+            <i data-lucide="check-circle" class="w-5 h-5" style="color:var(--apr-ink);"></i>
         </div>
         <div>
-            <p class="font-bold text-sm">¡Venta registrada!</p>
-            <p class="text-xs text-slate-400 mt-0.5">Guardada correctamente en el sistema.</p>
+            <p class="font-bold text-sm" style="color:var(--ink);">¡Venta registrada!</p>
+            <p class="text-xs mt-0.5" style="color:var(--ink-3);">Guardada correctamente en el sistema.</p>
         </div>
-        <button onclick="dismissToast()" class="ml-1 p-1.5 text-slate-500 hover:text-white transition rounded-lg hover:bg-slate-800 shrink-0">
+        <button onclick="dismissToast()" class="ml-1 p-1.5 rounded-lg transition shrink-0" style="color:var(--ink-3);" onmouseover="this.style.background='var(--paper)'" onmouseout="this.style.background='transparent'">
             <i data-lucide="x" class="w-4 h-4"></i>
         </button>
     </div>
-    <style>@keyframes slideInToast { from { transform: translateX(110%) scale(0.9); opacity: 0; } to { transform: translateX(0) scale(1); opacity: 1; } }</style>
     <script>
         function dismissToast() {
             const t = document.getElementById('toast-success');
@@ -118,16 +117,16 @@ include 'includes/header.php';
     <!-- Cabecera -->
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
         <div>
-            <h2 class="text-3xl font-bold text-white tracking-tight uppercase">Panel de Control</h2>
-            <p class="text-slate-400 text-sm mt-1 tracking-wide">Bienvenido, <span class="text-blue-400 font-bold"><?= htmlspecialchars($name) ?></span>.</p>
+            <h2 class="text-3xl font-bold tracking-tight uppercase" style="color:var(--ink);">Panel de Control</h2>
+            <p class="text-sm mt-1" style="color:var(--ink-3);">Bienvenido, <span class="font-bold" style="color:var(--accent-ink);"><?= htmlspecialchars($name) ?></span>.</p>
         </div>
         <div class="flex flex-wrap gap-3">
-            <button onclick="exportarPDF()" class="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 text-sm font-bold shadow-lg shadow-rose-900/30">
-                <i data-lucide="file-down" class="w-4 h-4"></i> PDF PENDIENTES
+            <button onclick="exportarPDF()" class="flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition" style="background:var(--rec-bg);color:var(--rec-ink);border:1.5px solid rgba(159,18,57,.2);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+                <i data-lucide="file-down" class="w-4 h-4"></i> PDF Pendientes
             </button>
             <?php if ($can_manage || $is_entregador): ?>
-            <a href="entregas.php" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg transition flex items-center gap-2 text-sm font-bold shadow-lg shadow-emerald-900/30">
-                <i data-lucide="truck" class="w-4 h-4"></i> GESTIÓN ENTREGAS
+            <a href="entregas.php" class="flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition" style="background:var(--apr-bg);color:var(--apr-ink);border:1.5px solid rgba(11,107,70,.2);">
+                <i data-lucide="truck" class="w-4 h-4"></i> Gestión Entregas
             </a>
             <?php endif; ?>
         </div>
@@ -135,108 +134,108 @@ include 'includes/header.php';
 
     <?php if ($is_admin): ?>
     <!-- Filtro de Período -->
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-8 shadow-lg">
+    <div class="rounded-2xl p-4 mb-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
         <form method="GET" class="flex flex-col sm:flex-row gap-3 items-end">
-            <div class="flex items-center gap-2 text-slate-400 shrink-0 mb-1 sm:mb-0">
-                <i data-lucide="calendar-range" class="w-4 h-4 text-blue-400"></i>
-                <span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Período de análisis</span>
+            <div class="flex items-center gap-2 shrink-0 mb-1 sm:mb-0">
+                <i data-lucide="calendar-range" class="w-4 h-4" style="color:var(--accent);"></i>
+                <span class="text-[10px] font-bold uppercase tracking-widest" style="color:var(--ink-3);">Período de análisis</span>
             </div>
             <div class="flex gap-3 flex-1 flex-wrap">
                 <div class="flex-1 min-w-[140px]">
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1 tracking-widest">Desde</label>
-                    <input type="date" name="start" value="<?= $start ?>" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-blue-500 outline-none transition text-sm">
+                    <label class="block text-[10px] font-bold uppercase mb-1 ml-1 tracking-widest" style="color:var(--ink-3);">Desde</label>
+                    <input type="date" name="start" value="<?= $start ?>" class="w-full input-light px-3 py-2 text-sm" style="color:var(--ink);">
                 </div>
                 <div class="flex-1 min-w-[140px]">
-                    <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1 tracking-widest">Hasta</label>
-                    <input type="date" name="end" value="<?= $end ?>" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white focus:border-blue-500 outline-none transition text-sm">
+                    <label class="block text-[10px] font-bold uppercase mb-1 ml-1 tracking-widest" style="color:var(--ink-3);">Hasta</label>
+                    <input type="date" name="end" value="<?= $end ?>" class="w-full input-light px-3 py-2 text-sm" style="color:var(--ink);">
                 </div>
             </div>
             <div class="flex gap-2 shrink-0">
-                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-xl font-bold text-sm transition flex items-center gap-2 shadow-lg">
+                <button type="submit" class="text-white px-5 py-2 rounded-xl font-bold text-sm transition flex items-center gap-2" style="background:var(--accent);">
                     <i data-lucide="filter" class="w-4 h-4"></i> Aplicar
                 </button>
-                <a href="dashboard.php" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl font-bold text-sm transition border border-slate-700 flex items-center gap-1" title="Resetear al mes actual">
+                <a href="dashboard.php" class="px-4 py-2 rounded-xl font-bold text-sm transition flex items-center gap-1" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-2);" title="Resetear al mes actual">
                     <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
                 </a>
             </div>
         </form>
         <?php if ($total_periodo > 0 || $start !== date('Y-m-01') || $end !== date('Y-m-d')): ?>
-        <div class="mt-3 pt-3 border-t border-slate-800/70 flex flex-wrap gap-4 text-xs text-slate-500">
+        <div class="mt-3 pt-3 flex flex-wrap gap-4 text-xs" style="border-top:1px dashed var(--line);color:var(--ink-3);">
             <span class="flex items-center gap-1.5"><i data-lucide="calendar" class="w-3 h-3"></i> <?= date('d/m/Y', strtotime($start)) ?> — <?= date('d/m/Y', strtotime($end)) ?></span>
-            <span class="flex items-center gap-1.5"><i data-lucide="bar-chart-2" class="w-3 h-3"></i> <span class="text-white font-bold"><?= $total_periodo ?></span> ventas en el período</span>
-            <span class="flex items-center gap-1.5 text-emerald-400"><i data-lucide="dollar-sign" class="w-3 h-3"></i> $<?= number_format($statsMonto['entregado'], 0, ',', '.') ?> entregado</span>
+            <span class="flex items-center gap-1.5"><i data-lucide="bar-chart-2" class="w-3 h-3"></i> <span class="font-bold" style="color:var(--ink);"><?= $total_periodo ?></span> ventas en el período</span>
+            <span class="flex items-center gap-1.5 font-bold" style="color:var(--apr-ink);"><i data-lucide="dollar-sign" class="w-3 h-3"></i> $<?= number_format($statsMonto['entregado'], 0, ',', '.') ?> entregado</span>
             <?php if ($efectividad > 0): ?>
-            <span class="flex items-center gap-1.5 text-blue-400"><i data-lucide="target" class="w-3 h-3"></i> <?= $efectividad ?>% efectividad</span>
+            <span class="flex items-center gap-1.5 font-bold" style="color:var(--accent-ink);"><i data-lucide="target" class="w-3 h-3"></i> <?= $efectividad ?>% efectividad</span>
             <?php endif; ?>
         </div>
         <?php endif; ?>
     </div>
 
-    <!-- 2. RESUMEN NUMÉRICO (TARJETAS) — filtradas por período -->
+    <!-- 2. RESUMEN NUMÉRICO (TARJETAS KPI) -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="p-5 rounded-2xl border border-yellow-500/20 bg-slate-900/50 flex items-center justify-between transition-all duration-300 hover:shadow-xl hover:shadow-yellow-500/10 hover:border-yellow-500/40 hover:-translate-y-0.5 cursor-default group">
+        <div class="p-5 rounded-2xl flex items-center justify-between cursor-default transition-all hover:-translate-y-0.5" style="background:var(--rev-bg);border:1.5px solid rgba(138,90,8,.18);box-shadow:0 2px 12px rgba(138,90,8,.08);">
             <div>
-                <p class="text-[10px] uppercase font-bold text-yellow-500 tracking-widest mb-1">En Revisión</p>
-                <p class="text-3xl font-bold text-white stat-counter" data-target="<?= $stats['revision'] ?>">0</p>
+                <p class="text-[10px] uppercase font-bold tracking-widest mb-1" style="color:var(--rev-ink);">En Revisión</p>
+                <p class="text-3xl font-bold stat-counter" style="color:var(--ink);" data-target="<?= $stats['revision'] ?>">0</p>
                 <?php if ($statsMonto['revision'] > 0): ?>
-                <p class="text-[10px] text-slate-500 mt-1 font-mono">$<?= number_format($statsMonto['revision'], 0, ',', '.') ?></p>
+                <p class="text-[10px] mt-1 font-mono" style="color:var(--rev-ink);">$<?= number_format($statsMonto['revision'], 0, ',', '.') ?></p>
                 <?php endif; ?>
             </div>
-            <div class="p-2.5 rounded-xl bg-yellow-500/10 text-yellow-400 group-hover:bg-yellow-500/20 transition-colors"><i data-lucide="clock" class="w-5 h-5"></i></div>
+            <div class="p-2.5 rounded-xl" style="background:rgba(138,90,8,.12);color:var(--rev-ink);"><i data-lucide="clock" class="w-5 h-5"></i></div>
         </div>
-        <div class="p-5 rounded-2xl border border-emerald-500/20 bg-slate-900/50 flex items-center justify-between transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/10 hover:border-emerald-500/40 hover:-translate-y-0.5 cursor-default group">
+        <div class="p-5 rounded-2xl flex items-center justify-between cursor-default transition-all hover:-translate-y-0.5" style="background:var(--apr-bg);border:1.5px solid rgba(11,107,70,.18);box-shadow:0 2px 12px rgba(11,107,70,.08);">
             <div>
-                <p class="text-[10px] uppercase font-bold text-emerald-500 tracking-widest mb-1">Aprobadas</p>
-                <p class="text-3xl font-bold text-white stat-counter" data-target="<?= $stats['aprobado'] ?>">0</p>
+                <p class="text-[10px] uppercase font-bold tracking-widest mb-1" style="color:var(--apr-ink);">Aprobadas</p>
+                <p class="text-3xl font-bold stat-counter" style="color:var(--ink);" data-target="<?= $stats['aprobado'] ?>">0</p>
                 <?php if ($statsMonto['aprobado'] > 0): ?>
-                <p class="text-[10px] text-slate-500 mt-1 font-mono">$<?= number_format($statsMonto['aprobado'], 0, ',', '.') ?></p>
+                <p class="text-[10px] mt-1 font-mono" style="color:var(--apr-ink);">$<?= number_format($statsMonto['aprobado'], 0, ',', '.') ?></p>
                 <?php endif; ?>
             </div>
-            <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 group-hover:bg-emerald-500/20 transition-colors"><i data-lucide="check" class="w-5 h-5"></i></div>
+            <div class="p-2.5 rounded-xl" style="background:rgba(11,107,70,.12);color:var(--apr-ink);"><i data-lucide="check" class="w-5 h-5"></i></div>
         </div>
-        <div class="p-5 rounded-2xl border border-blue-500/20 bg-slate-900/50 flex items-center justify-between transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/10 hover:border-blue-500/40 hover:-translate-y-0.5 cursor-default group">
+        <div class="p-5 rounded-2xl flex items-center justify-between cursor-default transition-all hover:-translate-y-0.5" style="background:var(--ent-bg);border:1.5px solid rgba(55,48,163,.18);box-shadow:0 2px 12px rgba(55,48,163,.08);">
             <div>
-                <p class="text-[10px] uppercase font-bold text-blue-500 tracking-widest mb-1">Entregadas</p>
-                <p class="text-3xl font-bold text-white stat-counter" data-target="<?= $stats['entregado'] ?>">0</p>
+                <p class="text-[10px] uppercase font-bold tracking-widest mb-1" style="color:var(--ent-ink);">Entregadas</p>
+                <p class="text-3xl font-bold stat-counter" style="color:var(--ink);" data-target="<?= $stats['entregado'] ?>">0</p>
                 <?php if ($statsMonto['entregado'] > 0): ?>
-                <p class="text-[10px] text-emerald-400/70 mt-1 font-mono font-bold">$<?= number_format($statsMonto['entregado'], 0, ',', '.') ?></p>
+                <p class="text-[10px] mt-1 font-mono font-bold" style="color:var(--apr-ink);">$<?= number_format($statsMonto['entregado'], 0, ',', '.') ?></p>
                 <?php endif; ?>
             </div>
-            <div class="p-2.5 rounded-xl bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20 transition-colors"><i data-lucide="truck" class="w-5 h-5"></i></div>
+            <div class="p-2.5 rounded-xl" style="background:rgba(55,48,163,.12);color:var(--ent-ink);"><i data-lucide="truck" class="w-5 h-5"></i></div>
         </div>
-        <div class="p-5 rounded-2xl border border-red-500/20 bg-slate-900/50 flex items-center justify-between transition-all duration-300 hover:shadow-xl hover:shadow-red-500/10 hover:border-red-500/40 hover:-translate-y-0.5 cursor-default group">
+        <div class="p-5 rounded-2xl flex items-center justify-between cursor-default transition-all hover:-translate-y-0.5" style="background:var(--rec-bg);border:1.5px solid rgba(159,18,57,.18);box-shadow:0 2px 12px rgba(159,18,57,.08);">
             <div>
-                <p class="text-[10px] uppercase font-bold text-red-500 tracking-widest mb-1">Rechazadas</p>
-                <p class="text-3xl font-bold text-white stat-counter" data-target="<?= $stats['rechazado'] ?>">0</p>
+                <p class="text-[10px] uppercase font-bold tracking-widest mb-1" style="color:var(--rec-ink);">Rechazadas</p>
+                <p class="text-3xl font-bold stat-counter" style="color:var(--ink);" data-target="<?= $stats['rechazado'] ?>">0</p>
                 <?php if ($efectividad > 0): ?>
-                <p class="text-[10px] text-slate-500 mt-1">efectiv. <span class="text-blue-400 font-bold"><?= $efectividad ?>%</span></p>
+                <p class="text-[10px] mt-1" style="color:var(--ink-3);">efectiv. <span class="font-bold" style="color:var(--accent-ink);"><?= $efectividad ?>%</span></p>
                 <?php endif; ?>
             </div>
-            <div class="p-2.5 rounded-xl bg-red-500/10 text-red-400 group-hover:bg-red-500/20 transition-colors"><i data-lucide="x-circle" class="w-5 h-5"></i></div>
+            <div class="p-2.5 rounded-xl" style="background:rgba(159,18,57,.12);color:var(--rec-ink);"><i data-lucide="x-circle" class="w-5 h-5"></i></div>
         </div>
     </div>
 
     <!-- 3. GRÁFICOS ESTADÍSTICOS -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-2 bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 p-6 rounded-2xl" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-white font-bold flex items-center gap-2 uppercase text-xs tracking-widest">
-                    <i data-lucide="trending-up" class="w-4 h-4 text-blue-400"></i> Desempeño mensual
+                <h3 class="font-bold flex items-center gap-2 uppercase text-xs tracking-widest" style="color:var(--ink);">
+                    <i data-lucide="trending-up" class="w-4 h-4" style="color:var(--accent);"></i> Desempeño mensual
                 </h3>
-                <span class="text-[10px] text-slate-500 font-mono bg-slate-800 px-2 py-1 rounded border border-slate-700">
+                <span class="text-[10px] font-mono px-2 py-1 rounded" style="color:var(--ink-3);background:var(--paper);border:1.5px solid var(--line);">
                     <?= date('d/m/Y', strtotime($start)) ?> – <?= date('d/m/Y', strtotime($end)) ?>
                 </span>
             </div>
             <div class="h-[250px] w-full"><canvas id="monthlyChart"></canvas></div>
         </div>
 
-        <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
+        <div class="p-6 rounded-2xl" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-white font-bold flex items-center gap-2 uppercase text-xs tracking-widest">
-                    <i data-lucide="pie-chart" class="w-4 h-4 text-purple-400"></i> Distribución
+                <h3 class="font-bold flex items-center gap-2 uppercase text-xs tracking-widest" style="color:var(--ink);">
+                    <i data-lucide="pie-chart" class="w-4 h-4" style="color:var(--accent);"></i> Distribución
                 </h3>
                 <?php if ($total_periodo > 0): ?>
-                <span class="text-[10px] text-slate-500 font-mono bg-slate-800 px-2 py-1 rounded border border-slate-700"><?= $total_periodo ?> total</span>
+                <span class="text-[10px] font-mono px-2 py-1 rounded" style="color:var(--ink-3);background:var(--paper);border:1.5px solid var(--line);"><?= $total_periodo ?> total</span>
                 <?php endif; ?>
             </div>
             <div class="h-[220px] w-full flex items-center justify-center"><canvas id="statusChart"></canvas></div>
@@ -245,96 +244,93 @@ include 'includes/header.php';
     <?php endif; // fin bloque admin ?>
 
     <!-- 1. BANDEJA DE ENTRADA (TABLA) -->
-    <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden <?= $is_admin ? 'mt-8' : '' ?>">
-        <div class="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-950/30">
-            <h3 class="font-bold text-lg text-white flex items-center gap-2 uppercase tracking-wider">
-                <i data-lucide="inbox" class="w-5 h-5 text-blue-500"></i>
-                <?= $is_limited_view ? "Mis Ventas Activas" : "Bandeja de Entrada (Revisión)" ?>
+    <div class="rounded-2xl overflow-hidden <?= $is_admin ? 'mt-8' : '' ?>" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+        <div class="p-5 flex justify-between items-center" style="border-bottom:1.5px solid var(--line);background:#f8f7fc;">
+            <h3 class="font-bold text-base flex items-center gap-2 uppercase tracking-wide" style="color:var(--ink);">
+                <i data-lucide="inbox" class="w-5 h-5" style="color:var(--accent);"></i>
+                <?= $is_limited_view ? "Mis Ventas Activas" : "Bandeja de Entrada · Revisión" ?>
             </h3>
-            <span class="text-[10px] font-bold text-slate-500 uppercase bg-slate-950 px-3 py-1 rounded border border-slate-800 tracking-widest">
-                <?= count($orders) ?> REGISTROS
+            <span class="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full" style="color:var(--ink-3);background:var(--paper);border:1.5px solid var(--line);">
+                <?= count($orders) ?> registros
             </span>
         </div>
 
         <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-                <thead class="bg-slate-950/50 text-slate-500 uppercase text-[10px] font-bold tracking-widest border-b border-slate-800">
+            <table class="w-full text-left text-sm table-light">
+                <thead>
                     <tr>
-                        <th class="p-5 pl-6 hidden sm:table-cell">#</th>
-                        <th class="p-5 hidden sm:table-cell">Fecha</th>
-                        <th class="p-5">Cliente</th>
-                        <th class="p-5 hidden lg:table-cell">Cargado por</th>
-                        <th class="p-5">Artículo / Total</th>
-                        <th class="p-5 hidden sm:table-cell">Estado</th>
-                        <th class="p-5 text-right">Acciones</th>
+                        <th class="hidden sm:table-cell">#</th>
+                        <th class="hidden sm:table-cell">Fecha</th>
+                        <th>Cliente</th>
+                        <th class="hidden lg:table-cell">Cargado por</th>
+                        <th>Artículo / Total</th>
+                        <th class="hidden sm:table-cell">Estado</th>
+                        <th style="text-align:right;">Acciones</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-800/50">
+                <tbody>
                     <?php if (empty($orders)): ?>
                         <tr><td colspan="7" class="p-16 text-center">
                             <div class="flex flex-col items-center gap-4">
-                                <div class="p-5 bg-slate-800/60 rounded-2xl border border-slate-700/50 shadow-inner">
-                                    <i data-lucide="inbox" class="w-10 h-10 text-slate-600"></i>
+                                <div class="p-5 rounded-2xl" style="background:var(--paper);border:1.5px solid var(--line);">
+                                    <i data-lucide="inbox" class="w-10 h-10" style="color:var(--ink-3);"></i>
                                 </div>
                                 <div>
-                                    <p class="text-slate-400 font-semibold text-base">Todo al día</p>
-                                    <p class="text-slate-600 text-sm mt-1">No hay ventas pendientes de procesar en este momento.</p>
+                                    <p class="font-semibold text-base" style="color:var(--ink-2);">Todo al día</p>
+                                    <p class="text-sm mt-1" style="color:var(--ink-3);">No hay ventas pendientes de procesar en este momento.</p>
                                 </div>
                             </div>
                         </td></tr>
                     <?php else: ?>
                         <?php $counter = 1; foreach ($orders as $order): ?>
-                        <tr class="hover:bg-slate-800/30 transition-colors border-l-4 <?= $order['status'] === 'revision' ? 'border-yellow-500/60' : 'border-emerald-500/60' ?>">
-                            <td class="p-5 pl-6 font-bold text-slate-600 hidden sm:table-cell"><?= $counter++ ?></td>
-                            <td class="p-5 text-slate-300 font-mono text-xs hidden sm:table-cell"><?= date('d/m/Y', strtotime($order['created_at'])) ?></td>
-                            <td class="p-3 sm:p-5">
-                                <div class="font-bold text-white"><?= htmlspecialchars($order['client_name']) ?></div>
-                                <div class="text-[10px] text-emerald-400 font-mono tracking-tighter flex items-center gap-1 mt-0.5">
+                        <tr class="<?= $order['status'] === 'revision' ? 'row-revision' : 'row-aprobado' ?>">
+                            <td class="hidden sm:table-cell font-bold" style="color:var(--ink-3);"><?= $counter++ ?></td>
+                            <td class="hidden sm:table-cell font-mono text-xs" style="color:var(--ink-2);"><?= date('d/m/Y', strtotime($order['created_at'])) ?></td>
+                            <td class="p-3 sm:p-[13px]">
+                                <div class="font-bold" style="color:var(--ink);"><?= htmlspecialchars($order['client_name']) ?></div>
+                                <div class="text-[10px] font-mono flex items-center gap-1 mt-0.5" style="color:var(--apr-ink);">
                                     <i data-lucide="phone" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($order['client_whatsapp']) ?>
                                 </div>
-                                <div class="text-[10px] text-slate-500 font-mono mt-0.5 sm:hidden"><?= date('d/m/Y', strtotime($order['created_at'])) ?></div>
+                                <div class="text-[10px] font-mono mt-0.5 sm:hidden" style="color:var(--ink-3);"><?= date('d/m/Y', strtotime($order['created_at'])) ?></div>
                             </td>
-                            <td class="p-5 text-slate-400 hidden lg:table-cell">
+                            <td class="hidden lg:table-cell" style="color:var(--ink-2);">
                                 <div class="flex items-center gap-1.5">
-                                    <i data-lucide="user-edit" class="w-3.5 h-3.5 text-slate-500"></i>
-                                    <a href="perfil_vendedor.php?id=<?= $order['user_id'] ?>" class="hover:text-blue-400 hover:underline transition flex items-center gap-1 group/seller">
+                                    <i data-lucide="user-edit" class="w-3.5 h-3.5" style="color:var(--ink-3);"></i>
+                                    <a href="perfil_vendedor.php?id=<?= $order['user_id'] ?>" class="transition hover:underline" style="color:var(--ink-2);" onmouseover="this.style.color='var(--accent-ink)'" onmouseout="this.style.color='var(--ink-2)'">
                                         <?= isset($order['seller_name']) ? htmlspecialchars($order['seller_name']) : 'Yo' ?>
-                                        <i data-lucide="external-link" class="w-2.5 h-2.5 opacity-0 group-hover/seller:opacity-100 transition-opacity"></i>
                                     </a>
                                 </div>
                             </td>
-                            <td class="p-3 sm:p-5">
-                                <div class="text-slate-200 font-medium"><?= htmlspecialchars($order['item']) ?></div>
-                                <div class="text-xs font-bold text-emerald-500/80">$<?= number_format($order['total_amount'], 0, ',', '.') ?></div>
+                            <td class="p-3 sm:p-[13px]">
+                                <div class="font-medium" style="color:var(--ink);"><?= htmlspecialchars($order['item']) ?></div>
+                                <div class="text-xs font-bold" style="color:var(--apr-ink);">$<?= number_format($order['total_amount'], 0, ',', '.') ?></div>
                                 <div class="mt-1 sm:hidden"><?= status_badge($order['status']) ?></div>
                             </td>
-                            <td class="p-5 hidden sm:table-cell">
-                                <?= status_badge($order['status']) ?>
-                            </td>
-                            <td class="p-3 sm:p-5 text-right">
+                            <td class="hidden sm:table-cell"><?= status_badge($order['status']) ?></td>
+                            <td class="p-3 sm:p-[13px]" style="text-align:right;">
                                 <div class="flex justify-end gap-1.5 sm:gap-2 items-center">
-                                    <a href="ver_ficha.php?id=<?= $order['id'] ?>" class="w-10 h-10 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-blue-600 text-blue-400 hover:text-white transition border border-slate-700 shadow-sm" title="Ver Ficha">
+                                    <a href="ver_ficha.php?id=<?= $order['id'] ?>" class="w-11 h-11 flex items-center justify-center rounded-lg transition" style="background:var(--accent-soft);color:var(--accent-ink);border:1.5px solid rgba(99,102,241,.2);" title="Ver Ficha" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'">
                                         <i data-lucide="eye" class="w-4 h-4"></i>
                                     </a>
 
                                     <?php if ($can_manage && $order['status'] === 'revision'): ?>
-                                        <div class="w-px h-4 bg-slate-700 mx-1"></div>
+                                        <div class="w-px h-4 mx-1" style="background:var(--line);"></div>
                                         <form method="POST" action="update_status.php" class="inline">
                                             <?= csrf_field() ?>
                                             <input type="hidden" name="id" value="<?= $order['id'] ?>">
                                             <input type="hidden" name="status" value="aprobado">
-                                            <button type="submit" class="w-10 h-10 flex items-center justify-center bg-emerald-500/10 text-emerald-400 rounded-lg hover:bg-emerald-600 hover:text-white transition border border-emerald-500/20" title="Aprobar Venta">
+                                            <button type="submit" class="w-11 h-11 flex items-center justify-center rounded-lg transition" style="background:var(--apr-bg);color:var(--apr-ink);border:1.5px solid rgba(11,107,70,.2);" title="Aprobar Venta" onmouseover="this.style.background='var(--apr-ink)';this.style.color='#fff'" onmouseout="this.style.background='var(--apr-bg)';this.style.color='var(--apr-ink)'">
                                                 <i data-lucide="check" class="w-4 h-4"></i>
                                             </button>
                                         </form>
-                                        <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="w-10 h-10 flex items-center justify-center bg-red-500/10 text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition border border-red-500/20" title="Cancelar/Rechazar Venta" onclick="return confirm('¿Confirma que desea rechazar esta venta?')">
+                                        <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="w-11 h-11 flex items-center justify-center rounded-lg transition" style="background:var(--rec-bg);color:var(--rec-ink);border:1.5px solid rgba(159,18,57,.2);" title="Rechazar Venta" onclick="return confirm('¿Confirma que desea rechazar esta venta?')" onmouseover="this.style.background='var(--rec-ink)';this.style.color='#fff'" onmouseout="this.style.background='var(--rec-bg)';this.style.color='var(--rec-ink)'">
                                             <i data-lucide="x" class="w-4 h-4"></i>
                                         </a>
                                     <?php endif; ?>
 
                                     <?php if ($is_vendedor && $order['status'] === 'revision'): ?>
-                                        <div class="w-px h-4 bg-slate-700 mx-1"></div>
-                                        <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="w-10 h-10 flex items-center justify-center bg-red-500/10 text-red-400 rounded-lg hover:bg-red-600 hover:text-white transition border border-red-500/20" title="Cancelar mi carga" onclick="return confirm('¿Confirma que desea cancelar y retirar esta venta enviada?')">
+                                        <div class="w-px h-4 mx-1" style="background:var(--line);"></div>
+                                        <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="w-11 h-11 flex items-center justify-center rounded-lg transition" style="background:var(--rec-bg);color:var(--rec-ink);border:1.5px solid rgba(159,18,57,.2);" title="Cancelar mi carga" onclick="return confirm('¿Confirma que desea cancelar y retirar esta venta enviada?')" onmouseover="this.style.background='var(--rec-ink)';this.style.color='#fff'" onmouseout="this.style.background='var(--rec-bg)';this.style.color='var(--rec-ink)'">
                                             <i data-lucide="trash-2" class="w-4 h-4"></i>
                                         </a>
                                     <?php endif; ?>
@@ -381,12 +377,12 @@ include 'includes/header.php';
                     display: true,
                     position: 'top',
                     align: 'end',
-                    labels: { color: '#94a3b8', font: { size: 10 }, boxWidth: 12, padding: 12, usePointStyle: true }
+                    labels: { color: '#6b6b80', font: { size: 10 }, boxWidth: 12, padding: 12, usePointStyle: true }
                 }
             },
             scales: {
-                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', precision: 0 } },
-                x: { grid: { display: false }, ticks: { color: '#64748b' } }
+                y: { beginAtZero: true, grid: { color: 'rgba(43,43,58,0.06)' }, ticks: { color: '#9a9aae', precision: 0 } },
+                x: { grid: { display: false }, ticks: { color: '#9a9aae' } }
             }
         }
     });
@@ -404,7 +400,7 @@ include 'includes/header.php';
         },
         options: {
             responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } } },
+            plugins: { legend: { position: 'bottom', labels: { color: '#6b6b80', font: { size: 10 } } } },
             cutout: '75%'
         }
     });
@@ -438,7 +434,7 @@ include 'includes/header.php';
             head: [['#', 'Fecha', 'Cliente', 'Dirección', 'Artículo', 'Vendedor']],
             body: salesData.map((r, i) => [i+1, r.date, r.client, r.address, r.item, r.seller]),
             startY: 25, theme: 'grid', styles: { fontSize: 8 },
-            headStyles: { fillColor: [51, 65, 85] }
+            headStyles: { fillColor: [99, 102, 241] }
         });
         window.open(doc.output('bloburl'), '_blank');
     }

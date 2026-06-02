@@ -93,7 +93,7 @@ include 'includes/header.php';
     
     <div class="flex flex-col md:flex-row md:items-center gap-4 mb-8 justify-between">
         <div class="flex items-center gap-4">
-            <a href="dashboard.php" class="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white transition border border-slate-700">
+            <a href="dashboard.php" class="p-2 rounded-full transition" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-3);" onmouseover="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--ink-3)'">
                 <i data-lucide="chevron-left"></i>
             </a>
             <div>
@@ -106,15 +106,15 @@ include 'includes/header.php';
     <!-- Filtros y Resumen -->
     <div class="flex flex-col xl:flex-row gap-6 mb-8">
         <!-- Formulario Filtro -->
-        <div class="flex-1 bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg">
+        <div class="flex-1 p-5 rounded-2xl" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
             <form class="flex flex-col sm:flex-row gap-4 items-end">
                 <div class="w-full sm:w-auto flex-1">
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Desde</label>
-                    <input type="date" name="start" value="<?= $start ?>" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-blue-500 outline-none">
+                    <input type="date" name="start" value="<?= $start ?>" class="w-full input-light px-3 py-2">
                 </div>
                 <div class="w-full sm:w-auto flex-1">
                     <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Hasta</label>
-                    <input type="date" name="end" value="<?= $end ?>" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:border-blue-500 outline-none">
+                    <input type="date" name="end" value="<?= $end ?>" class="w-full input-light px-3 py-2">
                 </div>
                 <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg transition flex items-center gap-2">
                     <i data-lucide="filter" class="w-4 h-4"></i> Filtrar
@@ -127,11 +127,11 @@ include 'includes/header.php';
 
         <!-- Tarjetas Totales -->
         <div class="flex gap-4 flex-col sm:flex-row xl:w-auto">
-            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-lg flex-1 min-w-[200px]">
+            <div class="p-5 rounded-2xl flex-1 min-w-[200px]" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
                 <span class="text-slate-500 text-xs uppercase font-bold tracking-wider block mb-1">Total Ventas</span>
                 <div class="text-2xl font-bold text-white">$<?= number_format($totalVentas, 0, ',', '.') ?></div>
             </div>
-            <div class="bg-slate-900 p-5 rounded-2xl border border-emerald-500/20 shadow-lg flex-1 min-w-[200px]">
+            <div class="p-5 rounded-2xl flex-1 min-w-[200px]" style="background:var(--apr-bg);border:1.5px solid rgba(11,107,70,.18);box-shadow:var(--shadow-card);">
                 <span class="text-emerald-500 text-xs uppercase font-bold tracking-wider block mb-1">Comisiones (5%)</span>
                 <div class="text-3xl font-bold text-emerald-400">$<?= number_format($totalComisiones, 0, ',', '.') ?></div>
             </div>
@@ -139,10 +139,10 @@ include 'includes/header.php';
     </div>
 
     <!-- Tabla de Resultados -->
-    <div class="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-xl flex flex-col min-h-[500px]">
+    <div class="rounded-2xl overflow-hidden flex flex-col min-h-[500px]" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
         <div class="overflow-x-auto flex-1">
             <table class="w-full text-sm text-left">
-                <thead class="bg-slate-950/50 text-slate-400 uppercase text-xs font-bold tracking-wider border-b border-slate-800">
+                <thead class="uppercase text-xs font-bold tracking-wider" style="background:#f8f7fc;color:var(--ink-3);border-bottom:1.5px solid var(--line);">
                     <tr>
                         <th class="p-4 whitespace-nowrap">F. Entrega</th>
                         <th class="p-4">Vendedor</th>
@@ -157,7 +157,7 @@ include 'includes/header.php';
                         <tr><td colspan="6" class="p-10 text-center text-slate-500 italic">No hay registros entregados en este rango de fechas.</td></tr>
                     <?php else: ?>
                         <?php foreach ($displaySales as $s): ?>
-                        <tr class="hover:bg-slate-800/30 transition">
+                        <tr class="transition" style="border-bottom:1px dashed var(--line);" onmouseover="this.style.background='rgba(99,102,241,.04)'" onmouseout="this.style.background=''">
                             <td class="p-4 text-slate-300 font-mono text-xs">
                                 <?= date('d/m/Y', strtotime($s['delivered_at'])) ?>
                             </td>

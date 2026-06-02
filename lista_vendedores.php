@@ -31,20 +31,20 @@ include 'includes/header.php';
     
     <!-- Título y Regresar -->
     <div class="flex items-center gap-4 mb-8">
-        <a href="dashboard.php" class="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white transition border border-slate-700">
+        <a href="dashboard.php" class="p-2 rounded-full transition" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-3);" onmouseover="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--ink-3)'">
             <i data-lucide="chevron-left"></i>
         </a>
         <div>
-            <h1 class="text-2xl font-bold text-white tracking-tight">Listado de Vendedores</h1>
+            <h1 class="text-2xl font-bold tracking-tight" style="color:var(--ink);">Listado de Vendedores</h1>
             <p class="text-sm text-slate-500">Usuarios que han registrado ventas en el sistema.</p>
         </div>
     </div>
 
     <!-- Tabla de Vendedores -->
-    <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col min-h-[500px]">
+    <div class="rounded-2xl overflow-hidden flex flex-col min-h-[500px]" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
         <div class="overflow-x-auto flex-1">
             <table class="w-full text-left text-sm">
-                <thead class="bg-slate-950/50 text-slate-500 uppercase text-[10px] font-bold tracking-widest border-b border-slate-800">
+                <thead class="uppercase text-[10px] font-bold tracking-widest" style="background:#f8f7fc;color:var(--ink-3);border-bottom:1.5px solid var(--line);">
                     <tr>
                         <th class="p-5 pl-6">Vendedor</th>
                         <th class="p-5 text-center">Rol</th>
@@ -61,24 +61,24 @@ include 'includes/header.php';
                         <tr><td colspan="8" class="p-12 text-center text-slate-500 italic flex flex-col items-center justify-center w-full col-span-8"><i data-lucide="users-2" class="w-10 h-10 mb-2 opacity-50"></i>No se encontraron vendedores con ventas registradas.</td></tr>
                     <?php else: ?>
                         <?php foreach ($sellers as $s): ?>
-                        <tr class="hover:bg-slate-800/30 transition border-b border-slate-800/50 last:border-0">
+                        <tr class="transition" style="border-bottom:1px dashed var(--line);" onmouseover="this.style.background='rgba(99,102,241,.04)'" onmouseout="this.style.background=''">
                             <td class="p-5 pl-6">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold border border-blue-500/20">
                                         <?= strtoupper(substr($s['name'], 0, 1)) ?>
                                     </div>
                                     <div>
-                                        <div class="font-bold text-white"><?= htmlspecialchars($s['name']) ?></div>
+                                        <div class="font-bold" style="color:var(--ink);"><?= htmlspecialchars($s['name']) ?></div>
                                         <div class="text-[10px] text-slate-500 font-mono uppercase tracking-tighter">@<?= htmlspecialchars($s['username']) ?></div>
                                     </div>
                                 </div>
                             </td>
                             <td class="p-5 text-center">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border bg-slate-800 text-slate-400 border-slate-700">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border" style="background:var(--paper);color:var(--ink-2);border-color:var(--line);">
                                     <?= ucfirst($s['role']) ?>
                                 </span>
                             </td>
-                            <td class="p-5 text-center font-bold text-white">
+                            <td class="p-5 text-center font-bold" style="color:var(--ink);">
                                 <?= $s['total_sales'] ?>
                             </td>
                             <td class="p-5 text-center font-bold text-green-400">
@@ -96,7 +96,7 @@ include 'includes/header.php';
                                 elseif ($percentage > 0) $color = 'text-red-500';
                                 ?>
                                 <div class="<?= $color ?> font-bold text-sm"><?= $percentage ?>%</div>
-                                <div class="w-16 h-1 bg-slate-800 rounded-full mx-auto mt-1 overflow-hidden">
+                                <div class="w-16 h-1 rounded-full mx-auto mt-1 overflow-hidden" style="background:var(--line);">
                                     <div class="h-full <?= str_replace('text', 'bg', $color) ?>" style="width: <?= $percentage ?>%"></div>
                                 </div>
                             </td>

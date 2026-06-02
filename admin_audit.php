@@ -65,7 +65,7 @@ include 'includes/header.php';
 
     <!-- Cabecera -->
     <div class="flex items-center gap-4 mb-8">
-        <a href="dashboard.php" class="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white transition border border-slate-700">
+        <a href="dashboard.php" class="p-2 rounded-full transition" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-3);" onmouseover="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--ink-3)'">
             <i data-lucide="arrow-left"></i>
         </a>
         <div>
@@ -78,10 +78,10 @@ include 'includes/header.php';
     </div>
 
     <!-- Filtros -->
-    <form method="GET" class="bg-slate-900 p-4 rounded-xl border border-slate-800 mb-6 flex flex-wrap gap-3 items-end">
+    <form method="GET" class="p-4 rounded-xl mb-6 flex flex-wrap gap-3 items-end" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
         <div>
             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Acción</label>
-            <select name="action" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+            <select name="action" class="input-light px-3 py-2 text-sm">
                 <option value="">Todas</option>
                 <?php foreach ($acciones as $ac): ?>
                     <option value="<?= htmlspecialchars($ac) ?>" <?= $filtro_action === $ac ? 'selected' : '' ?>>
@@ -92,7 +92,7 @@ include 'includes/header.php';
         </div>
         <div>
             <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Usuario</label>
-            <select name="user_id" class="bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white text-sm">
+            <select name="user_id" class="input-light px-3 py-2 text-sm">
                 <option value="">Todos</option>
                 <?php foreach ($usuarios as $u): ?>
                     <option value="<?= $u['id'] ?>" <?= $filtro_user == $u['id'] ? 'selected' : '' ?>>
@@ -105,17 +105,17 @@ include 'includes/header.php';
             Filtrar
         </button>
         <?php if ($filtro_action || $filtro_user): ?>
-            <a href="admin_audit.php" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-bold rounded-lg transition">
+            <a href="admin_audit.php" class="px-4 py-2 text-sm font-bold rounded-lg transition" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-2);" onmouseover="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--ink-2)'"  >
                 Limpiar
             </a>
         <?php endif; ?>
     </form>
 
     <!-- Tabla -->
-    <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden flex flex-col">
+    <div class="rounded-2xl overflow-hidden flex flex-col" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm">
-                <thead class="bg-slate-950/50 text-slate-400 uppercase text-xs font-bold tracking-wider border-b border-slate-800">
+                <thead class="uppercase text-xs font-bold tracking-wider" style="background:#f8f7fc;color:var(--ink-3);border-bottom:1.5px solid var(--line);">
                     <tr>
                         <th class="p-4">Fecha</th>
                         <th class="p-4">Usuario</th>
@@ -135,7 +135,7 @@ include 'includes/header.php';
                         </tr>
                     <?php else: ?>
                         <?php foreach ($logs as $log): ?>
-                        <tr class="hover:bg-slate-800/30 transition">
+                        <tr class="transition" style="border-bottom:1px dashed var(--line);" onmouseover="this.style.background='rgba(99,102,241,.04)'" onmouseout="this.style.background=''">
                             <td class="p-4 text-slate-400 whitespace-nowrap">
                                 <?= date('d/m/Y H:i', strtotime($log['created_at'])) ?>
                             </td>
@@ -145,15 +145,15 @@ include 'includes/header.php';
                             <td class="p-4">
                                 <?php
                                 $action_colors = [
-                                    'login'           => 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-                                    'create_sale'     => 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-                                    'aprobado'        => 'bg-green-500/10 text-green-400 border-green-500/20',
-                                    'entregado'       => 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-                                    'revision'        => 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
-                                    'reject'          => 'bg-red-500/10 text-red-400 border-red-500/20',
-                                    'change_password' => 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+                                    'login'           => 'bg-blue-100 text-blue-800 border-blue-200',
+                                    'create_sale'     => 'bg-emerald-100 text-emerald-800 border-emerald-200',
+                                    'aprobado'        => 'bg-green-100 text-green-800 border-green-200',
+                                    'entregado'       => 'bg-indigo-100 text-indigo-800 border-indigo-200',
+                                    'revision'        => 'bg-amber-100 text-amber-800 border-amber-200',
+                                    'reject'          => 'bg-red-100 text-red-800 border-red-200',
+                                    'change_password' => 'bg-orange-100 text-orange-800 border-orange-200',
                                 ];
-                                $color = $action_colors[$log['action']] ?? 'bg-slate-700 text-slate-300 border-slate-600';
+                                $color = $action_colors[$log['action']] ?? 'bg-gray-100 text-gray-700 border-gray-200';
                                 ?>
                                 <span class="px-2 py-1 rounded border text-xs font-bold <?= $color ?>">
                                     <?= htmlspecialchars($log['action']) ?>

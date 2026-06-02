@@ -7,6 +7,16 @@
 // Cargar credenciales desde archivo de configuración (no versionado)
 require_once dirname(__DIR__) . '/config.php';
 
+// Base URL del proyecto — calculada desde la ubicación real del archivo en disco.
+// Más robusto que contar slashes en la URL: funciona sin importar en qué
+// subdirectorio esté desplegado el proyecto (raíz, /crm/, /apps/crm/, etc.).
+if (!defined('ASSET_BASE')) {
+    $__docRoot = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/');
+    $__appRoot = rtrim(str_replace('\\', '/', dirname(__DIR__)), '/');
+    define('ASSET_BASE', '/' . ltrim(str_replace($__docRoot, '', $__appRoot), '/') . '/');
+    unset($__docRoot, $__appRoot);
+}
+
 try {
     // Crear instancia PDO
     $pdo = new PDO("mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4", DB_USER, DB_PASS);

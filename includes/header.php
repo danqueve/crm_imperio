@@ -4,51 +4,23 @@
  * Propósito: Cabecera global del sistema con navegación dinámica y control de roles.
  */
 
-// Detectar el nombre del archivo actual para marcar el enlace activo
 $current_page = basename($_SERVER['PHP_SELF']);
 
-// Estilos para enlace Activo e Inactivo (Escritorio)
-$active_class = 'bg-blue-600 text-white shadow-md shadow-blue-900/20';
-$inactive_class = 'text-slate-400 hover:text-white hover:bg-slate-700/50';
-
-function getLinkClass($page_name) {
-    global $current_page, $active_class, $inactive_class;
-    return $current_page === $page_name ? $active_class : $inactive_class;
-}
-
-// Estilos para enlace Activo e Inactivo (Móvil)
-$mobile_active = 'bg-blue-600 text-white border-blue-500 shadow-lg';
-$mobile_inactive = 'bg-slate-800 text-slate-300 border-slate-700';
-
-function getMobileClass($page_name) {
-    global $current_page, $mobile_active, $mobile_inactive;
-    return $current_page === $page_name ? $mobile_active : $mobile_inactive;
-}
-
-// --- DEFINICIÓN DE PERMISOS BASADOS EN ROLES ---
-$role = $_SESSION['role'] ?? '';
+$role    = $_SESSION['role'] ?? '';
 $user_id = $_SESSION['user_id'] ?? 0;
 
-// Permiso para gestionar entregas (Admin, Supervisor, Verificador y Entregador)
 $can_manage_deliveries = in_array($role, ['admin', 'supervisor', 'verificador', 'entregador']);
+$can_see_commissions   = in_array($role, ['admin', 'supervisor']);
 
-// Permiso para ver comisiones GLOBALES (Solo Admin y Supervisor)
-$can_see_commissions = in_array($role, ['admin', 'supervisor']);
-
-// Contador de ventas pendientes (solo para roles que aprueban)
 $pending_count = 0;
 if (in_array($role, ['admin', 'supervisor', 'verificador']) && isset($pdo)) {
     $stmtPending = $pdo->query("SELECT COUNT(*) FROM sales WHERE status = 'revision'");
     $pending_count = (int)$stmtPending->fetchColumn();
 }
 
-// Permiso para gestión de usuarios (Solo Admin)
-$is_admin = ($role === 'admin');
-
-// Permiso para ver su propio perfil (Todos los usuarios logueados)
+$is_admin           = ($role === 'admin');
 $can_view_own_profile = isset($_SESSION['user_id']);
 
-// Color de avatar basado en el nombre del usuario
 function getAvatarGradient($name) {
     $gradients = [
         'from-blue-500 to-indigo-600',
@@ -66,6 +38,21 @@ function getAvatarGradient($name) {
 }
 $avatarGradient = getAvatarGradient($_SESSION['name'] ?? 'U');
 $avatarInitial  = strtoupper(mb_substr($_SESSION['name'] ?? 'U', 0, 1));
+
+function navLink(string $href, string $icon, string $label, bool $hasBadge = false, int $badgeCount = 0, bool $extraCond = true): string {
+    global $current_page;
+    if (!$extraCond) return '';
+    $page    = basename(strtok($href, '?'));
+    $isActive = ($current_page === $page);
+    $active   = $isActive ? 'active' : '';
+    $badge    = ($hasBadge && $badgeCount > 0)
+        ? '<span class="dot-badge">' . ($badgeCount > 99 ? '99+' : $badgeCount) . '</span>'
+        : '';
+    return sprintf(
+        '<a href="%s" class="navpill-item %s"><i data-lucide="%s" style="width:15px;height:15px;"></i> %s %s</a>',
+        htmlspecialchars($href), $active, htmlspecialchars($icon), htmlspecialchars($label), $badge
+    );
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -73,144 +60,145 @@ $avatarInitial  = strtoupper(mb_substr($_SESSION['name'] ?? 'U', 0, 1));
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>CRM Imperio</title>
-    <link rel="icon" href="img/logo.jpg" type="image/jpeg">
+    <link rel="icon" href="<?= ASSET_BASE ?>img/logo.jpg" type="image/jpeg">
+    <!-- Fuentes -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Sistema de diseño -->
+    <link rel="stylesheet" href="<?= ASSET_BASE ?>style.css">
     <!-- Iconos Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        /* Personalización de scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
-        /* Animación de entrada */
-        .fade-in { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        /* Utilidad para ocultar scrollbar en móviles */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        /* Safe area insets para dispositivos con notch (iPhone X+) */
-        .mobile-bottom-nav { padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 0.375rem); }
-    </style>
 </head>
-<body class="bg-slate-950 text-gray-100 font-sans min-h-[100dvh] flex flex-col selection:bg-blue-500 selection:text-white">
+<body style="min-height:100dvh; display:flex; flex-direction:column;">
 
     <!-- Navbar Superior -->
-    <nav class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-20 items-center">
-                
-                <!-- 1. Logo y Marca -->
-                <div class="flex items-center gap-3 min-w-[150px]">
-                    <div class="bg-gradient-to-br from-blue-600 to-indigo-600 p-2 rounded-lg shadow-lg shadow-blue-900/20">
-                        <i data-lucide="layout-dashboard" class="text-white w-6 h-6"></i>
-                    </div>
+    <nav style="background:rgba(255,255,255,0.9); backdrop-filter:blur(12px); border-bottom:1.5px solid var(--line); position:sticky; top:0; z-index:30; box-shadow:0 1px 8px rgba(43,43,58,.06);">
+        <div style="max-width:1280px; margin:0 auto; padding:0 20px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; height:68px; gap:16px;">
+
+                <!-- Logo y marca -->
+                <a href="dashboard.php" style="display:flex; align-items:center; gap:10px; text-decoration:none; min-width:0; flex-shrink:0;">
+                    <img src="<?= ASSET_BASE ?>img/logo.jpg"
+                         alt="Imperio"
+                         style="width:38px;height:38px;border-radius:10px;object-fit:cover;border:1.5px solid var(--line);background:#fff;flex-shrink:0;">
                     <div class="hidden md:block">
-                        <h1 class="font-bold text-xl text-white tracking-tight leading-none">CRM Imperio</h1>
-                        
+                        <div style="font-weight:800;font-size:16px;color:var(--ink);letter-spacing:-.01em;line-height:1;">CRM Imperio</div>
+                        <div style="font-size:10px;color:var(--ink-3);font-weight:600;letter-spacing:.1em;text-transform:uppercase;">Sistema de ventas</div>
                     </div>
-                </div>
+                </a>
 
-                <!-- 2. Navegación Centro (Solo Escritorio) -->
-                <div class="hidden md:flex items-center justify-center flex-1">
-                    <div class="flex items-center gap-1 bg-slate-800/50 border border-slate-700/50 rounded-full p-1.5 shadow-inner">
-                        
-                        <a href="dashboard.php" class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all <?= getLinkClass('dashboard.php') ?>">
-                            <i data-lucide="home" class="w-4 h-4"></i> Panel
-                            <?php if ($pending_count > 0): ?>
-                            <span class="inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold bg-red-500 text-white rounded-full leading-none"><?= $pending_count > 99 ? '99+' : $pending_count ?></span>
-                            <?php endif; ?>
-                        </a>
-                        
-                        <a href="cargar_venta.php" class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all <?= getLinkClass('cargar_venta.php') ?>">
-                            <i data-lucide="plus-circle" class="w-4 h-4"></i> Nueva Venta
-                        </a>
-
-                        <a href="historial_ventas.php" class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all <?= getLinkClass('historial_ventas.php') ?>">
-                            <i data-lucide="archive" class="w-4 h-4"></i> Historial
-                        </a>
-
-                        <?php if ($can_view_own_profile): ?>
-                        <a href="perfil_vendedor.php?id=<?= $user_id ?>" class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all <?= getLinkClass('perfil_vendedor.php') ?>">
-                            <i data-lucide="user" class="w-4 h-4"></i> Mis Ventas
-                        </a>
-                        <?php endif; ?>
-
-
+                <!-- Navegación centro (escritorio) -->
+                <div class="hidden md:flex flex-1 justify-center">
+                    <div class="navpill-container">
+                        <?= navLink('dashboard.php',        'home',        'Panel',     true, $pending_count) ?>
+                        <?= navLink('cargar_venta.php',     'plus-circle', 'Nueva Venta') ?>
+                        <?= navLink('historial_ventas.php', 'archive',     'Historial') ?>
+                        <?= navLink("perfil_vendedor.php?id=$user_id", 'user', 'Mis Ventas', false, 0, $can_view_own_profile) ?>
                         <?php if ($can_manage_deliveries): ?>
-                        <div class="w-px h-5 bg-slate-700 mx-1"></div>
-                        <a href="entregas.php" class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all <?= getLinkClass('entregas.php') ?>">
-                            <i data-lucide="truck" class="w-4 h-4"></i> Entregas
-                        </a>
+                        <span style="width:1px;height:20px;background:var(--line);margin:0 2px;"></span>
+                        <?= navLink('entregas.php',         'truck',       'Entregas') ?>
                         <?php endif; ?>
-
-                        <?php if ($can_see_commissions): ?>
-                        <a href="comisiones.php" class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all <?= getLinkClass('comisiones.php') ?>">
-                            <i data-lucide="dollar-sign" class="w-4 h-4"></i> Comisiones
-                        </a>
-                        <?php endif; ?>
-
+                        <?= navLink('comisiones.php',       'dollar-sign', 'Comisiones', false, 0, $can_see_commissions) ?>
                         <?php if ($is_admin): ?>
-                        <a href="lista_vendedores.php" class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all <?= getLinkClass('lista_vendedores.php') ?>">
-                            <i data-lucide="users-2" class="w-4 h-4"></i> Vendedores
-                        </a>
+                        <span style="width:1px;height:20px;background:var(--line);margin:0 2px;"></span>
+                        <?= navLink('lista_vendedores.php', 'users-2',     'Vendedores') ?>
+                        <?= navLink('register_user.php',    'users',       'Usuarios') ?>
+                        <?= navLink('admin_audit.php',      'shield-check','Auditoría') ?>
                         <?php endif; ?>
-
-                        <?php if ($is_admin): ?>
-                        <a href="register_user.php" class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all <?= getLinkClass('register_user.php') ? $active_class : 'text-purple-400 hover:text-purple-300 hover:bg-purple-500/10' ?>">
-                            <i data-lucide="users" class="w-4 h-4"></i> Usuarios
-                        </a>
-                        <a href="admin_audit.php" class="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all <?= getLinkClass('admin_audit.php') ?>">
-                            <i data-lucide="shield-check" class="w-4 h-4"></i> Auditoría
-                        </a>
-                        <?php endif; ?>
-
                     </div>
                 </div>
 
-                <!-- 3. Perfil y Salida -->
-                <div class="flex items-center justify-end gap-3 min-w-[100px] md:min-w-[200px]">
-                    <div class="hidden sm:flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-gradient-to-br <?= $avatarGradient ?> flex items-center justify-center text-sm font-bold text-white shadow-lg shrink-0 border border-white/10">
+                <!-- Perfil y salida -->
+                <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                    <div class="hidden sm:flex" style="align-items:center;gap:10px;">
+                        <div class="nav-avatar bg-gradient-to-br <?= $avatarGradient ?>" style="color:#fff;">
                             <?= $avatarInitial ?>
                         </div>
-                        <div class="text-right">
-                            <p class="text-sm font-semibold text-white leading-tight"><?= htmlspecialchars($_SESSION['name'] ?? 'Usuario') ?></p>
-                            <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider"><?= $role ?></p>
+                        <div style="text-align:right;">
+                            <div style="font-size:13px;font-weight:700;color:var(--ink);line-height:1.2;"><?= htmlspecialchars($_SESSION['name'] ?? 'Usuario') ?></div>
+                            <div style="font-size:10px;color:var(--ink-3);font-weight:600;letter-spacing:.1em;text-transform:uppercase;"><?= $role ?></div>
                         </div>
                     </div>
-                    <a href="logout.php" class="p-2 bg-slate-800 hover:bg-red-500/10 text-slate-400 hover:text-red-400 rounded-full transition-colors border border-slate-700 hover:border-red-500/20" title="Cerrar Sesión">
-                        <i data-lucide="log-out" class="w-5 h-5"></i>
+                    <a href="logout.php"
+                       title="Cerrar Sesión"
+                       style="display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;background:var(--paper);border:1.5px solid var(--line);color:var(--ink-3);transition:background .15s,color .15s;"
+                       onmouseover="this.style.background='#fad9da';this.style.color='#9f1239';this.style.borderColor='rgba(159,18,57,.3)'"
+                       onmouseout="this.style.background='var(--paper)';this.style.color='var(--ink-3)';this.style.borderColor='var(--line)'">
+                        <i data-lucide="log-out" style="width:17px;height:17px;"></i>
                     </a>
                 </div>
 
             </div>
         </div>
 
-        <!-- Navegación Móvil -->
-        <div class="md:hidden border-t border-slate-800/80 bg-slate-900 px-2 pt-1.5 mobile-bottom-nav flex overflow-x-auto gap-1 no-scrollbar items-center">
+    </nav>
+
+    <!-- ===== NAV INFERIOR MOBILE (fixed bottom, solo visible en móvil) ===== -->
+    <div class="md:hidden" id="bottom-nav-wrapper"
+         style="position:fixed;bottom:0;left:0;right:0;z-index:40;background:rgba(255,255,255,.97);border-top:1.5px solid var(--line);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding-bottom:env(safe-area-inset-bottom,0px);">
+        <div id="mobile-nav-scroll"
+             class="no-scrollbar"
+             style="display:flex;overflow-x:auto;gap:0;scroll-behavior:smooth;">
             <?php
             $mobileLinks = [
-                ['href' => 'dashboard.php',              'icon' => 'home',        'label' => 'Panel',    'cond' => true],
-                ['href' => 'cargar_venta.php',           'icon' => 'plus-circle', 'label' => 'Nueva',    'cond' => true],
-                ['href' => 'historial_ventas.php',       'icon' => 'archive',     'label' => 'Historial','cond' => true],
-                ['href' => "perfil_vendedor.php?id=$user_id", 'icon' => 'user',   'label' => 'Mis Ventas','cond' => $can_view_own_profile],
-                ['href' => 'entregas.php',               'icon' => 'truck',       'label' => 'Entregas', 'cond' => $can_manage_deliveries],
+                ['href' => 'dashboard.php',                   'icon' => 'home',         'label' => 'Panel',       'cond' => true],
+                ['href' => 'cargar_venta.php',                'icon' => 'plus-circle',  'label' => 'Nueva',       'cond' => true],
+                ['href' => 'historial_ventas.php',            'icon' => 'archive',      'label' => 'Historial',   'cond' => true],
+                ['href' => "perfil_vendedor.php?id=$user_id", 'icon' => 'user',         'label' => 'Mis Ventas',  'cond' => $can_view_own_profile],
+                ['href' => 'entregas.php',                    'icon' => 'truck',        'label' => 'Entregas',    'cond' => $can_manage_deliveries],
+                ['href' => 'comisiones.php',                  'icon' => 'dollar-sign',  'label' => 'Comisiones',  'cond' => $can_see_commissions],
+                ['href' => 'lista_vendedores.php',            'icon' => 'users-2',      'label' => 'Vendedores',  'cond' => $is_admin],
+                ['href' => 'register_user.php',               'icon' => 'user-plus',    'label' => 'Usuarios',    'cond' => $is_admin],
+                ['href' => 'admin_audit.php',                 'icon' => 'shield-check', 'label' => 'Auditoría',   'cond' => $is_admin],
             ];
+
+            // Contar items visibles para distribuir espacio correctamente
+            $visibleCount = count(array_filter($mobileLinks, fn($l) => $l['cond']));
+            // Si caben en pantalla (≤5), los distribuimos igual; si hay más, cada uno tiene ancho fijo para el scroll
+            $itemStyle = $visibleCount <= 5
+                ? 'flex:1;'
+                : 'flex-shrink:0;min-width:64px;';
+
             foreach ($mobileLinks as $link):
                 if (!$link['cond']) continue;
                 $isActive = ($current_page === basename(strtok($link['href'], '?')));
+                $activeStyle = $isActive
+                    ? 'color:var(--accent-ink);background:var(--accent-soft);'
+                    : 'color:var(--ink-3);';
             ?>
-            <a href="<?= $link['href'] ?>" class="flex-shrink-0 flex flex-col items-center gap-0.5 px-4 py-2 rounded-xl transition-all whitespace-nowrap <?= $isActive ? 'text-blue-400 bg-blue-500/10' : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50' ?>">
-                <i data-lucide="<?= $link['icon'] ?>" class="w-5 h-5"></i>
-                <span class="text-[9px] font-bold uppercase tracking-wide"><?= $link['label'] ?></span>
-                <?php if ($isActive): ?>
-                    <span class="w-1 h-1 rounded-full bg-blue-400"></span>
-                <?php else: ?>
-                    <span class="w-1 h-1"></span>
-                <?php endif; ?>
+            <a href="<?= $link['href'] ?>"
+               style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 4px 6px;text-decoration:none;white-space:nowrap;transition:background .15s,color .15s;min-height:52px;<?= $itemStyle ?><?= $activeStyle ?>">
+                <i data-lucide="<?= $link['icon'] ?>" style="width:18px;height:18px;flex-shrink:0;"></i>
+                <span style="font-size:9px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;line-height:1;"><?= $link['label'] ?></span>
+                <span style="width:<?= $isActive ? '16px' : '0' ?>;height:2px;border-radius:1px;background:var(--accent);transition:width .2s;"></span>
             </a>
             <?php endforeach; ?>
         </div>
-    </nav>
+        <!-- Gradiente derecho — indica scroll horizontal cuando hay más de 5 items -->
+        <?php if ($visibleCount > 5): ?>
+        <div id="mobile-nav-fade"
+             style="position:absolute;right:0;top:0;bottom:0;width:24px;pointer-events:none;background:linear-gradient(to left,rgba(255,255,255,.97),transparent);"></div>
+        <?php endif; ?>
+    </div>
+
+    <script>
+    (function(){
+        var scroll = document.getElementById('mobile-nav-scroll');
+        var fade   = document.getElementById('mobile-nav-fade');
+        if (!scroll) return;
+        if (fade) {
+            function updateFade(){
+                var atEnd = scroll.scrollLeft + scroll.clientWidth >= scroll.scrollWidth - 4;
+                fade.style.opacity = atEnd ? '0' : '1';
+            }
+            scroll.addEventListener('scroll', updateFade, {passive:true});
+            updateFade();
+        }
+        // Desplazar el item activo al centro al cargar
+        var active = scroll.querySelector('a[style*="accent-soft"]');
+        if (active) active.scrollIntoView({block:'nearest',inline:'center'});
+    })();
+    </script>

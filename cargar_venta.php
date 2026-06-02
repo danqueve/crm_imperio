@@ -16,12 +16,12 @@ include 'includes/header.php';
     
     <!-- Cabecera interna -->
     <div class="flex items-center gap-4 mb-8">
-        <a href="dashboard.php" class="w-10 h-10 flex items-center justify-center bg-slate-800 rounded-full text-slate-400 hover:text-white transition border border-slate-700 shrink-0">
+        <a href="dashboard.php" class="w-10 h-10 flex items-center justify-center rounded-full shrink-0 transition" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-3);" onmouseover="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--ink-3)'">
             <i data-lucide="chevron-left"></i>
         </a>
         <div>
-            <h1 class="text-2xl font-bold text-white">Cargar Nueva Venta</h1>
-            <p class="text-sm text-slate-500">Complete el formulario siguiendo los datos de la ficha del cliente.</p>
+            <h1 class="text-2xl font-bold" style="color:var(--ink);">Cargar Nueva Venta</h1>
+            <p class="text-sm" style="color:var(--ink-3);">Complete el formulario siguiendo los datos de la ficha del cliente.</p>
         </div>
     </div>
 
@@ -69,39 +69,39 @@ include 'includes/header.php';
         <?= csrf_field() ?>
 
         <!-- Sección 1: Datos del Cliente -->
-        <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 md:p-8 shadow-2xl">
-            <div class="flex items-center gap-3 mb-6 text-blue-400 border-b border-slate-800 pb-4">
+        <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+            <div class="flex items-center gap-3 mb-6 pb-4" style="color:var(--accent);border-bottom:1.5px solid var(--line);">
                 <i data-lucide="user"></i>
-                <h2 class="font-bold text-lg text-white tracking-tight uppercase">DATOS DEL CLIENTE</h2>
+                <h2 class="font-bold text-lg tracking-tight uppercase" style="color:var(--ink);">DATOS DEL CLIENTE</h2>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">DNI</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">DNI</label>
                     <input type="text" name="client_dni" required placeholder="Sin puntos ni espacios" 
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition font-mono">
+                           class="w-full input-light px-4 py-3 font-mono">
                 </div>
                 <div class="md:col-span-1 lg:col-span-2">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Apellido y Nombre</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Apellido y Nombre</label>
                     <input type="text" name="client_name" required placeholder="Nombre completo" 
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Domicilio</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Domicilio</label>
                     <input type="text" name="client_address" required placeholder="Calle y número" 
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Barrio</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Barrio</label>
                     <input type="text" name="client_neighborhood" required placeholder="Barrio" 
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Localidad</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Localidad</label>
                     <select name="client_locality" required
-                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                            class="w-full input-light px-4 py-3">
                         <option value="" disabled selected>Seleccionar localidad...</option>
                         <option value="Acheral">Acheral</option>
                         <option value="Aguilares">Aguilares</option>
@@ -127,73 +127,73 @@ include 'includes/header.php';
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">WhatsApp</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">WhatsApp</label>
                     <input type="text" name="client_whatsapp" required placeholder="Ej: 381..." 
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition font-mono">
+                           class="w-full input-light px-4 py-3 font-mono">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Nro Llamada (Opcional)</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Nro Llamada (Opcional)</label>
                     <input type="text" name="client_phone" placeholder="Alternativo" 
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition font-mono">
+                           class="w-full input-light px-4 py-3 font-mono">
                 </div>
 
                 <div class="md:col-span-2 lg:col-span-3">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Ubicación Google Maps</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Ubicación Google Maps</label>
                     <input type="text" name="client_map_link" placeholder="Pegue el enlace aquí (https://maps...)" 
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
             </div>
         </div>
 
         <!-- Sección 2: Datos Laborales -->
-        <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 md:p-8 shadow-2xl">
-            <div class="flex items-center gap-3 mb-6 text-blue-400 border-b border-slate-800 pb-4">
+        <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+            <div class="flex items-center gap-3 mb-6 pb-4" style="color:var(--accent);border-bottom:1.5px solid var(--line);">
                 <i data-lucide="briefcase"></i>
-                <h2 class="font-bold text-lg text-white tracking-tight uppercase">DATOS LABORALES</h2>
+                <h2 class="font-bold text-lg tracking-tight uppercase" style="color:var(--ink);">DATOS LABORALES</h2>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Tipo de Empleo</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Tipo de Empleo</label>
                     <input type="text" name="job_type" placeholder="Ej: Rel. Dependencia, Monotributo" 
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Ocupación</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Ocupación</label>
                     <input type="text" name="job_occupation" placeholder="Ej: Empleado de comercio" 
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Nombre del Trabajo</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Nombre del Trabajo</label>
                     <input type="text" name="job_name" placeholder="Nombre de la empresa o lugar" 
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Domicilio Laboral</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Domicilio Laboral</label>
                     <input type="text" name="job_address" placeholder="Dirección del trabajo" 
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
             </div>
         </div>
 
         <!-- Sección 3: Detalle de la Venta -->
-        <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 md:p-8 shadow-2xl">
-            <div class="flex items-center gap-3 mb-6 text-emerald-400 border-b border-slate-800 pb-4">
+        <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+            <div class="flex items-center gap-3 mb-6 pb-4" style="color:#059669;border-bottom:1.5px solid var(--line);">
                 <i data-lucide="dollar-sign"></i>
-                <h2 class="font-bold text-lg text-white uppercase tracking-tight">DETALLE DE LA VENTA</h2>
+                <h2 class="font-bold text-lg uppercase tracking-tight" style="color:var(--ink);">DETALLE DE LA VENTA</h2>
             </div>
 
             <!-- Fila principal -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Artículo</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Artículo</label>
                     <input type="text" name="item" required placeholder="Producto vendido" 
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Día de Cobro</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Día de Cobro</label>
                     <select name="payment_day" required 
-                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none cursor-pointer">
+                            class="w-full input-light px-4 py-3 cursor-pointer">
                         <option value="" disabled selected>Seleccionar día...</option>
                         <option value="Lunes">Lunes</option>
                         <option value="Martes">Martes</option>
@@ -204,32 +204,32 @@ include 'includes/header.php';
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Cuotas</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Cuotas</label>
                     <input type="number" name="installments_count" id="installments_count" required placeholder="Cant." 
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none transition" oninput="calculateTotal()">
+                           class="w-full input-light px-4 py-3" oninput="calculateTotal()">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Monto ($)</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Monto ($)</label>
                     <input type="number" name="installment_amount" id="installment_amount" required placeholder="Monto" 
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none transition" oninput="calculateTotal()">
+                           class="w-full input-light px-4 py-3" oninput="calculateTotal()">
                 </div>
             </div>
 
             <!-- Fila frecuencia y adelanto -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Frecuencia de Pago</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Frecuencia de Pago</label>
                     <select name="payment_frequency" required 
-                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none">
+                            class="w-full input-light px-4 py-3 cursor-pointer">
                         <option value="semanal" selected>Semanal</option>
                         <option value="quincenal">Quincenal</option>
                         <option value="mensual">Mensual</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Adelanto ($)</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Adelanto ($)</label>
                     <input type="number" name="down_payment" value="0"
-                           class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none transition">
+                           class="w-full input-light px-4 py-3">
                 </div>
             </div>
 
@@ -246,34 +246,34 @@ include 'includes/header.php';
 
         <!-- Sección 4: Archivos y Observaciones -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 md:p-8 shadow-2xl">
-                <div class="flex items-center gap-3 mb-6 text-purple-400 border-b border-slate-800 pb-4">
+            <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+                <div class="flex items-center gap-3 mb-6 pb-4" style="color:#7c3aed;border-bottom:1.5px solid var(--line);">
                     <i data-lucide="file-text"></i>
-                    <h2 class="font-bold text-lg text-white tracking-tight uppercase">DOCUMENTACIÓN ADJUNTA</h2>
+                    <h2 class="font-bold text-lg tracking-tight uppercase" style="color:var(--ink);">DOCUMENTACIÓN ADJUNTA</h2>
                 </div>
-                <div class="bg-slate-950 border-2 border-dashed border-slate-800 rounded-2xl p-8 text-center group hover:border-blue-500/50 transition-colors">
+                <div class="rounded-2xl p-8 text-center group transition-colors" style="background:var(--paper);border:2px dashed var(--line);" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--line)'">
                     <input type="hidden" name="MAX_FILE_SIZE" value="5242880">
                     <input type="file" name="sale_files[]" id="sale_files" multiple accept="image/*,.pdf" class="hidden" onchange="previewFiles(this)">
                     <label for="sale_files" class="cursor-pointer flex flex-col items-center">
-                        <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-500 mb-4 transition group-hover:text-blue-400"></i>
-                        <span class="text-white font-bold block mb-1">Click para subir documentos</span>
-                        <span class="text-slate-500 text-xs">(DNI, Servicios, Recibos de sueldo)</span>
+                        <i data-lucide="upload-cloud" class="w-8 h-8 mb-4 transition" style="color:var(--ink-3);"></i>
+                        <span class="font-bold block mb-1" style="color:var(--ink);">Click para subir documentos</span>
+                        <span class="text-xs" style="color:var(--ink-3);">(DNI, Servicios, Recibos de sueldo)</span>
                     </label>
                 </div>
                 <div id="file-list" class="mt-4 flex flex-wrap gap-2 justify-center"></div>
             </div>
 
-            <div class="bg-slate-900 rounded-2xl border border-slate-800 p-6 md:p-8 shadow-2xl">
-                <div class="flex items-center gap-3 mb-6 text-yellow-400 border-b border-slate-800 pb-4">
+            <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+                <div class="flex items-center gap-3 mb-6 pb-4" style="color:var(--rev-ink);border-bottom:1.5px solid var(--line);">
                     <i data-lucide="message-square"></i>
-                    <h2 class="font-bold text-lg text-white tracking-tight uppercase">OBSERVACIONES</h2>
+                    <h2 class="font-bold text-lg tracking-tight uppercase" style="color:var(--ink);">OBSERVACIONES</h2>
                 </div>
-                <textarea name="observations" rows="5" placeholder="Horarios de entrega, aclaraciones del crédito, etc." 
-                          class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-4 text-white focus:border-yellow-500 outline-none transition resize-none h-[145px]"></textarea>
+                <textarea name="observations" rows="5" placeholder="Horarios de entrega, aclaraciones del crédito, etc."
+                          class="w-full input-light px-4 py-4 resize-none h-[145px]"></textarea>
             </div>
         </div>
 
-        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-900/30 flex items-center justify-center gap-3 transition transform active:scale-[0.98]">
+        <button type="submit" class="w-full text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-3 transition active:scale-[0.98]" style="background:var(--accent);box-shadow:0 4px 20px rgba(99,102,241,.3);" onmouseover="this.style.background='#4f46e5'" onmouseout="this.style.background='var(--accent)'"  >
             <i data-lucide="send"></i> GUARDAR Y ENVIAR VENTA PARA REVISIÓN
         </button>
 
@@ -296,7 +296,7 @@ include 'includes/header.php';
         if (input.files) {
             Array.from(input.files).forEach(file => {
                 const span = document.createElement('span');
-                span.className = 'bg-slate-800 text-slate-400 text-[10px] px-2 py-1 rounded border border-slate-700 flex items-center gap-1';
+                span.className = 'text-[10px] px-2 py-1 rounded flex items-center gap-1'; span.style.cssText = 'background:var(--paper);color:var(--ink-2);border:1px solid var(--line);';
                 span.innerHTML = `<i data-lucide="file" class="w-3 h-3"></i> ${file.name}`;
                 list.appendChild(span);
             });

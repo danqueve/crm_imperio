@@ -84,11 +84,11 @@ include 'includes/header.php';
     
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div class="flex items-center gap-4">
-            <a href="dashboard.php" class="p-2 bg-slate-800 rounded-full text-slate-400 hover:text-white transition border border-slate-700">
+            <a href="dashboard.php" class="p-2 rounded-full transition" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-3);" onmouseover="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--ink-3)'">
                 <i data-lucide="chevron-left"></i>
             </a>
             <div>
-                <h1 class="text-2xl font-bold text-white">Gestión de Usuarios</h1>
+                <h1 class="text-2xl font-bold" style="color:var(--ink);">Gestión de Usuarios</h1>
                 <p class="text-sm text-slate-500">Alta de personal y administración de permisos.</p>
             </div>
         </div>
@@ -98,10 +98,10 @@ include 'includes/header.php';
         
         <!-- COLUMNA 1: FORMULARIO -->
         <div class="h-full">
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl h-full sticky top-24">
-                <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-800">
+            <div class="p-6 rounded-2xl h-full sticky top-24" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+                <div class="flex items-center gap-3 mb-6 pb-4" style="border-bottom:1.5px solid var(--line);">
                     <div class="bg-blue-600/20 p-2 rounded-lg"><i data-lucide="user-plus" class="w-5 h-5 text-blue-400"></i></div>
-                    <h2 class="font-bold text-white">Registrar Nuevo Usuario</h2>
+                    <h2 class="font-bold" style="color:var(--ink);">Registrar Nuevo Usuario</h2>
                 </div>
 
                 <?php if ($message): ?>
@@ -123,7 +123,7 @@ include 'includes/header.php';
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">DNI (Usuario y Clave)</label>
                         <div class="relative">
-                            <input type="number" name="dni" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 pl-10 text-white focus:border-blue-500 outline-none transition placeholder:text-slate-600 font-mono" placeholder="Sin puntos" required>
+                            <input type="number" name="dni" class="w-full input-light px-4 py-3 pl-10 font-mono" placeholder="Sin puntos" required>
                             <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"><i data-lucide="credit-card" class="w-4 h-4"></i></div>
                         </div>
                         <p class="text-[10px] text-blue-400/80 mt-1 ml-1">* La clave inicial será igual al número de DNI.</p>
@@ -132,18 +132,18 @@ include 'includes/header.php';
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">Nombre</label>
-                            <input type="text" name="nombre" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:border-blue-500 outline-none transition" placeholder="Juan" required>
+                            <input type="text" name="nombre" class="w-full input-light px-4 py-2.5" placeholder="Juan" required>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">Apellido</label>
-                            <input type="text" name="apellido" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:border-blue-500 outline-none transition" placeholder="Perez" required>
+                            <input type="text" name="apellido" class="w-full input-light px-4 py-2.5" placeholder="Perez" required>
                         </div>
                     </div>
 
                     <div>
                         <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">Celular</label>
                         <div class="relative">
-                            <input type="text" name="celular" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-2.5 pl-10 text-white focus:border-blue-500 outline-none transition" placeholder="Ej: 381...">
+                            <input type="text" name="celular" class="w-full input-light px-4 py-2.5 pl-10" placeholder="Ej: 381...">
                             <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"><i data-lucide="smartphone" class="w-4 h-4"></i></div>
                         </div>
                     </div>
@@ -152,7 +152,7 @@ include 'includes/header.php';
                         <div class="col-span-2 sm:col-span-1">
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">Rol / Permisos</label>
                             <div class="relative">
-                                <select name="role" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 pl-10 text-white focus:border-blue-500 outline-none appearance-none cursor-pointer transition hover:bg-slate-900">
+                                <select name="role" class="w-full input-light px-4 py-3 pl-10 appearance-none cursor-pointer">
                                     <option value="vendedor">Vendedor</option>
                                     <option value="entregador">Entregador</option>
                                     <option value="verificador">Verificador</option>
@@ -166,7 +166,7 @@ include 'includes/header.php';
                         <div class="col-span-2 sm:col-span-1">
                             <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5 ml-1">% Comisión</label>
                             <div class="relative">
-                                <input type="number" name="commission_rate" value="5" min="0" max="100" step="0.5" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-4 py-3 pl-10 text-white focus:border-blue-500 outline-none transition font-mono">
+                                <input type="number" name="commission_rate" value="5" min="0" max="100" step="0.5" class="w-full input-light px-4 py-3 pl-10 font-mono">
                                 <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none"><i data-lucide="percent" class="w-4 h-4"></i></div>
                             </div>
                         </div>
@@ -181,15 +181,15 @@ include 'includes/header.php';
 
         <!-- COLUMNA 2: LISTADO -->
         <div class="h-full">
-            <div class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden h-full flex flex-col">
-                <div class="p-5 border-b border-slate-800 flex items-center gap-3 bg-slate-950/30">
+            <div class="rounded-2xl overflow-hidden h-full flex flex-col" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+                <div class="p-5 flex items-center gap-3" style="border-bottom:1.5px solid var(--line);background:#f8f7fc;">
                     <div class="bg-purple-600/20 p-2 rounded-lg"><i data-lucide="users" class="w-5 h-5 text-purple-400"></i></div>
-                    <h2 class="font-bold text-white">Equipo Activo</h2>
+                    <h2 class="font-bold" style="color:var(--ink);">Equipo Activo</h2>
                 </div>
                 
                 <div class="overflow-x-auto flex-1">
                     <table class="w-full text-sm text-left">
-                        <thead class="bg-slate-950 text-slate-400 font-bold text-xs uppercase sticky top-0 z-10">
+                        <thead class="font-bold text-xs uppercase sticky top-0 z-10" style="background:#f8f7fc;color:var(--ink-3);"  >
                             <tr>
                                 <th class="p-4">Nombre / DNI</th>
                                 <th class="p-4 hidden sm:table-cell">Contacto</th>
@@ -199,12 +199,12 @@ include 'includes/header.php';
                         </thead>
                         <tbody class="divide-y divide-slate-800">
                             <?php foreach ($users as $u): ?>
-                            <tr class="hover:bg-slate-800/50 transition group">
+                            <tr class="transition group" style="border-bottom:1px dashed var(--line);" onmouseover="this.style.background='rgba(99,102,241,.04)'" onmouseout="this.style.background=''">
                                 <td class="p-4">
-                                    <div class="font-bold text-white flex items-center gap-2">
+                                    <div class="font-bold flex items-center gap-2" style="color:var(--ink);">
                                         <?= htmlspecialchars($u['name']) ?>
                                         <?php if ($u['id'] == $_SESSION['user_id']): ?>
-                                            <span class="text-[10px] bg-slate-800 text-slate-400 px-1.5 rounded border border-slate-700">Tú</span>
+                                            <span class="text-[10px] px-1.5 rounded" style="background:var(--accent-soft);color:var(--accent-ink);border:1px solid rgba(99,102,241,.2);">Tú</span>
                                         <?php endif; ?>
                                     </div>
                                     <div class="flex items-center gap-3 mt-1 text-xs text-slate-500">
@@ -227,8 +227,8 @@ include 'includes/header.php';
                                         <input type="hidden" name="action" value="update_commission">
                                         <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
                                         <input type="number" name="commission_rate" value="<?= number_format((float)($u['commission_rate'] ?? 5), 1) ?>" min="0" max="100" step="0.5"
-                                               class="w-16 bg-slate-950 border border-slate-700 rounded text-xs text-white py-1 px-2 text-center font-mono focus:border-blue-500 outline-none">
-                                        <button type="submit" class="p-1 bg-slate-800 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded border border-slate-700 transition" title="Guardar comisión">
+                                               class="w-16 input-light text-xs py-1 px-2 text-center font-mono">
+                                        <button type="submit" class="p-1 rounded transition" style="background:var(--apr-bg);color:var(--apr-ink);border:1px solid rgba(11,107,70,.2);" title="Guardar comisión" onmouseover="this.style.background='var(--apr-ink)';this.style.color='#fff'" onmouseout="this.style.background='var(--apr-bg)';this.style.color='var(--apr-ink)'">
                                             <i data-lucide="percent" class="w-3 h-3"></i>
                                         </button>
                                     </form>
@@ -246,7 +246,7 @@ include 'includes/header.php';
                                             <input type="hidden" name="action" value="update_role">
                                             <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
                                             
-                                            <select name="new_role" class="bg-slate-950 border border-slate-700 rounded text-xs text-white py-1.5 px-2 focus:border-blue-500 outline-none w-28 cursor-pointer hover:bg-slate-900 transition">
+                                            <select name="new_role" class="input-light text-xs py-1.5 px-2 w-28 cursor-pointer">
                                                 <option value="vendedor" <?= $u['role'] == 'vendedor' ? 'selected' : '' ?>>Vend.</option>
                                                 <option value="entregador" <?= $u['role'] == 'entregador' ? 'selected' : '' ?>>Entreg.</option>
                                                 <option value="verificador" <?= $u['role'] == 'verificador' ? 'selected' : '' ?>>Verif.</option>
@@ -254,7 +254,7 @@ include 'includes/header.php';
                                                 <option value="admin" <?= $u['role'] == 'admin' ? 'selected' : '' ?>>Admin</option>
                                             </select>
                                             
-                                            <button type="submit" class="p-1.5 bg-slate-800 hover:bg-emerald-600 text-emerald-400 hover:text-white rounded border border-slate-700 transition shadow-sm" title="Guardar">
+                                            <button type="submit" class="p-1.5 rounded transition shadow-sm" style="background:var(--apr-bg);color:var(--apr-ink);border:1px solid rgba(11,107,70,.2);" title="Guardar" onmouseover="this.style.background='var(--apr-ink)';this.style.color='#fff'" onmouseout="this.style.background='var(--apr-bg)';this.style.color='var(--apr-ink)'">
                                                 <i data-lucide="check" class="w-3.5 h-3.5"></i>
                                             </button>
                                         </form>
