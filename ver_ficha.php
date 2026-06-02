@@ -408,7 +408,7 @@ include 'includes/header.php';
                         <div>
                             <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1 ml-1">Localidad</label>
                             <?php
-                            $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Concepción','Famaillá','Lules','Manantial','Monteros','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Villa Carmela','Yerba Buena'];
+                            $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Catamarca','Concepción','Famaillá','Lules','Manantial','Monteros','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Villa Carmela','Yerba Buena'];
                             $cur_loc = $order['client_locality'] ?? '';
                             ?>
                             <select name="client_locality" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:border-blue-500 outline-none transition">
@@ -493,6 +493,12 @@ include 'includes/header.php';
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Observaciones -->
+            <div class="space-y-2">
+                <label class="block text-[10px] font-bold text-yellow-500 uppercase mb-1 ml-1">Observaciones</label>
+                <textarea name="observations" rows="3" placeholder="Notas internas de la venta..." class="w-full bg-slate-950 border border-yellow-900/50 rounded-xl px-4 py-2.5 text-white focus:border-yellow-500 outline-none transition resize-none"><?= htmlspecialchars($order['observations'] ?? '') ?></textarea>
             </div>
 
             <div class="bg-emerald-900/10 border border-emerald-500/20 p-6 rounded-3xl flex justify-between items-center px-6 sm:px-12">

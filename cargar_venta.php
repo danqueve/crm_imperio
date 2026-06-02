@@ -109,6 +109,7 @@ include 'includes/header.php';
                         <option value="Banda del Río Salí">Banda del Río Salí</option>
                         <option value="Bella Vista">Bella Vista</option>
                         <option value="Burruyacu">Burruyacu</option>
+                        <option value="Catamarca">Catamarca</option>
                         <option value="Concepción">Concepción</option>
                         <option value="Famaillá">Famaillá</option>
                         <option value="Lules">Lules</option>
