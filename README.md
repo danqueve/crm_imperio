@@ -29,10 +29,11 @@ revision → aprobado → entregado
 
 | Rol | Descripción | Permisos |
 |-----|-------------|----------|
-| `vendedor` | Agente de ventas | Cargar ventas, ver su propio historial y comisiones |
-| `verificador` | Verifica documentación | Aprobar/rechazar/entregar ventas |
-| `supervisor` | Supervisa equipo | Todo lo del verificador + ver comisiones globales |
-| `admin` | Administrador total | Todo + gestión de usuarios + log de auditoría |
+| `vendedor` | Agente de ventas | Cargar ventas, editar propias ventas en revisión, ver su historial y comisiones |
+| `verificador` | Verifica documentación | Aprobar/rechazar/entregar ventas, editar fichas completas |
+| `entregador` | Gestiona entregas | Ver ventas aprobadas/entregadas, gestionar panel de entregas |
+| `supervisor` | Supervisa equipo | Todo lo del verificador + ver comisiones globales + ver ventas por vendedor |
+| `admin` | Administrador total | Todo + gestión de usuarios + log de auditoría + exportación CSV |
 
 ---
 
@@ -54,20 +55,25 @@ crm/
 ├── dashboard.php             # Panel principal por rol
 ├── cargar_venta.php          # Formulario nueva venta
 ├── save_sale.php             # Procesador de carga de venta
-├── ver_ficha.php             # Detalle completo de una venta
-├── historial_ventas.php      # Historial con búsqueda
+├── ver_ficha.php             # Detalle completo de una venta (+ modal edición managers)
+├── editar_venta.php          # Edición de venta para vendedor (solo estado revision)
+├── update_sale_full.php      # Procesador de edición completa (managers)
+├── update_sale_plan.php      # Procesador de edición de plan de pago (managers)
 ├── update_status.php         # Cambiar estado de venta (POST)
 ├── rechazar_venta.php        # Rechazar venta con motivo
-├── perfil_vendedor.php       # Perfil + cambio de contraseña
-├── comisiones.php            # Reporte de comisiones (admin/supervisor)
+├── delete_sale_file.php      # Eliminar archivo adjunto de venta
+├── historial_ventas.php      # Historial con búsqueda y exportación PDF
+├── export_csv.php            # Exportación CSV del historial (admin)
 ├── entregas.php              # Panel de entregas pendientes
+├── comisiones.php            # Reporte de comisiones (admin/supervisor)
 ├── lista_vendedores.php      # Lista de vendedores (admin)
+├── ventas_vendedor.php       # Ventas de un vendedor específico (admin)
+├── perfil_vendedor.php       # Perfil + cambio de contraseña
 ├── register_user.php         # Alta de usuarios (admin)
 ├── admin_audit.php           # Log de auditoría (admin)
 ├── logout.php                # Cerrar sesión
 ├── config.php                # Credenciales DB (NO subir al repo)
 ├── config.example.php        # Plantilla de configuración
-├── migration_fase3.sql       # SQL de tablas adicionales (NO subir al repo)
 ├── includes/
 │   ├── db.php                # Conexión PDO + sesión + timeout
 │   ├── functions.php         # CSRF, paginación, log_audit()
@@ -88,7 +94,7 @@ crm/
 | `name` | VARCHAR | Nombre completo |
 | `username` | VARCHAR | DNI (usado para login) |
 | `password` | VARCHAR | Hash bcrypt |
-| `role` | ENUM | vendedor / verificador / supervisor / admin |
+| `role` | ENUM | vendedor / verificador / entregador / supervisor / admin |
 | `phone` | VARCHAR | Teléfono de contacto |
 
 ### `sales`
@@ -101,7 +107,7 @@ Contiene todos los datos del cliente (nombre, DNI, dirección, teléfono), datos
 | `sale_id` | INT FK | Referencia a `sales.id` |
 | `file_path` | VARCHAR | Ruta relativa del archivo |
 
-### `login_attempts` *(Fase 3)*
+### `login_attempts`
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
 | `id` | INT PK | Identificador |
@@ -109,7 +115,7 @@ Contiene todos los datos del cliente (nombre, DNI, dirección, teléfono), datos
 | `username` | VARCHAR | Usuario intentado |
 | `attempted_at` | DATETIME | Timestamp del intento |
 
-### `audit_log` *(Fase 3)*
+### `audit_log`
 | Campo | Tipo | Descripción |
 |-------|------|-------------|
 | `id` | INT PK | Identificador |
@@ -160,7 +166,7 @@ define('DB_PASS', 'tu_password');
 
 ### 4. Importar estructura de la base de datos
 
-Importar el schema principal en phpMyAdmin (o por CLI). Luego, para activar las funcionalidades de Fase 3, ejecutar en phpMyAdmin el contenido de `migration_fase3.sql`:
+Importar el schema principal en phpMyAdmin (o por CLI). Luego ejecutar las tablas adicionales:
 
 ```sql
 -- Tabla para rate limiting de login
@@ -229,44 +235,28 @@ VALUES ('Administrador', '12345678', '$2y$10$...hash_bcrypt...', 'admin');
 
 ---
 
-## Mejoras visuales implementadas
-
-### Dashboard (`dashboard.php`)
-- **Toast de confirmación:** Notificación deslizante al guardar una venta (reemplaza banner estático)
-- **Filas con borde de color:** Indicador visual lateral según estado (amarillo=revisión, verde=aprobado)
-- **Badges animados:** Punto parpadeante en ventas en revisión
-- **Estado vacío:** Ilustración y mensaje cuando no hay ventas
-- **Tarjetas de estadísticas:** Efecto hover con sombra de color y elevación suave
-- **Contadores animados:** Números que incrementan con easing al cargar la página
-
-### Ficha de venta (`ver_ficha.php`)
-- **Pipeline visual:** Stepper horizontal mostrando el progreso del estado actual (revisión → aprobado → entregado)
-- **Modal glassmorphism:** Ventana modal con efecto de cristal esmerilado y blur de fondo
-
-### Cabecera (`includes/header.php`)
-- **Avatar dinámico:** Inicial del usuario sobre gradiente de color calculado a partir del nombre
-- **Navegación móvil rediseñada:** Íconos + etiqueta + punto indicador de página activa
-
----
-
 ## Flujo de uso típico
 
 ```
 1. Vendedor carga venta en cargar_venta.php
    └─ Estado inicial: "revision"
+   └─ Puede editar la venta en editar_venta.php mientras siga en revisión
 
 2. Verificador/supervisor revisa en dashboard o historial
    ├─ Aprueba → estado: "aprobado"
    └─ Rechaza → estado: "rechazado" (con motivo)
 
-3. Verificador/supervisor entrega en entregas.php
+3. Verificador/entregador gestiona en entregas.php
    └─ Estado: "entregado"
 
-4. Admin consulta comisiones en comisiones.php
+4. Admin/supervisor consulta comisiones en comisiones.php
    └─ 5% del valor de ventas entregadas
 
 5. Admin revisa acciones en admin_audit.php
    └─ Log completo con IP, usuario, fecha, detalles
+
+6. Admin exporta datos en historial_ventas.php o export_csv.php
+   └─ PDF desde el navegador o CSV descargable
 ```
 
 ---
