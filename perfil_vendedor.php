@@ -178,10 +178,10 @@ include 'includes/header.php';
                     <?php else: ?>
                         <?php foreach ($sales as $s): ?>
                         <tr class="transition" style="border-bottom:1px dashed var(--line);" onmouseover="this.style.background='rgba(99,102,241,.04)'" onmouseout="this.style.background=''">
-                            <td class="p-4 text-slate-300"><?= date('d/m/Y', strtotime($s['delivered_at'])) ?></td>
-                            <td class="p-4 font-medium text-white"><?= htmlspecialchars($s['client_name']) ?></td>
-                            <td class="p-4 text-slate-400"><?= htmlspecialchars($s['item']) ?></td>
-                            <td class="p-4 text-right font-mono">$<?= number_format($s['total_amount'], 0, ',', '.') ?></td>
+                            <td class="p-4 text-black"><?= date('d/m/Y', strtotime($s['delivered_at'])) ?></td>
+                            <td class="p-4 font-medium text-black"><?= htmlspecialchars($s['client_name']) ?></td>
+                            <td class="p-4 text-black"><?= htmlspecialchars($s['item']) ?></td>
+                            <td class="p-4 text-right font-mono text-black">$<?= number_format($s['total_amount'], 0, ',', '.') ?></td>
                             <td class="p-4 text-right font-bold text-emerald-400">$<?= number_format($s['total_amount'] * 0.05, 0, ',', '.') ?></td>
                             <td class="p-4 text-center">
                                 <a href="ver_ficha.php?id=<?= $s['id'] ?>" class="p-1.5 rounded transition inline-block" style="color:var(--accent-ink);" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='var(--accent-ink)'"><i data-lucide="eye" class="w-4 h-4"></i></a>
@@ -195,53 +195,6 @@ include 'includes/header.php';
     </div>
 
 
-    <!-- Cambio de Contraseña (solo visible para el propio usuario) -->
-    <?php if ($seller_id == $my_id): ?>
-    <div class="rounded-2xl mt-6 overflow-hidden" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-        <div class="p-5 flex items-center gap-2" style="border-bottom:1.5px solid var(--line);background:#f8f7fc;">
-            <i data-lucide="key-round" class="w-4 h-4 text-slate-500"></i>
-            <h3 class="font-bold text-white">Cambiar Contraseña</h3>
-        </div>
-        <div class="p-6">
-            <?php if ($pass_message): ?>
-                <div class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm p-3 rounded-lg mb-4 flex items-center gap-2">
-                    <i data-lucide="check-circle" class="w-4 h-4"></i>
-                    <?= htmlspecialchars($pass_message) ?>
-                </div>
-            <?php endif; ?>
-            <?php if ($pass_error): ?>
-                <div class="bg-red-500/10 border border-red-500/20 text-red-400 text-sm p-3 rounded-lg mb-4 flex items-center gap-2">
-                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
-                    <?= htmlspecialchars($pass_error) ?>
-                </div>
-            <?php endif; ?>
-            <form method="POST" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <?= csrf_field() ?>
-                <input type="hidden" name="action" value="change_password">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Contraseña Actual</label>
-                    <input type="password" name="current_password" required
-                        class="w-full input-light px-3 py-2.5 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Nueva Contraseña</label>
-                    <input type="password" name="new_password" required minlength="6"
-                        class="w-full input-light px-3 py-2.5 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Confirmar Contraseña</label>
-                    <input type="password" name="confirm_password" required minlength="6"
-                        class="w-full input-light px-3 py-2.5 text-sm">
-                </div>
-                <div class="sm:col-span-3 flex justify-end">
-                    <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-lg shadow-lg transition text-sm">
-                        Actualizar Contraseña
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <?php endif; ?>
 
 </main>
 

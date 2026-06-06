@@ -46,15 +46,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $user = $stmt->fetch();
 
             if ($user && password_verify($pass_input, $user['password'])) {
-                $pdo->prepare("DELETE FROM login_attempts WHERE ip = ?")->execute([$ip]);
-                session_regenerate_id(true);
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['name']    = $user['name'];
-                $_SESSION['role']    = $user['role'];
-                $_SESSION['last_activity'] = time();
-                log_audit($pdo, 'login', 'user', $user['id'], 'Login exitoso');
-                header("Location: dashboard.php");
-                exit;
+                if (!$user['is_active']) {
+                    $error = "Tu cuenta está desactivada. Contactá al administrador.";
+                } else {
+                    $pdo->prepare("DELETE FROM login_attempts WHERE ip = ?")->execute([$ip]);
+                    session_regenerate_id(true);
+                    $_SESSION['user_id'] = $user['id'];
+                    $_SESSION['name']    = $user['name'];
+                    $_SESSION['role']    = $user['role'];
+                    $_SESSION['last_activity'] = time();
+                    log_audit($pdo, 'login', 'user', $user['id'], 'Login exitoso');
+                    header("Location: dashboard.php");
+                    exit;
+                }
             } else {
                 $pdo->prepare("INSERT INTO login_attempts (ip, username) VALUES (?, ?)")
                     ->execute([$ip, $user_input]);

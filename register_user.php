@@ -57,6 +57,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
+// --- ACTIVAR / DESACTIVAR USUARIO ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'toggle_active') {
+    $target_user_id = (int)$_POST['user_id'];
+    if ($target_user_id == $_SESSION['user_id']) {
+        $error = "No puedes desactivarte a ti mismo.";
+    } else {
+        $stmt = $pdo->prepare("UPDATE users SET is_active = NOT is_active WHERE id = ?");
+        if ($stmt->execute([$target_user_id])) {
+            $message = "Estado del usuario actualizado.";
+        } else {
+            $error = "Error al actualizar estado.";
+        }
+    }
+}
+
 // --- ACTUALIZAR ROL ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update_role') {
     $target_user_id = $_POST['user_id'];
@@ -74,7 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
-$stmt = $pdo->query("SELECT * FROM users ORDER BY name ASC");
+$stmt = $pdo->query("SELECT * FROM users ORDER BY is_active DESC, name ASC");
 $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 include 'includes/header.php';
@@ -184,7 +199,7 @@ include 'includes/header.php';
             <div class="rounded-2xl overflow-hidden h-full flex flex-col" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
                 <div class="p-5 flex items-center gap-3" style="border-bottom:1.5px solid var(--line);background:#f8f7fc;">
                     <div class="bg-purple-600/20 p-2 rounded-lg"><i data-lucide="users" class="w-5 h-5 text-purple-400"></i></div>
-                    <h2 class="font-bold" style="color:var(--ink);">Equipo Activo</h2>
+                    <h2 class="font-bold" style="color:var(--ink);">Usuarios</h2>
                 </div>
                 
                 <div class="overflow-x-auto flex-1">
@@ -199,12 +214,15 @@ include 'includes/header.php';
                         </thead>
                         <tbody class="divide-y divide-slate-800">
                             <?php foreach ($users as $u): ?>
-                            <tr class="transition group" style="border-bottom:1px dashed var(--line);" onmouseover="this.style.background='rgba(99,102,241,.04)'" onmouseout="this.style.background=''">
+                            <?php $inactive = !$u['is_active']; ?>
+                            <tr class="transition group <?= $inactive ? 'opacity-50' : '' ?>" style="border-bottom:1px dashed var(--line);" onmouseover="this.style.background='rgba(99,102,241,.04)'" onmouseout="this.style.background=''">
                                 <td class="p-4">
                                     <div class="font-bold flex items-center gap-2" style="color:var(--ink);">
                                         <?= htmlspecialchars($u['name']) ?>
                                         <?php if ($u['id'] == $_SESSION['user_id']): ?>
                                             <span class="text-[10px] px-1.5 rounded" style="background:var(--accent-soft);color:var(--accent-ink);border:1px solid rgba(99,102,241,.2);">Tú</span>
+                                        <?php elseif ($inactive): ?>
+                                            <span class="text-[10px] px-1.5 rounded font-semibold" style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;">Inactivo</span>
                                         <?php endif; ?>
                                     </div>
                                     <div class="flex items-center gap-3 mt-1 text-xs text-slate-500">
@@ -240,24 +258,41 @@ include 'includes/header.php';
                                     <?php if ($u['id'] == $_SESSION['user_id']): ?>
                                         <span class="text-xs text-slate-600 italic pr-2">Bloqueado</span>
                                     <?php else: ?>
-                                        <!-- Formulario Pequeño para Cambio de Rol -->
-                                        <form method="POST" class="flex items-center justify-end gap-2">
-                                            <?= csrf_field() ?>
-                                            <input type="hidden" name="action" value="update_role">
-                                            <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
-                                            
-                                            <select name="new_role" class="input-light text-xs py-1.5 px-2 w-28 cursor-pointer">
-                                                <option value="vendedor" <?= $u['role'] == 'vendedor' ? 'selected' : '' ?>>Vend.</option>
-                                                <option value="entregador" <?= $u['role'] == 'entregador' ? 'selected' : '' ?>>Entreg.</option>
-                                                <option value="verificador" <?= $u['role'] == 'verificador' ? 'selected' : '' ?>>Verif.</option>
-                                                <option value="supervisor" <?= $u['role'] == 'supervisor' ? 'selected' : '' ?>>Sup.</option>
-                                                <option value="admin" <?= $u['role'] == 'admin' ? 'selected' : '' ?>>Admin</option>
-                                            </select>
-                                            
-                                            <button type="submit" class="p-1.5 rounded transition shadow-sm" style="background:var(--apr-bg);color:var(--apr-ink);border:1px solid rgba(11,107,70,.2);" title="Guardar" onmouseover="this.style.background='var(--apr-ink)';this.style.color='#fff'" onmouseout="this.style.background='var(--apr-bg)';this.style.color='var(--apr-ink)'">
-                                                <i data-lucide="check" class="w-3.5 h-3.5"></i>
-                                            </button>
-                                        </form>
+                                        <div class="flex flex-col items-end gap-2">
+                                            <!-- Cambio de Rol -->
+                                            <?php if ($u['is_active']): ?>
+                                            <form method="POST" class="flex items-center justify-end gap-2">
+                                                <?= csrf_field() ?>
+                                                <input type="hidden" name="action" value="update_role">
+                                                <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                                                <select name="new_role" class="input-light text-xs py-1.5 px-2 w-28 cursor-pointer">
+                                                    <option value="vendedor" <?= $u['role'] == 'vendedor' ? 'selected' : '' ?>>Vend.</option>
+                                                    <option value="entregador" <?= $u['role'] == 'entregador' ? 'selected' : '' ?>>Entreg.</option>
+                                                    <option value="verificador" <?= $u['role'] == 'verificador' ? 'selected' : '' ?>>Verif.</option>
+                                                    <option value="supervisor" <?= $u['role'] == 'supervisor' ? 'selected' : '' ?>>Sup.</option>
+                                                    <option value="admin" <?= $u['role'] == 'admin' ? 'selected' : '' ?>>Admin</option>
+                                                </select>
+                                                <button type="submit" class="p-1.5 rounded transition shadow-sm" style="background:var(--apr-bg);color:var(--apr-ink);border:1px solid rgba(11,107,70,.2);" title="Guardar rol" onmouseover="this.style.background='var(--apr-ink)';this.style.color='#fff'" onmouseout="this.style.background='var(--apr-bg)';this.style.color='var(--apr-ink)'">
+                                                    <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                                                </button>
+                                            </form>
+                                            <?php endif; ?>
+                                            <!-- Toggle Activar / Desactivar -->
+                                            <form method="POST" onsubmit="return confirm('<?= $inactive ? '¿Activar a ' : '¿Desactivar a ' ?><?= addslashes(htmlspecialchars($u['name'])) ?>?')">
+                                                <?= csrf_field() ?>
+                                                <input type="hidden" name="action" value="toggle_active">
+                                                <input type="hidden" name="user_id" value="<?= $u['id'] ?>">
+                                                <?php if ($inactive): ?>
+                                                    <button type="submit" class="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded transition font-semibold" style="background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0;" onmouseover="this.style.background='#16a34a';this.style.color='#fff'" onmouseout="this.style.background='#dcfce7';this.style.color='#16a34a'">
+                                                        <i data-lucide="user-check" class="w-3.5 h-3.5"></i> Activar
+                                                    </button>
+                                                <?php else: ?>
+                                                    <button type="submit" class="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded transition font-semibold" style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;" onmouseover="this.style.background='#dc2626';this.style.color='#fff'" onmouseout="this.style.background='#fee2e2';this.style.color='#dc2626'">
+                                                        <i data-lucide="user-x" class="w-3.5 h-3.5"></i> Desactivar
+                                                    </button>
+                                                <?php endif; ?>
+                                            </form>
+                                        </div>
                                     <?php endif; ?>
                                 </td>
                             </tr>
