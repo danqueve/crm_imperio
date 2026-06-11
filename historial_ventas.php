@@ -128,12 +128,14 @@ $pdfData = array_map(function($h) {
         : "Rechazado por: " . ($h['rejected_by_name'] ?? 'Admin') . ". Motivo: " . ($h['rejected_reason'] ?? '-');
 
     return [
-        'date' => date('d/m/Y', strtotime($h['created_at'])),
+        'date'   => date('d/m/Y', strtotime($h['created_at'])),
+        'dni'    => $h['client_dni'] ?? '-',
         'client' => $h['client_name'],
-        'item' => $h['item'],
+        'phone'  => $h['client_whatsapp'] ?? '-',
+        'item'   => $h['item'],
         'seller' => $h['seller_name'],
         'status' => strtoupper($h['status']),
-        'audit' => $auditDetail
+        'audit'  => $auditDetail
     ];
 }, $allHistory);
 
@@ -437,44 +439,85 @@ include 'includes/header.php';
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
         const pageWidth = doc.internal.pageSize.getWidth();
-
-        // Cabecera del Documento
-        doc.setFontSize(18);
-        doc.setFont("helvetica", "bold");
-        doc.text("Auditoría de Ventas (Historial)", pageWidth / 2, 15, { align: 'center' });
-        
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
         const rangeText = "Periodo: <?= date('d/m/Y', strtotime($start)) ?> al <?= date('d/m/Y', strtotime($end)) ?>";
-        doc.text(rangeText, pageWidth / 2, 22, { align: 'center' });
 
-        // Tabla de datos
-        const tableBody = historyData.map((row, i) => [
-            i + 1,
-            row.date,
-            row.client,
-            row.item,
-            row.seller,
-            row.status,
-            row.audit
-        ]);
+        // Detectar si el filtro activo es "rechazado"
+        const statusFilter = document.querySelector('[name="status"]').value;
+        const soloRechazados = statusFilter === 'rechazado';
 
-        doc.autoTable({
-            head: [['#', 'Fecha', 'Cliente', 'Artículo', 'Vendedor', 'Estado', 'Detalle Auditoría']],
-            body: tableBody,
-            startY: 30,
-            theme: 'grid',
-            styles: { fontSize: 7, cellPadding: 2, textColor: [0, 0, 0] },
-            headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
-            columnStyles: {
-                0: { cellWidth: 7 }, 1: { cellWidth: 18 }, 2: { cellWidth: 35 }, 
-                3: { cellWidth: 35 }, 4: { cellWidth: 25 }, 5: { cellWidth: 20 }, 
-                6: { cellWidth: 'auto' }
-            },
-            margin: { top: 30, left: 14, right: 14 }
-        });
+        if (soloRechazados) {
+            // PDF simplificado para rechazados
+            doc.setFontSize(16);
+            doc.setFont("helvetica", "bold");
+            doc.text("Ventas Rechazadas", pageWidth / 2, 15, { align: 'center' });
 
-        const fileName = `Historial_Ventas_${new Date().toISOString().slice(0,10)}.pdf`;
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.text(rangeText, pageWidth / 2, 22, { align: 'center' });
+
+            const body = historyData.map((row, i) => [
+                i + 1,
+                row.dni,
+                row.client,
+                row.phone,
+                row.item,
+                row.seller
+            ]);
+
+            doc.autoTable({
+                head: [['#', 'DNI', 'Nombre y Apellido', 'Celular', 'Artículo', 'Vendedor']],
+                body: body,
+                startY: 28,
+                theme: 'grid',
+                styles: { fontSize: 8, cellPadding: 2.5, textColor: [0, 0, 0] },
+                headStyles: { fillColor: [200, 50, 50], textColor: [255, 255, 255], fontStyle: 'bold' },
+                columnStyles: {
+                    0: { cellWidth: 8 },
+                    1: { cellWidth: 22 },
+                    2: { cellWidth: 50 },
+                    3: { cellWidth: 28 },
+                    4: { cellWidth: 50 },
+                    5: { cellWidth: 'auto' }
+                },
+                margin: { top: 28, left: 14, right: 14 }
+            });
+
+        } else {
+            // PDF completo (auditoría general)
+            doc.setFontSize(18);
+            doc.setFont("helvetica", "bold");
+            doc.text("Auditoría de Ventas (Historial)", pageWidth / 2, 15, { align: 'center' });
+
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text(rangeText, pageWidth / 2, 22, { align: 'center' });
+
+            const body = historyData.map((row, i) => [
+                i + 1,
+                row.date,
+                row.client,
+                row.item,
+                row.seller,
+                row.status,
+                row.audit
+            ]);
+
+            doc.autoTable({
+                head: [['#', 'Fecha', 'Cliente', 'Artículo', 'Vendedor', 'Estado', 'Detalle Auditoría']],
+                body: body,
+                startY: 30,
+                theme: 'grid',
+                styles: { fontSize: 7, cellPadding: 2, textColor: [0, 0, 0] },
+                headStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+                columnStyles: {
+                    0: { cellWidth: 7 }, 1: { cellWidth: 18 }, 2: { cellWidth: 35 },
+                    3: { cellWidth: 35 }, 4: { cellWidth: 25 }, 5: { cellWidth: 20 },
+                    6: { cellWidth: 'auto' }
+                },
+                margin: { top: 30, left: 14, right: 14 }
+            });
+        }
+
         window.open(doc.output('bloburl'), '_blank');
     }
 </script>
