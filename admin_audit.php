@@ -69,7 +69,7 @@ include 'includes/header.php';
             <i data-lucide="arrow-left"></i>
         </a>
         <div>
-            <h1 class="text-2xl font-bold text-white flex items-center gap-2">
+            <h1 class="text-2xl font-bold flex items-center gap-2" style="color:var(--ink);">
                 <i data-lucide="shield-check" class="w-6 h-6 text-blue-400"></i>
                 Log de Auditoría
             </h1>
@@ -139,7 +139,7 @@ include 'includes/header.php';
                             <td class="p-4 text-slate-400 whitespace-nowrap">
                                 <?= date('d/m/Y H:i', strtotime($log['created_at'])) ?>
                             </td>
-                            <td class="p-4 text-white font-medium">
+                            <td class="p-4 font-medium" style="color:var(--ink);">
                                 <?= htmlspecialchars($log['user_name'] ?? 'Sistema') ?>
                             </td>
                             <td class="p-4">

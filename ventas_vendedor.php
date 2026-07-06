@@ -77,7 +77,7 @@ include 'includes/header.php';
             <i data-lucide="chevron-left"></i>
         </a>
         <div>
-            <h1 class="text-2xl font-bold text-white tracking-tight">Ventas de <?= htmlspecialchars($seller['name']) ?></h1>
+            <h1 class="text-2xl font-bold tracking-tight" style="color:var(--ink);">Ventas de <?= htmlspecialchars($seller['name']) ?></h1>
             <p class="text-sm text-slate-500">Historial completo de ventas cargadas (25 por página).</p>
         </div>
     </div>
@@ -123,7 +123,7 @@ include 'includes/header.php';
                             <td class="p-5 pl-6 font-bold text-slate-600"><?= $counter++ ?></td>
                             <td class="p-5 text-slate-400 font-mono text-xs whitespace-nowrap"><?= date('d/m/Y', strtotime($s['created_at'])) ?></td>
                             <td class="p-5">
-                                <div class="font-bold text-white"><?= htmlspecialchars($s['client_name']) ?></div>
+                                <div class="font-bold" style="color:var(--ink);"><?= htmlspecialchars($s['client_name']) ?></div>
                                 <div class="text-[10px] text-slate-500 font-mono"><?= htmlspecialchars($s['client_dni']) ?></div>
                             </td>
                             <td class="p-5">

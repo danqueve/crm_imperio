@@ -90,7 +90,7 @@ include 'includes/header.php';
             <i data-lucide="arrow-left"></i>
         </a>
         <div>
-            <h1 class="text-2xl font-bold text-white">
+            <h1 class="text-2xl font-bold" style="color:var(--ink);">
                 <!-- Título Dinámico: Si veo mi propio ID dice 'Mis Ventas', sino 'Ficha' -->
                 <?= ($seller_id == $my_id) ? 'Mis Ventas y Comisiones' : 'Ficha de Vendedor' ?>
             </h1>
@@ -107,14 +107,14 @@ include 'includes/header.php';
                     <?= strtoupper(substr($seller['name'], 0, 1)) ?>
                 </div>
                 <div>
-                    <h2 class="text-lg font-bold text-white"><?= htmlspecialchars($seller['name']) ?></h2>
+                    <h2 class="text-lg font-bold" style="color:var(--ink);"><?= htmlspecialchars($seller['name']) ?></h2>
                     <span class="text-xs px-2 py-1 rounded uppercase font-bold" style="background:var(--accent-soft);color:var(--accent-ink);border:1px solid rgba(99,102,241,.2);"><?= ucfirst($seller['role']) ?></span>
                 </div>
             </div>
             <div class="space-y-2 text-sm pt-4" style="color:var(--ink-2);border-top:1.5px solid var(--line);">
-                <div class="flex justify-between"><span>Usuario/DNI:</span> <span class="text-white font-mono"><?= htmlspecialchars($seller['username']) ?></span></div>
-                <div class="flex justify-between"><span>Celular:</span> <span class="text-white"><?= htmlspecialchars($seller['phone'] ?? '-') ?></span></div>
-                <div class="flex justify-between"><span>Alta:</span> <span class="text-white"><?= date('d/m/Y', strtotime($seller['created_at'])) ?></span></div>
+                <div class="flex justify-between"><span>Usuario/DNI:</span> <span class="font-mono" style="color:var(--ink);"><?= htmlspecialchars($seller['username']) ?></span></div>
+                <div class="flex justify-between"><span>Celular:</span> <span style="color:var(--ink);"><?= htmlspecialchars($seller['phone'] ?? '-') ?></span></div>
+                <div class="flex justify-between"><span>Alta:</span> <span style="color:var(--ink);"><?= date('d/m/Y', strtotime($seller['created_at'])) ?></span></div>
             </div>
         </div>
 
@@ -143,7 +143,7 @@ include 'includes/header.php';
             <div class="grid grid-cols-2 gap-4">
                 <div class="p-4 rounded-xl" style="background:var(--paper);border:1.5px solid var(--line);">
                     <p class="text-xs text-slate-500 uppercase font-bold">Ventas Entregadas</p>
-                    <p class="text-2xl font-bold text-white mt-1">$<?= number_format($totalVentas, 0, ',', '.') ?></p>
+                    <p class="text-2xl font-bold mt-1" style="color:var(--ink);">$<?= number_format($totalVentas, 0, ',', '.') ?></p>
                     <p class="text-xs text-slate-600 mt-1"><?= count($sales) ?> operaciones</p>
                 </div>
                 <div class="bg-emerald-900/10 p-4 rounded-xl border border-emerald-500/20">

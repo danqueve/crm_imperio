@@ -97,7 +97,7 @@ include 'includes/header.php';
                 <i data-lucide="chevron-left"></i>
             </a>
             <div>
-                <h1 class="text-2xl font-bold text-white">Reporte de Comisiones</h1>
+                <h1 class="text-2xl font-bold" style="color:var(--ink);">Reporte de Comisiones</h1>
                 <p class="text-sm text-slate-500">Liquidación semanal por fecha de entrega.</p>
             </div>
         </div>
@@ -129,7 +129,7 @@ include 'includes/header.php';
         <div class="flex gap-4 flex-col sm:flex-row xl:w-auto">
             <div class="p-5 rounded-2xl flex-1 min-w-[200px]" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
                 <span class="text-slate-500 text-xs uppercase font-bold tracking-wider block mb-1">Total Ventas</span>
-                <div class="text-2xl font-bold text-white">$<?= number_format($totalVentas, 0, ',', '.') ?></div>
+                <div class="text-2xl font-bold" style="color:var(--ink);">$<?= number_format($totalVentas, 0, ',', '.') ?></div>
             </div>
             <div class="p-5 rounded-2xl flex-1 min-w-[200px]" style="background:var(--apr-bg);border:1.5px solid rgba(11,107,70,.18);box-shadow:var(--shadow-card);">
                 <span class="text-emerald-500 text-xs uppercase font-bold tracking-wider block mb-1">Comisiones (5%)</span>
@@ -169,7 +169,7 @@ include 'includes/header.php';
                             </td>
                             <td class="p-4 text-slate-300"><?= htmlspecialchars($s['client_name']) ?></td>
                             <td class="p-4 text-blue-300"><?= htmlspecialchars($s['item']) ?></td>
-                            <td class="p-4 text-right font-medium text-white">$<?= number_format($s['total_amount'], 0, ',', '.') ?></td>
+                            <td class="p-4 text-right font-medium" style="color:var(--ink);">$<?= number_format($s['total_amount'], 0, ',', '.') ?></td>
                             <td class="p-4 text-right font-bold text-emerald-400">$<?= number_format($s['commission'], 0, ',', '.') ?></td>
                         </tr>
                         <?php endforeach; ?>

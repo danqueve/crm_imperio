@@ -47,7 +47,7 @@ include 'includes/header.php';
             <i data-lucide="arrow-left"></i>
         </a>
         <div>
-            <h1 class="text-2xl font-bold text-white">Editar Venta <span class="text-blue-400">#<?= $sale_id ?></span></h1>
+            <h1 class="text-2xl font-bold" style="color:var(--ink);">Editar Venta <span class="text-blue-400">#<?= $sale_id ?></span></h1>
             <p class="text-sm text-slate-500">Modifique los datos y guarde los cambios. Solo disponible mientras la venta esté En Revisión.</p>
         </div>
     </div>
@@ -81,7 +81,7 @@ include 'includes/header.php';
         <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
             <div class="flex items-center gap-3 mb-6 pb-4" style="color:var(--accent);border-bottom:1.5px solid var(--line);">
                 <i data-lucide="user"></i>
-                <h2 class="font-bold text-lg text-white tracking-tight uppercase">Datos del Cliente</h2>
+                <h2 class="font-bold text-lg tracking-tight uppercase">Datos del Cliente</h2>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -157,7 +157,7 @@ include 'includes/header.php';
         <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
             <div class="flex items-center gap-3 mb-6 pb-4" style="color:#4f46e5;border-bottom:1.5px solid var(--line);">
                 <i data-lucide="briefcase"></i>
-                <h2 class="font-bold text-lg text-white tracking-tight uppercase">Datos Laborales</h2>
+                <h2 class="font-bold text-lg tracking-tight uppercase">Datos Laborales</h2>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -196,7 +196,7 @@ include 'includes/header.php';
         <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
             <div class="flex items-center gap-3 mb-6 pb-4" style="color:#059669;border-bottom:1.5px solid var(--line);">
                 <i data-lucide="dollar-sign"></i>
-                <h2 class="font-bold text-lg text-white uppercase tracking-tight">Detalle de la Venta</h2>
+                <h2 class="font-bold text-lg uppercase tracking-tight">Detalle de la Venta</h2>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -266,7 +266,7 @@ include 'includes/header.php';
             <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
                 <div class="flex items-center gap-3 mb-6 pb-4" style="color:#7c3aed;border-bottom:1.5px solid var(--line);">
                     <i data-lucide="files"></i>
-                    <h2 class="font-bold text-lg text-white tracking-tight uppercase">Documentación Adjunta</h2>
+                    <h2 class="font-bold text-lg tracking-tight uppercase">Documentación Adjunta</h2>
                 </div>
 
                 <!-- Archivos existentes -->
@@ -305,7 +305,7 @@ include 'includes/header.php';
                            class="hidden" onchange="previewNewFiles(this)">
                     <label for="sale_files" class="cursor-pointer flex flex-col items-center">
                         <i data-lucide="upload-cloud" class="w-8 h-8 text-slate-500 mb-4 transition group-hover:text-purple-400"></i>
-                        <span class="text-white font-bold block mb-1">Click para agregar documentos</span>
+                        <span class="font-bold block mb-1" style="color:var(--ink);">Click para agregar documentos</span>
                         <span class="text-slate-500 text-xs">JPG, PNG, PDF · Máx. 5 MB por archivo</span>
                     </label>
                 </div>
@@ -316,7 +316,7 @@ include 'includes/header.php';
             <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
                 <div class="flex items-center gap-3 mb-6 pb-4" style="color:var(--rev-ink);border-bottom:1.5px solid var(--line);">
                     <i data-lucide="message-square"></i>
-                    <h2 class="font-bold text-lg text-white tracking-tight uppercase">Observaciones</h2>
+                    <h2 class="font-bold text-lg tracking-tight uppercase">Observaciones</h2>
                 </div>
                 <textarea name="observations" rows="5"
                           placeholder="Horarios de entrega, aclaraciones del crédito, etc."
