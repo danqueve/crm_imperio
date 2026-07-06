@@ -56,6 +56,46 @@ if ($is_admin) {
 
     $denominador = $stats['entregado'] + $stats['rechazado'];
     $efectividad = $denominador > 0 ? round($stats['entregado'] / $denominador * 100) : 0;
+
+    // --- Objetivos de Vendedores (mes calendario en curso, independiente del filtro de arriba) ---
+    $mtdStart = date('Y-m-01') . ' 00:00:00';
+    $mtdEnd   = date('Y-m-d') . ' 23:59:59';
+    $stmtGoals = $pdo->prepare(
+        "SELECT u.id, u.name,
+                COALESCE(MAX(g.target_sales), 0) as target_sales,
+                COUNT(CASE WHEN s.status IN ('aprobado','entregado')
+                                AND s.created_at BETWEEN ? AND ?
+                           THEN s.id END) as progress_sales
+         FROM users u
+         LEFT JOIN seller_goals g ON g.user_id = u.id
+         LEFT JOIN sales s ON s.user_id = u.id
+         WHERE u.role = 'vendedor' AND u.is_active = 1
+         GROUP BY u.id
+         ORDER BY u.name ASC"
+    );
+    $stmtGoals->execute([$mtdStart, $mtdEnd]);
+    $sellerGoals = $stmtGoals->fetchAll(PDO::FETCH_ASSOC);
+}
+
+if ($is_vendedor) {
+    $mtdStart = date('Y-m-01') . ' 00:00:00';
+    $mtdEnd   = date('Y-m-d') . ' 23:59:59';
+    $stmtMyGoal = $pdo->prepare(
+        "SELECT COALESCE(MAX(g.target_sales), 0) as target_sales,
+                COUNT(CASE WHEN s.status IN ('aprobado','entregado')
+                                AND s.created_at BETWEEN ? AND ?
+                           THEN s.id END) as progress_sales
+         FROM users u
+         LEFT JOIN seller_goals g ON g.user_id = u.id
+         LEFT JOIN sales s ON s.user_id = u.id
+         WHERE u.id = ?
+         GROUP BY u.id"
+    );
+    $stmtMyGoal->execute([$mtdStart, $mtdEnd, $user_id]);
+    $myGoal     = $stmtMyGoal->fetch(PDO::FETCH_ASSOC);
+    $myTarget   = (int)($myGoal['target_sales'] ?? 0);
+    $myProgress = (int)($myGoal['progress_sales'] ?? 0);
+    $myPct      = $myTarget > 0 ? round($myProgress / $myTarget * 100) : 0;
 }
 
 // --- 3. LISTADO DE TABLA (BANDEJA DE ENTRADA) ---
@@ -131,6 +171,22 @@ include 'includes/header.php';
             <?php endif; ?>
         </div>
     </div>
+
+    <?php if ($is_vendedor && $myTarget > 0): ?>
+    <!-- Objetivo del mes (vendedor) -->
+    <div class="rounded-2xl p-5 mb-8 flex items-center justify-between gap-4 flex-wrap" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+        <div class="flex items-center gap-3">
+            <div class="p-2.5 rounded-xl" style="background:var(--accent-soft);color:var(--accent-ink);"><i data-lucide="target" class="w-5 h-5"></i></div>
+            <div>
+                <p class="text-[10px] uppercase font-bold tracking-widest" style="color:var(--ink-3);">Objetivo del mes</p>
+                <p class="text-lg font-bold" style="color:var(--ink);"><?= $myProgress ?> / <?= $myTarget ?> ventas <span style="color:var(--accent-ink);">(<?= $myPct ?>%)</span></p>
+            </div>
+        </div>
+        <div class="w-full sm:w-48 h-2 rounded-full overflow-hidden shrink-0" style="background:var(--line);">
+            <div class="h-full <?= $myPct >= 100 ? 'bg-green-500' : ($myPct >= 50 ? 'bg-yellow-500' : 'bg-red-500') ?>" style="width: <?= min(100, $myPct) ?>%"></div>
+        </div>
+    </div>
+    <?php endif; ?>
 
     <?php if ($is_admin): ?>
     <!-- Filtro de Período -->
@@ -343,6 +399,68 @@ include 'includes/header.php';
             </table>
         </div>
     </div>
+
+    <?php if ($is_admin): ?>
+    <!-- 4. OBJETIVOS DE VENDEDORES -->
+    <div class="rounded-2xl overflow-hidden mt-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+        <div class="p-5" style="border-bottom:1.5px solid var(--line);background:#f8f7fc;">
+            <h3 class="font-bold text-base flex items-center gap-2 uppercase tracking-wide" style="color:var(--ink);">
+                <i data-lucide="target" class="w-5 h-5" style="color:var(--accent);"></i> Objetivos de Vendedores · Mes Actual
+            </h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="uppercase text-[10px] font-bold tracking-widest" style="background:#f8f7fc;color:var(--ink-3);border-bottom:1.5px solid var(--line);">
+                    <tr>
+                        <th class="p-4 pl-6">Vendedor</th>
+                        <th class="p-4 text-center">Objetivo</th>
+                        <th class="p-4">Progreso</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($sellerGoals)): ?>
+                        <tr><td colspan="3" class="p-8 text-center italic" style="color:var(--ink-3);">No hay vendedores activos registrados.</td></tr>
+                    <?php else: ?>
+                        <?php foreach ($sellerGoals as $g): ?>
+                        <?php
+                        $gTarget = (int)$g['target_sales'];
+                        $gProgress = (int)$g['progress_sales'];
+                        $gPct = $gTarget > 0 ? round($gProgress / $gTarget * 100) : 0;
+                        $gColor = 'bg-gray-400';
+                        if ($gPct >= 100) $gColor = 'bg-green-500';
+                        elseif ($gPct >= 50) $gColor = 'bg-yellow-500';
+                        elseif ($gPct > 0) $gColor = 'bg-red-500';
+                        ?>
+                        <tr style="border-bottom:1px dashed var(--line);">
+                            <td class="p-4 pl-6 font-bold" style="color:var(--ink);"><?= htmlspecialchars($g['name']) ?></td>
+                            <td class="p-4 text-center">
+                                <form method="POST" action="set_goal.php" class="flex items-center justify-center gap-2">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="user_id" value="<?= $g['id'] ?>">
+                                    <input type="number" name="target_sales" min="0" step="1" value="<?= $gTarget ?>" class="w-16 input-light text-xs py-1 px-2 text-center font-mono">
+                                    <button type="submit" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-white" style="background:var(--accent);">Guardar</button>
+                                </form>
+                            </td>
+                            <td class="p-4">
+                                <?php if ($gTarget === 0): ?>
+                                    <span class="italic text-xs" style="color:var(--ink-3);">Sin objetivo asignado</span>
+                                <?php else: ?>
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-xs font-bold whitespace-nowrap" style="color:var(--ink);"><?= $gProgress ?> / <?= $gTarget ?> ventas (<?= $gPct ?>%)</span>
+                                        <div class="w-full h-1.5 rounded-full overflow-hidden" style="background:var(--line);max-width:160px;">
+                                            <div class="h-full <?= $gColor ?>" style="width: <?= min(100, $gPct) ?>%"></div>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php endif; // fin sección objetivos ?>
 </main>
 
 <script>
