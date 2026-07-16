@@ -22,10 +22,11 @@ if ($target_user_id <= 0 || $target_sales === false) {
     exit;
 }
 
-// Verificar que el destino sea efectivamente un vendedor
-$stmtChk = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+// Verificar que el destino sea un usuario activo existente (cualquier rol)
+$stmtChk = $pdo->prepare("SELECT is_active FROM users WHERE id = ?");
 $stmtChk->execute([$target_user_id]);
-if ($stmtChk->fetchColumn() !== 'vendedor') {
+$targetActive = $stmtChk->fetchColumn();
+if ($targetActive === false || (int)$targetActive !== 1) {
     header("Location: dashboard.php");
     exit;
 }
