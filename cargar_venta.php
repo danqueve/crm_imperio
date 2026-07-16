@@ -112,6 +112,7 @@ include 'includes/header.php';
                         <option value="Catamarca">Catamarca</option>
                         <option value="Concepción">Concepción</option>
                         <option value="Famaillá">Famaillá</option>
+                        <option value="Leales">Leales</option>
                         <option value="Lules">Lules</option>
                         <option value="Manantial">Manantial</option>
                         <option value="Monteros">Monteros</option>
