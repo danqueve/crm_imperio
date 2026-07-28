@@ -117,7 +117,7 @@ include 'includes/header.php';
                     $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Concepción','Famaillá','Leales','Lules','Manantial','Monteros','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Sgo del Estero','Villa Carmela','Yerba Buena'];
                     $current_locality = $order['client_locality'] ?? '';
                     ?>
-                    <select name="client_locality" required
+                    <select name="client_locality" id="client_locality" required
                             class="w-full input-light px-4 py-3">
                         <option value="" disabled <?= $current_locality === '' ? 'selected' : '' ?>>Seleccionar localidad...</option>
                         <?php foreach ($localidades as $loc): ?>
@@ -209,10 +209,24 @@ include 'includes/header.php';
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Día de Cobro <span class="text-red-400">*</span></label>
-                    <select name="payment_day" required
+                    <select name="payment_day" id="payment_day" required
                             class="w-full input-light px-4 py-3 cursor-pointer">
-                        <?php foreach (['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'] as $dia): ?>
-                            <option value="<?= $dia ?>" <?= ($order['payment_day'] ?? '') === $dia ? 'selected' : '' ?>><?= $dia ?></option>
+                        <?php 
+                        $dias_permitidos = ['Lunes', 'Martes', 'Miércoles', 'Sábado'];
+                        $current_day = $order['payment_day'] ?? '';
+                        $options_to_render = $dias_permitidos;
+                        if (!empty($current_day) && !in_array($current_day, $dias_permitidos)) {
+                            $options_to_render[] = $current_day;
+                        }
+                        foreach ($options_to_render as $dia): 
+                            $is_historical = !in_array($dia, $dias_permitidos);
+                        ?>
+                            <option value="<?= htmlspecialchars($dia) ?>" 
+                                    <?= ($order['payment_day'] ?? '') === $dia ? 'selected' : '' ?>
+                                    <?= $is_historical ? 'class="historical-opt"' : '' ?>
+                                    id="<?= $dia === 'Sábado' ? 'opt-sabado' : ($is_historical ? 'opt-historical' : '') ?>">
+                                <?= htmlspecialchars($dia) ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -387,6 +401,51 @@ include 'includes/header.php';
             })
             .catch(() => alert('Error de conexión al intentar eliminar.'));
     }
+
+    // Control dinámico del día de cobro "Sábado" y resguardo histórico según la localidad
+    document.addEventListener('DOMContentLoaded', function() {
+        const localitySelect = document.getElementById('client_locality');
+        const paymentDaySelect = document.getElementById('payment_day');
+        const optSabado = document.getElementById('opt-sabado');
+        const optHistorical = document.getElementById('opt-historical');
+        
+        function updatePaymentDays() {
+            if (!localitySelect || !paymentDaySelect) return;
+            
+            const locality = localitySelect.value;
+            const isTafiOrLeales = (locality === 'Tafí del Valle' || locality === 'Leales');
+            
+            if (optSabado) {
+                if (isTafiOrLeales) {
+                    optSabado.disabled = false;
+                    optSabado.style.display = '';
+                } else {
+                    if (paymentDaySelect.value === 'Sábado') {
+                        optSabado.disabled = false;
+                        optSabado.style.display = '';
+                    } else {
+                        optSabado.disabled = true;
+                        optSabado.style.display = 'none';
+                    }
+                }
+            }
+            
+            if (optHistorical) {
+                if (paymentDaySelect.value === optHistorical.value) {
+                    optHistorical.disabled = false;
+                    optHistorical.style.display = '';
+                } else {
+                    optHistorical.disabled = true;
+                    optHistorical.style.display = 'none';
+                }
+            }
+        }
+        
+        if (localitySelect) {
+            localitySelect.addEventListener('change', updatePaymentDays);
+            updatePaymentDays();
+        }
+    });
 </script>
 
 <?php include 'includes/footer.php'; ?>

@@ -100,7 +100,7 @@ include 'includes/header.php';
 
                 <div>
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Localidad</label>
-                    <select name="client_locality" required
+                    <select name="client_locality" id="client_locality" required
                             class="w-full input-light px-4 py-3">
                         <option value="" disabled selected>Seleccionar localidad...</option>
                         <option value="Acheral">Acheral</option>
@@ -193,15 +193,13 @@ include 'includes/header.php';
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Día de Cobro</label>
-                    <select name="payment_day" required 
+                    <select name="payment_day" id="payment_day" required 
                             class="w-full input-light px-4 py-3 cursor-pointer">
                         <option value="" disabled selected>Seleccionar día...</option>
                         <option value="Lunes">Lunes</option>
                         <option value="Martes">Martes</option>
                         <option value="Miércoles">Miércoles</option>
-                        <option value="Jueves">Jueves</option>
-                        <option value="Viernes">Viernes</option>
-                        <option value="Sábado">Sábado</option>
+                        <option value="Sábado" id="opt-sabado">Sábado</option>
                     </select>
                 </div>
                 <div>
@@ -304,6 +302,34 @@ include 'includes/header.php';
             lucide.createIcons();
         }
     }
+
+    // Control dinámico del día de cobro "Sábado" según la localidad
+    document.addEventListener('DOMContentLoaded', function() {
+        const localitySelect = document.getElementById('client_locality');
+        const paymentDaySelect = document.getElementById('payment_day');
+        const optSabado = document.getElementById('opt-sabado');
+        
+        function updatePaymentDays() {
+            if (!localitySelect || !paymentDaySelect || !optSabado) return;
+            
+            const locality = localitySelect.value;
+            if (locality === 'Tafí del Valle' || locality === 'Leales') {
+                optSabado.disabled = false;
+                optSabado.style.display = '';
+            } else {
+                optSabado.disabled = true;
+                optSabado.style.display = 'none';
+                if (paymentDaySelect.value === 'Sábado') {
+                    paymentDaySelect.value = '';
+                }
+            }
+        }
+        
+        if (localitySelect) {
+            localitySelect.addEventListener('change', updatePaymentDays);
+            updatePaymentDays();
+        }
+    });
 
     // Loading state al enviar el formulario
     document.getElementById('ventaForm').addEventListener('submit', function() {
