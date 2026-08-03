@@ -12,6 +12,7 @@ $is_vendedor = ($role === 'vendedor');
 $is_entregador = ($role === 'entregador');
 $is_limited_view = ($is_vendedor || $is_entregador); // Roles que solo ven sus propias ventas
 $can_manage = in_array($role, ['admin', 'supervisor', 'verificador']);
+$can_assign = in_array($role, ['admin', 'supervisor']);
 $is_admin   = ($role === 'admin');
 
 // --- BLOQUE ADMIN: estadísticas, gráficos y filtro de período ---
@@ -38,21 +39,6 @@ if ($is_admin) {
         $statsMonto[$row['status']] = (float)$row['monto'];
     }
     $total_periodo = array_sum($stats);
-
-    $stmtMonthly = $pdo->prepare(
-        "SELECT DATE_FORMAT(created_at, '%b %y') as label,
-                COUNT(*) as total,
-                SUM(CASE WHEN status = 'entregado' THEN 1 ELSE 0 END) as entregadas
-         FROM sales WHERE created_at BETWEEN ? AND ?
-         GROUP BY DATE_FORMAT(created_at, '%Y-%m') ORDER BY MIN(created_at) ASC"
-    );
-    $stmtMonthly->execute([$startSql, $endSql]);
-    $monthlyStats = $stmtMonthly->fetchAll(PDO::FETCH_ASSOC);
-
-    $labelsMonths   = json_encode(array_column($monthlyStats, 'label'));
-    $dataMonths     = json_encode(array_column($monthlyStats, 'total'));
-    $dataEntregadas = json_encode(array_column($monthlyStats, 'entregadas'));
-    $dataStatus     = json_encode(array_values($stats));
 
     $denominador = $stats['entregado'] + $stats['rechazado'];
     $efectividad = $denominador > 0 ? round($stats['entregado'] / $denominador * 100) : 0;
@@ -101,11 +87,26 @@ $myPct      = $myTarget > 0 ? round($myProgress / $myTarget * 100) : 0;
 if ($is_limited_view) {
     $stmt = $pdo->prepare("SELECT * FROM sales WHERE user_id = ? AND status IN ('revision', 'aprobado') ORDER BY created_at DESC");
     $stmt->execute([$user_id]);
+} elseif ($role === 'verificador') {
+    // Modelo estricto: el verificador solo ve las ventas que le fueron asignadas puntualmente
+    $stmt = $pdo->prepare("SELECT sales.*, users.name as seller_name
+        FROM sales JOIN users ON sales.user_id = users.id
+        WHERE sales.status = 'revision' AND sales.assigned_verifier_id = ?
+        ORDER BY sales.created_at DESC");
+    $stmt->execute([$user_id]);
 } else {
-    // Gestores ven quién cargó la venta mediante el JOIN con users
-    $stmt = $pdo->query("SELECT sales.*, users.name as seller_name FROM sales JOIN users ON sales.user_id = users.id WHERE status = 'revision' ORDER BY created_at DESC");
+    // Admin/Supervisor ven todo el pool en revisión, junto a quién está asignada cada venta
+    $stmt = $pdo->query("SELECT sales.*, users.name as seller_name, av.name as verifier_name
+        FROM sales JOIN users ON sales.user_id = users.id
+        LEFT JOIN users av ON sales.assigned_verifier_id = av.id
+        WHERE sales.status = 'revision' ORDER BY sales.created_at DESC");
 }
 $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Verificadores activos disponibles para asignar (solo se usa si $can_assign)
+$verifiers = $can_assign
+    ? $pdo->query("SELECT id, name FROM users WHERE role = 'verificador' AND is_active = 1 ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC)
+    : [];
 
 // PREPARAR DATOS PDF
 $pdfData = array_map(function($order) {
@@ -124,8 +125,7 @@ $pdfData = array_map(function($order) {
 include 'includes/header.php';
 ?>
 
-<!-- Librerías de Gráficos y PDF -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Librería de exportación PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
@@ -270,32 +270,6 @@ include 'includes/header.php';
         </div>
     </div>
 
-    <!-- 3. GRÁFICOS ESTADÍSTICOS -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 p-6 rounded-2xl" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="font-bold flex items-center gap-2 uppercase text-xs tracking-widest" style="color:var(--ink);">
-                    <i data-lucide="trending-up" class="w-4 h-4" style="color:var(--accent);"></i> Desempeño mensual
-                </h3>
-                <span class="text-[10px] font-mono px-2 py-1 rounded" style="color:var(--ink-3);background:var(--paper);border:1.5px solid var(--line);">
-                    <?= date('d/m/Y', strtotime($start)) ?> – <?= date('d/m/Y', strtotime($end)) ?>
-                </span>
-            </div>
-            <div class="h-[250px] w-full"><canvas id="monthlyChart"></canvas></div>
-        </div>
-
-        <div class="p-6 rounded-2xl" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="font-bold flex items-center gap-2 uppercase text-xs tracking-widest" style="color:var(--ink);">
-                    <i data-lucide="pie-chart" class="w-4 h-4" style="color:var(--accent);"></i> Distribución
-                </h3>
-                <?php if ($total_periodo > 0): ?>
-                <span class="text-[10px] font-mono px-2 py-1 rounded" style="color:var(--ink-3);background:var(--paper);border:1.5px solid var(--line);"><?= $total_periodo ?> total</span>
-                <?php endif; ?>
-            </div>
-            <div class="h-[220px] w-full flex items-center justify-center"><canvas id="statusChart"></canvas></div>
-        </div>
-    </div>
     <?php endif; // fin bloque admin ?>
 
     <!-- 1. BANDEJA DE ENTRADA (TABLA) -->
@@ -303,7 +277,7 @@ include 'includes/header.php';
         <div class="p-5 flex justify-between items-center" style="border-bottom:1.5px solid var(--line);background:#f8f7fc;">
             <h3 class="font-bold text-base flex items-center gap-2 uppercase tracking-wide" style="color:var(--ink);">
                 <i data-lucide="inbox" class="w-5 h-5" style="color:var(--accent);"></i>
-                <?= $is_limited_view ? "Mis Ventas Activas" : "Bandeja de Entrada · Revisión" ?>
+                <?= $is_limited_view ? "Mis Ventas Activas" : ($role === 'verificador' ? "Mis Verificaciones Asignadas" : "Bandeja de Entrada · Revisión") ?>
             </h3>
             <span class="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full" style="color:var(--ink-3);background:var(--paper);border:1.5px solid var(--line);">
                 <?= count($orders) ?> registros
@@ -363,6 +337,21 @@ include 'includes/header.php';
                             </td>
                             <td class="hidden sm:table-cell"><?= status_badge($order['status']) ?></td>
                             <td class="p-3 sm:p-[13px]" style="text-align:right;">
+                                <?php if ($can_assign && $order['status'] === 'revision'): ?>
+                                <form method="POST" action="asignar_verificador.php" class="flex justify-end items-center gap-1.5 mb-2">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="sale_id" value="<?= $order['id'] ?>">
+                                    <select name="verifier_id" class="input-light text-xs min-h-[44px] py-2 px-2 rounded-lg cursor-pointer min-w-[110px]">
+                                        <option value="">Sin asignar</option>
+                                        <?php foreach ($verifiers as $v): ?>
+                                        <option value="<?= $v['id'] ?>" <?= (int)($order['assigned_verifier_id'] ?? 0) === (int)$v['id'] ? 'selected' : '' ?>><?= htmlspecialchars($v['name']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button type="submit" class="w-11 h-11 flex items-center justify-center rounded-lg transition shrink-0" style="background:var(--accent-soft);color:var(--accent-ink);border:1.5px solid rgba(99,102,241,.2);" title="Asignar verificador" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'">
+                                        <i data-lucide="user-check" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                                <?php endif; ?>
                                 <div class="flex justify-end gap-1.5 sm:gap-2 items-center">
                                     <a href="ver_ficha.php?id=<?= $order['id'] ?>" class="w-11 h-11 flex items-center justify-center rounded-lg transition" style="background:var(--accent-soft);color:var(--accent-ink);border:1.5px solid rgba(99,102,241,.2);" title="Ver Ficha" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'">
                                         <i data-lucide="eye" class="w-4 h-4"></i>
@@ -467,64 +456,6 @@ include 'includes/header.php';
 
 <script>
     <?php if ($is_admin): ?>
-    // Configuración Gráficos (solo admin)
-    const ctxMonthly = document.getElementById('monthlyChart').getContext('2d');
-    new Chart(ctxMonthly, {
-        type: 'line',
-        data: {
-            labels: <?= $labelsMonths ?>,
-            datasets: [
-                {
-                    label: 'Cargadas',
-                    data: <?= $dataMonths ?>,
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.08)',
-                    borderWidth: 2.5, tension: 0.4, fill: true, pointBackgroundColor: '#3b82f6', pointRadius: 4
-                },
-                {
-                    label: 'Entregadas',
-                    data: <?= $dataEntregadas ?>,
-                    borderColor: '#10b981',
-                    backgroundColor: 'rgba(16, 185, 129, 0.05)',
-                    borderWidth: 2.5, tension: 0.4, fill: false, pointBackgroundColor: '#10b981', pointRadius: 4, borderDash: []
-                }
-            ]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    align: 'end',
-                    labels: { color: '#6b6b80', font: { size: 10 }, boxWidth: 12, padding: 12, usePointStyle: true }
-                }
-            },
-            scales: {
-                y: { beginAtZero: true, grid: { color: 'rgba(43,43,58,0.06)' }, ticks: { color: '#9a9aae', precision: 0 } },
-                x: { grid: { display: false }, ticks: { color: '#9a9aae' } }
-            }
-        }
-    });
-
-    const ctxStatus = document.getElementById('statusChart').getContext('2d');
-    new Chart(ctxStatus, {
-        type: 'doughnut',
-        data: {
-            labels: ['Revisión', 'Aprobado', 'Entregado', 'Rechazado'],
-            datasets: [{
-                data: <?= $dataStatus ?>,
-                backgroundColor: ['#eab308', '#10b981', '#3b82f6', '#ef4444'],
-                borderWidth: 0, hoverOffset: 10
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            plugins: { legend: { position: 'bottom', labels: { color: '#6b6b80', font: { size: 10 } } } },
-            cutout: '75%'
-        }
-    });
-
     // Contadores animados en stat cards
     document.querySelectorAll('.stat-counter').forEach(el => {
         const target = parseInt(el.dataset.target) || 0;

@@ -12,15 +12,18 @@ $role = $_SESSION['role'];
 
 // Permisos de Gestión (Admin, Supervisor y Verificador)
 $can_manage = in_array($role, ['admin', 'supervisor', 'verificador']);
+$can_assign = in_array($role, ['admin', 'supervisor']);
 
-// 1. Obtener datos de la venta (Incluyendo aprobador y vendedor)
+// 1. Obtener datos de la venta (Incluyendo aprobador, vendedor y verificador asignado)
 $sql = "SELECT
             s.*,
             seller.name as seller_name,
-            approver.name as approved_by_name
+            approver.name as approved_by_name,
+            verifier.name as assigned_verifier_name
         FROM sales s
         JOIN users seller ON s.user_id = seller.id
         LEFT JOIN users approver ON s.approved_by = approver.id
+        LEFT JOIN users verifier ON s.assigned_verifier_id = verifier.id
         WHERE s.id = ?";
 
 $stmt = $pdo->prepare($sql);
@@ -28,6 +31,11 @@ $stmt->execute([$id]);
 $order = $stmt->fetch();
 
 if (!$order) die("Venta no encontrada");
+
+// Verificadores activos disponibles para asignar (solo se usa si $can_assign)
+$verifiers = $can_assign
+    ? $pdo->query("SELECT id, name FROM users WHERE role = 'verificador' AND is_active = 1 ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC)
+    : [];
 
 // Seguridad: Vendedores solo ven sus propias ventas
 // Entregadores pueden ver sus ventas + cualquier venta aprobada/entregada (para gestionar la entrega)
@@ -152,6 +160,43 @@ include 'includes/header.php';
         </div>
 
         <div class="p-8 space-y-10">
+
+            <!-- BLOQUE DE VERIFICACIÓN ASIGNADA -->
+            <?php if ($can_manage && $order['status'] === 'revision'): ?>
+            <div class="p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4" style="background:var(--accent-soft);border:1px solid rgba(99,102,241,.3);">
+                <div class="flex items-start gap-4">
+                    <div class="p-2 rounded-xl shrink-0" style="background:rgba(99,102,241,.12);color:var(--accent-ink);">
+                        <i data-lucide="user-check" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h4 class="uppercase text-[10px] font-bold tracking-widest mb-1" style="color:var(--accent-ink);">Verificación</h4>
+                        <p class="text-sm font-medium" style="color:var(--ink);">
+                            <?php if (!empty($order['assigned_verifier_name'])): ?>
+                                Asignada a <span style="color:var(--accent-ink);font-weight:700;"><?= htmlspecialchars($order['assigned_verifier_name']) ?></span>
+                            <?php else: ?>
+                                <span class="italic" style="color:var(--ink-3);">Sin verificador asignado</span>
+                            <?php endif; ?>
+                        </p>
+                    </div>
+                </div>
+
+                <?php if ($can_assign): ?>
+                <form method="POST" action="asignar_verificador.php" class="flex items-center gap-2">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="sale_id" value="<?= $order['id'] ?>">
+                    <select name="verifier_id" class="input-light text-xs min-h-[44px] py-2 px-3 rounded-lg cursor-pointer min-w-[160px]">
+                        <option value="">Sin asignar</option>
+                        <?php foreach ($verifiers as $v): ?>
+                        <option value="<?= $v['id'] ?>" <?= (int)($order['assigned_verifier_id'] ?? 0) === (int)$v['id'] ? 'selected' : '' ?>><?= htmlspecialchars($v['name']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button type="submit" class="min-h-[44px] px-4 rounded-lg font-bold text-xs transition shrink-0" style="background:var(--accent);color:#fff;">
+                        Asignar
+                    </button>
+                </form>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
 
             <!-- BLOQUE DE AUDITORÍA: APROBACIÓN (Restaurado) -->
             <?php if (in_array($order['status'], ['aprobado', 'entregado']) && !empty($order['approved_at'])): ?>
