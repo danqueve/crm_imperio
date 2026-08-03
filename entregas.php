@@ -85,7 +85,8 @@ $whereClause = "WHERE " . implode(" AND ", $conditions);
 
 $baseJoin = "FROM sales
              JOIN users ON sales.user_id = users.id
-             LEFT JOIN users AS deliverer ON sales.delivered_by = deliverer.id";
+             LEFT JOIN users AS deliverer ON sales.delivered_by = deliverer.id
+             LEFT JOIN users AS verifier ON sales.assigned_verifier_id = verifier.id";
 
 // --- TOTAL PARA PAGINACIÓN ---
 $stmtCount = $pdo->prepare("SELECT COUNT(*) FROM sales $whereClause");
@@ -94,7 +95,7 @@ $stmtCount->execute();
 $total_registros = (int)$stmtCount->fetchColumn();
 
 // --- QUERY PANTALLA (paginado) ---
-$sql = "SELECT sales.*, users.name as seller_name, deliverer.name as deliverer_name
+$sql = "SELECT sales.*, users.name as seller_name, deliverer.name as deliverer_name, verifier.name as verifier_name
         $baseJoin
         $whereClause
         $orderBy
@@ -107,7 +108,7 @@ $stmt->execute();
 $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // --- QUERY PDF (sin paginación) ---
-$sqlFull = "SELECT sales.*, users.name as seller_name, deliverer.name as deliverer_name
+$sqlFull = "SELECT sales.*, users.name as seller_name, deliverer.name as deliverer_name, verifier.name as verifier_name
             $baseJoin
             $whereClause
             $orderBy";
@@ -392,6 +393,11 @@ include 'includes/header.php';
                                     </a>
                                 <?php else: ?>
                                     <?= htmlspecialchars($order['seller_name']) ?>
+                                <?php endif; ?>
+                                <?php if (!empty($order['verifier_name'])): ?>
+                                <div class="text-[10px] flex items-center gap-1 mt-1" style="color:var(--accent-ink);">
+                                    <i data-lucide="user-check" class="w-2.5 h-2.5 shrink-0"></i> Verificó: <?= htmlspecialchars($order['verifier_name']) ?>
+                                </div>
                                 <?php endif; ?>
                             </td>
 

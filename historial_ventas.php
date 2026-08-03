@@ -78,17 +78,19 @@ $stmtCount->execute($params);
 $total_registros = $stmtCount->fetchColumn();
 
 // --- 3. CONSULTA B: DATOS PAGINADOS (Para la tabla) ---
-$sqlPage = "SELECT 
-                s.*, 
+$sqlPage = "SELECT
+                s.*,
                 u_seller.name as seller_name,
                 u_rej.name as rejected_by_name,
                 u_del.name as delivered_by_name,
-                u_apr.name as approved_by_name
+                u_apr.name as approved_by_name,
+                u_ver.name as assigned_verifier_name
             FROM sales s
             LEFT JOIN users u_seller ON s.user_id = u_seller.id
             LEFT JOIN users u_rej ON s.rejected_by = u_rej.id
             LEFT JOIN users u_del ON s.delivered_by = u_del.id
             LEFT JOIN users u_apr ON s.approved_by = u_apr.id
+            LEFT JOIN users u_ver ON s.assigned_verifier_id = u_ver.id
             $whereClause
             ORDER BY s.created_at DESC
             LIMIT :offset, :limit";
@@ -101,17 +103,19 @@ $stmtPage->execute();
 $history = $stmtPage->fetchAll(PDO::FETCH_ASSOC);
 
 // --- 4. CONSULTA C: DATOS PARA PDF (Todos los filtrados) ---
-$sqlFull = "SELECT 
-                s.*, 
+$sqlFull = "SELECT
+                s.*,
                 u_seller.name as seller_name,
                 u_rej.name as rejected_by_name,
                 u_del.name as delivered_by_name,
-                u_apr.name as approved_by_name
+                u_apr.name as approved_by_name,
+                u_ver.name as assigned_verifier_name
             FROM sales s
             LEFT JOIN users u_seller ON s.user_id = u_seller.id
             LEFT JOIN users u_rej ON s.rejected_by = u_rej.id
             LEFT JOIN users u_del ON s.delivered_by = u_del.id
             LEFT JOIN users u_apr ON s.approved_by = u_apr.id
+            LEFT JOIN users u_ver ON s.assigned_verifier_id = u_ver.id
             $whereClause
             ORDER BY s.created_at DESC";
 
@@ -182,6 +186,11 @@ if (isset($_GET['ajax'])) {
                             <span class="flex items-center gap-1 mb-1"><i data-lucide="shield-alert" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($h['rejected_by_name'] ?? 'Admin') ?></span>
                             <div class="italic pl-2 line-clamp-2" style="color:var(--ink-3);border-left:2px solid var(--rev-bg);">"<?= htmlspecialchars($h['rejected_reason'] ?? 'Sin motivo') ?>"</div>
                         </div>
+                    <?php endif; ?>
+                    <?php if (!empty($h['assigned_verifier_name'])): ?>
+                    <div class="text-[10px] mt-1.5 pt-1.5" style="border-top:1px dashed var(--line);color:var(--accent-ink);">
+                        <span class="flex items-center gap-1"><i data-lucide="user-check" class="w-2.5 h-2.5"></i> Verificador: <?= htmlspecialchars($h['assigned_verifier_name']) ?></span>
+                    </div>
                     <?php endif; ?>
                 </td>
                 <td class="p-5 text-right">
@@ -359,6 +368,11 @@ include 'includes/header.php';
                                         <span class="flex items-center gap-1 mb-1"><i data-lucide="shield-alert" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($h['rejected_by_name'] ?? 'Admin') ?></span>
                                         <div class="italic pl-2 line-clamp-2" style="color:var(--ink-3);border-left:2px solid var(--rev-bg);">"<?= htmlspecialchars($h['rejected_reason'] ?? 'Sin motivo') ?>"</div>
                                     </div>
+                                <?php endif; ?>
+                                <?php if (!empty($h['assigned_verifier_name'])): ?>
+                                <div class="text-[10px] mt-1.5 pt-1.5" style="border-top:1px dashed var(--line);color:var(--accent-ink);">
+                                    <span class="flex items-center gap-1"><i data-lucide="user-check" class="w-2.5 h-2.5"></i> Verificador: <?= htmlspecialchars($h['assigned_verifier_name']) ?></span>
+                                </div>
                                 <?php endif; ?>
                             </td>
                             <td class="p-5 text-right">

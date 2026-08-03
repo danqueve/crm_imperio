@@ -338,6 +338,15 @@ include 'includes/header.php';
                             <td class="hidden sm:table-cell"><?= status_badge($order['status']) ?></td>
                             <td class="p-3 sm:p-[13px]" style="text-align:right;">
                                 <?php if ($can_assign && $order['status'] === 'revision'): ?>
+                                <div class="flex justify-end mb-1">
+                                    <?php if (!empty($order['verifier_name'])): ?>
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold" style="background:var(--accent-soft);color:var(--accent-ink);">
+                                        <i data-lucide="user-check" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($order['verifier_name']) ?>
+                                    </span>
+                                    <?php else: ?>
+                                    <span class="text-[10px] italic" style="color:var(--ink-3);">Sin asignar</span>
+                                    <?php endif; ?>
+                                </div>
                                 <form method="POST" action="asignar_verificador.php" class="flex justify-end items-center gap-1.5 mb-2">
                                     <?= csrf_field() ?>
                                     <input type="hidden" name="sale_id" value="<?= $order['id'] ?>">
