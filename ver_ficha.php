@@ -173,6 +173,9 @@ include 'includes/header.php';
                         <p class="text-sm font-medium" style="color:var(--ink);">
                             <?php if (!empty($order['assigned_verifier_name'])): ?>
                                 Asignada a <span style="color:var(--accent-ink);font-weight:700;"><?= htmlspecialchars($order['assigned_verifier_name']) ?></span>
+                                <?php if (!empty($order['assigned_at'])): ?>
+                                <span class="font-mono text-xs" style="color:var(--ink-3);">· <?= date('d/m/Y H:i', strtotime($order['assigned_at'])) ?></span>
+                                <?php endif; ?>
                             <?php else: ?>
                                 <span class="italic" style="color:var(--ink-3);">Sin verificador asignado</span>
                             <?php endif; ?>

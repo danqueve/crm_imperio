@@ -128,11 +128,11 @@ $allHistory = $stmtFull->fetchAll(PDO::FETCH_ASSOC);
 $pdfData = array_map(function($h) {
     $approvedStr = !empty($h['approved_by_name']) ? " | Aprobado por: " . $h['approved_by_name'] : '';
     $auditDetail = ($h['status'] === 'entregado')
-        ? "Entregado por: " . ($h['delivered_by_name'] ?? 'S/D') . " el " . (!empty($h['delivered_at']) ? date('d/m/Y', strtotime($h['delivered_at'])) : '-') . $approvedStr
+        ? "Entregado por: " . ($h['delivered_by_name'] ?? 'S/D') . " el " . (!empty($h['delivered_at']) ? date('d/m/Y H:i', strtotime($h['delivered_at'])) : '-') . $approvedStr
         : "Rechazado por: " . ($h['rejected_by_name'] ?? 'Admin') . ". Motivo: " . ($h['rejected_reason'] ?? '-');
 
     return [
-        'date'   => date('d/m/Y', strtotime($h['created_at'])),
+        'date'   => date('d/m/Y H:i', strtotime($h['created_at'])),
         'dni'    => $h['client_dni'] ?? '-',
         'client' => $h['client_name'],
         'phone'  => $h['client_whatsapp'] ?? '-',
@@ -154,7 +154,7 @@ if (isset($_GET['ajax'])) {
             ?>
             <tr class="transition">
                 <td class="p-5 pl-6 font-bold" style="color:var(--ink-3);"><?= $counter++ ?></td>
-                <td class="p-5 font-mono text-xs whitespace-nowrap" style="color:var(--ink-2);"><?= date('d/m/Y', strtotime($h['created_at'])) ?></td>
+                <td class="p-5 font-mono text-xs whitespace-nowrap" style="color:var(--ink-2);"><?= date('d/m/Y H:i', strtotime($h['created_at'])) ?></td>
                 <td class="p-5">
                     <div class="font-bold" style="color:var(--ink);"><?= htmlspecialchars($h['client_name']) ?></div>
                     <div class="text-[10px] font-mono uppercase tracking-tighter" style="color:var(--ink-3);"><?= htmlspecialchars($h['client_dni']) ?></div>
@@ -171,12 +171,12 @@ if (isset($_GET['ajax'])) {
                         <div class="text-[10px]" style="color:var(--ink-2);">
                             <span class="block font-bold mb-0.5 uppercase tracking-tighter" style="color:var(--ent-ink);">Entregado por:</span>
                             <span class="flex items-center gap-1"><i data-lucide="user-check" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($h['delivered_by_name'] ?? 'S/D') ?></span>
-                            <span class="block mt-0.5 font-mono" style="color:var(--ink-3);"><?= !empty($h['delivered_at']) ? date('d/m/Y', strtotime($h['delivered_at'])) : '-' ?></span>
+                            <span class="block mt-0.5 font-mono" style="color:var(--ink-3);"><?= !empty($h['delivered_at']) ? date('d/m/Y H:i', strtotime($h['delivered_at'])) : '-' ?></span>
                             <?php if (!empty($h['approved_by_name'])): ?>
                             <span class="block font-bold mt-1.5 mb-0.5 uppercase tracking-tighter" style="color:#7c3aed;">Aprobado por:</span>
                             <span class="flex items-center gap-1"><i data-lucide="shield-check" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($h['approved_by_name']) ?></span>
                             <?php if (!empty($h['approved_at'])): ?>
-                            <span class="block mt-0.5 font-mono" style="color:var(--ink-3);"><?= date('d/m/Y', strtotime($h['approved_at'])) ?></span>
+                            <span class="block mt-0.5 font-mono" style="color:var(--ink-3);"><?= date('d/m/Y H:i', strtotime($h['approved_at'])) ?></span>
                             <?php endif; ?>
                             <?php endif; ?>
                         </div>
@@ -189,7 +189,7 @@ if (isset($_GET['ajax'])) {
                     <?php endif; ?>
                     <?php if (!empty($h['assigned_verifier_name'])): ?>
                     <div class="text-[10px] mt-1.5 pt-1.5" style="border-top:1px dashed var(--line);color:var(--accent-ink);">
-                        <span class="flex items-center gap-1"><i data-lucide="user-check" class="w-2.5 h-2.5"></i> Verificador: <?= htmlspecialchars($h['assigned_verifier_name']) ?></span>
+                        <span class="flex items-center gap-1"><i data-lucide="user-check" class="w-2.5 h-2.5"></i> Verificador: <?= htmlspecialchars($h['assigned_verifier_name']) ?><?php if (!empty($h['assigned_at'])): ?> <span class="font-mono opacity-75">· <?= date('H:i', strtotime($h['assigned_at'])) ?></span><?php endif; ?></span>
                     </div>
                     <?php endif; ?>
                 </td>
@@ -336,7 +336,7 @@ include 'includes/header.php';
                         <?php $counter = $offset + 1; foreach ($history as $h): ?>
                         <tr class="transition">
                             <td class="p-5 pl-6 font-bold" style="color:var(--ink-3);"><?= $counter++ ?></td>
-                            <td class="p-5 font-mono text-xs whitespace-nowrap" style="color:var(--ink-2);"><?= date('d/m/Y', strtotime($h['created_at'])) ?></td>
+                            <td class="p-5 font-mono text-xs whitespace-nowrap" style="color:var(--ink-2);"><?= date('d/m/Y H:i', strtotime($h['created_at'])) ?></td>
                             <td class="p-5">
                                 <div class="font-bold" style="color:var(--ink);"><?= htmlspecialchars($h['client_name']) ?></div>
                                 <div class="text-[10px] font-mono uppercase tracking-tighter" style="color:var(--ink-3);"><?= htmlspecialchars($h['client_dni']) ?></div>
@@ -353,12 +353,12 @@ include 'includes/header.php';
                                     <div class="text-[10px]" style="color:var(--ink-2);">
                                         <span class="block font-bold mb-0.5 uppercase tracking-tighter" style="color:var(--ent-ink);">Entregado por:</span>
                                         <span class="flex items-center gap-1"><i data-lucide="user-check" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($h['delivered_by_name'] ?? 'S/D') ?></span>
-                                        <span class="block mt-0.5 font-mono" style="color:var(--ink-3);"><?= !empty($h['delivered_at']) ? date('d/m/Y', strtotime($h['delivered_at'])) : '-' ?></span>
+                                        <span class="block mt-0.5 font-mono" style="color:var(--ink-3);"><?= !empty($h['delivered_at']) ? date('d/m/Y H:i', strtotime($h['delivered_at'])) : '-' ?></span>
                                         <?php if (!empty($h['approved_by_name'])): ?>
                                         <span class="block font-bold mt-1.5 mb-0.5 uppercase tracking-tighter" style="color:#7c3aed;">Aprobado por:</span>
                                         <span class="flex items-center gap-1"><i data-lucide="shield-check" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($h['approved_by_name']) ?></span>
                                         <?php if (!empty($h['approved_at'])): ?>
-                                        <span class="block mt-0.5 font-mono" style="color:var(--ink-3);"><?= date('d/m/Y', strtotime($h['approved_at'])) ?></span>
+                                        <span class="block mt-0.5 font-mono" style="color:var(--ink-3);"><?= date('d/m/Y H:i', strtotime($h['approved_at'])) ?></span>
                                         <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
@@ -371,7 +371,7 @@ include 'includes/header.php';
                                 <?php endif; ?>
                                 <?php if (!empty($h['assigned_verifier_name'])): ?>
                                 <div class="text-[10px] mt-1.5 pt-1.5" style="border-top:1px dashed var(--line);color:var(--accent-ink);">
-                                    <span class="flex items-center gap-1"><i data-lucide="user-check" class="w-2.5 h-2.5"></i> Verificador: <?= htmlspecialchars($h['assigned_verifier_name']) ?></span>
+                                    <span class="flex items-center gap-1"><i data-lucide="user-check" class="w-2.5 h-2.5"></i> Verificador: <?= htmlspecialchars($h['assigned_verifier_name']) ?><?php if (!empty($h['assigned_at'])): ?> <span class="font-mono opacity-75">· <?= date('H:i', strtotime($h['assigned_at'])) ?></span><?php endif; ?></span>
                                 </div>
                                 <?php endif; ?>
                             </td>

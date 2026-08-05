@@ -123,8 +123,8 @@ $pdfData = array_map(function($order) {
         'id'             => $order['id'],
         'raw_date'       => $order['created_at'],
         'raw_delivered'  => $order['delivered_at'],
-        'date_loaded'    => date('d/m/Y', strtotime($order['created_at'])),
-        'date_delivered' => $order['delivered_at'] ? date('d/m/Y', strtotime($order['delivered_at'])) : '-',
+        'date_loaded'    => date('d/m/Y H:i', strtotime($order['created_at'])),
+        'date_delivered' => $order['delivered_at'] ? date('d/m/Y H:i', strtotime($order['delivered_at'])) : '-',
         'client'         => $order['client_name'],
         'address'        => $order['client_address'] . ' (' . $order['client_locality'] . ')',
         'locality'       => $order['client_locality'],
@@ -342,11 +342,11 @@ include 'includes/header.php';
                                 <div class="flex flex-col gap-1">
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase" style="background:var(--paper);color:var(--ink-3);">Carga</span>
-                                        <span class="text-xs"><?= date('d/m/Y', strtotime($order['created_at'])) ?></span>
+                                        <span class="text-xs"><?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></span>
                                     </div>
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase" style="background:var(--apr-bg);color:var(--apr-ink);">Entrega</span>
-                                        <span class="text-xs" style="color:var(--apr-ink);"><?= !empty($order['delivered_at']) ? date('d/m/Y', strtotime($order['delivered_at'])) : '-' ?></span>
+                                        <span class="text-xs" style="color:var(--apr-ink);"><?= !empty($order['delivered_at']) ? date('d/m/Y H:i', strtotime($order['delivered_at'])) : '-' ?></span>
                                     </div>
                                 </div>
                             </td>
@@ -371,7 +371,7 @@ include 'includes/header.php';
                                 </a>
                                 <?php endif; ?>
                                 <?php if ($tab === 'pendientes'): ?>
-                                <div class="text-[10px] mt-0.5 sm:hidden" style="color:var(--ink-3);">Carga: <?= date('d/m/Y', strtotime($order['created_at'])) ?></div>
+                                <div class="text-[10px] mt-0.5 sm:hidden" style="color:var(--ink-3);">Carga: <?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></div>
                                 <?php endif; ?>
                             </td>
 
@@ -397,6 +397,9 @@ include 'includes/header.php';
                                 <?php if (!empty($order['verifier_name'])): ?>
                                 <div class="text-[10px] flex items-center gap-1 mt-1" style="color:var(--accent-ink);">
                                     <i data-lucide="user-check" class="w-2.5 h-2.5 shrink-0"></i> Verificó: <?= htmlspecialchars($order['verifier_name']) ?>
+                                    <?php if (!empty($order['assigned_at'])): ?>
+                                    <span class="font-mono opacity-75">· <?= date('H:i', strtotime($order['assigned_at'])) ?></span>
+                                    <?php endif; ?>
                                 </div>
                                 <?php endif; ?>
                             </td>

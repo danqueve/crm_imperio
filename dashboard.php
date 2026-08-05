@@ -113,7 +113,7 @@ $pdfData = array_map(function($order) {
     return [
         'id' => $order['id'],
         'raw_date' => $order['created_at'],
-        'date' => date('d/m/Y', strtotime($order['created_at'])),
+        'date' => date('d/m/Y H:i', strtotime($order['created_at'])),
         'client' => $order['client_name'],
         'address' => $order['client_address'],
         'phone' => $order['client_whatsapp'],
@@ -314,13 +314,13 @@ include 'includes/header.php';
                         <?php $counter = 1; foreach ($orders as $order): ?>
                         <tr class="<?= $order['status'] === 'revision' ? 'row-revision' : 'row-aprobado' ?>">
                             <td class="hidden sm:table-cell font-bold" style="color:var(--ink-3);"><?= $counter++ ?></td>
-                            <td class="hidden sm:table-cell font-mono text-xs" style="color:var(--ink-2);"><?= date('d/m/Y', strtotime($order['created_at'])) ?></td>
+                            <td class="hidden sm:table-cell font-mono text-xs whitespace-nowrap" style="color:var(--ink-2);"><?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></td>
                             <td class="p-3 sm:p-[13px]">
                                 <div class="font-bold" style="color:var(--ink);"><?= htmlspecialchars($order['client_name']) ?></div>
                                 <div class="text-[10px] font-mono flex items-center gap-1 mt-0.5" style="color:var(--apr-ink);">
                                     <i data-lucide="phone" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($order['client_whatsapp']) ?>
                                 </div>
-                                <div class="text-[10px] font-mono mt-0.5 sm:hidden" style="color:var(--ink-3);"><?= date('d/m/Y', strtotime($order['created_at'])) ?></div>
+                                <div class="text-[10px] font-mono mt-0.5 sm:hidden" style="color:var(--ink-3);"><?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></div>
                             </td>
                             <td class="hidden lg:table-cell" style="color:var(--ink-2);">
                                 <div class="flex items-center gap-1.5">
@@ -342,6 +342,9 @@ include 'includes/header.php';
                                     <?php if (!empty($order['verifier_name'])): ?>
                                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold" style="background:var(--accent-soft);color:var(--accent-ink);">
                                         <i data-lucide="user-check" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($order['verifier_name']) ?>
+                                        <?php if (!empty($order['assigned_at'])): ?>
+                                        <span class="font-mono opacity-75">· <?= date('H:i', strtotime($order['assigned_at'])) ?></span>
+                                        <?php endif; ?>
                                     </span>
                                     <?php else: ?>
                                     <span class="text-[10px] italic" style="color:var(--ink-3);">Sin asignar</span>
