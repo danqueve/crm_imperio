@@ -114,14 +114,15 @@ include 'includes/header.php';
                 <div>
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Localidad <span class="text-red-400">*</span></label>
                     <?php
-                    $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Concepción','Famaillá','Leales','Lules','Manantial','Monteros','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Sgo del Estero','Villa Carmela','Yerba Buena'];
+                    $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Concepción','Famaillá','Leales','Lules','Manantial','Monteros','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Sgo','Villa Carmela','Yerba Buena'];
+                    $localidadesLabels = ['Sgo' => 'Sgo del Estero'];
                     $current_locality = $order['client_locality'] ?? '';
                     ?>
                     <select name="client_locality" id="client_locality" required
                             class="w-full input-light px-4 py-3">
                         <option value="" disabled <?= $current_locality === '' ? 'selected' : '' ?>>Seleccionar localidad...</option>
                         <?php foreach ($localidades as $loc): ?>
-                        <option value="<?= htmlspecialchars($loc) ?>" <?= $current_locality === $loc ? 'selected' : '' ?>><?= htmlspecialchars($loc) ?></option>
+                        <option value="<?= htmlspecialchars($loc) ?>" <?= $current_locality === $loc ? 'selected' : '' ?>><?= htmlspecialchars($localidadesLabels[$loc] ?? $loc) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
