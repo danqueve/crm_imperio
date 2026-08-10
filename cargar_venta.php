@@ -32,7 +32,9 @@ include 'includes/header.php';
             'dni_formato'      => 'El DNI debe tener 7 u 8 dígitos numéricos.',
             'nombre'           => 'El nombre del cliente es obligatorio.',
             'whatsapp_formato' => 'El WhatsApp debe contener solo dígitos (7 a 15 caracteres).',
+            'telefono'         => 'El número de llamada (teléfono alternativo) es obligatorio.',
             'telefono_formato' => 'El teléfono alternativo tiene un formato inválido.',
+            'maps'             => 'La ubicación de Google Maps es obligatoria (debe ser un enlace válido).',
             'articulo'         => 'El artículo es obligatorio.',
             'monto'            => 'El monto por cuota debe ser mayor a cero.',
             'cuotas'           => 'La cantidad de cuotas debe ser mayor a cero.',
@@ -133,14 +135,14 @@ include 'includes/header.php';
                            class="w-full input-light px-4 py-3 font-mono">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Nro Llamada (Opcional)</label>
-                    <input type="text" name="client_phone" placeholder="Alternativo" 
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Nro Llamada</label>
+                    <input type="text" name="client_phone" required placeholder="Alternativo"
                            class="w-full input-light px-4 py-3 font-mono">
                 </div>
 
                 <div class="md:col-span-2 lg:col-span-3">
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Ubicación Google Maps</label>
-                    <input type="text" name="client_map_link" placeholder="Pegue el enlace aquí (https://maps...)" 
+                    <input type="text" name="client_map_link" required placeholder="Pegue el enlace aquí (https://maps...)"
                            class="w-full input-light px-4 py-3">
                 </div>
             </div>

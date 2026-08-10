@@ -51,6 +51,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // Validar campos obligatorios (defensa en profundidad además del required del HTML)
+    if (empty($client_phone) || empty($client_map_link)) {
+        $redirect = $is_vendedor ? "editar_venta.php?id={$sale_id}&msg=error" : "ver_ficha.php?id={$sale_id}&msg=error";
+        header("Location: $redirect");
+        exit;
+    }
+
     // 3. CAPTURA DE DATOS - SECCIÓN LABORAL
     $job_type            = trim($_POST['job_type'] ?? '');
     $job_occupation      = trim($_POST['job_occupation'] ?? '');

@@ -133,16 +133,16 @@ include 'includes/header.php';
                            class="w-full input-light px-4 py-3 font-mono">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Nro Llamada (Opcional)</label>
-                    <input type="text" name="client_phone"
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Nro Llamada <span class="text-red-400">*</span></label>
+                    <input type="text" name="client_phone" required
                            value="<?= htmlspecialchars($order['client_phone'] ?? '') ?>"
                            class="w-full input-light px-4 py-3 font-mono">
                 </div>
 
                 <div class="md:col-span-2 lg:col-span-3">
-                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Ubicación Google Maps</label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Ubicación Google Maps <span class="text-red-400">*</span></label>
                     <div class="relative">
-                        <input type="text" name="client_map_link"
+                        <input type="text" name="client_map_link" required
                                value="<?= htmlspecialchars($order['client_map_link'] ?? '') ?>"
                                placeholder="Pegue el enlace aquí (https://maps...)"
                                class="w-full input-light px-4 py-3 pr-10">

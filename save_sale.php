@@ -65,7 +65,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($client_dni) && !preg_match('/^\d{7,8}$/', $client_dni)) $errors[] = "dni_formato";
     if (empty($client_name)) $errors[] = "nombre";
     if (!empty($client_whatsapp) && !preg_match('/^\d{7,15}$/', $client_whatsapp)) $errors[] = "whatsapp_formato";
+    if (empty($client_phone)) $errors[] = "telefono";
     if (!empty($client_phone) && !preg_match('/^\d{7,15}$/', $client_phone)) $errors[] = "telefono_formato";
+    if (empty($client_map_link)) $errors[] = "maps";
     if (empty($item)) $errors[] = "articulo";
     if ($installment_amount <= 0) $errors[] = "monto";
     if ($installments_count <= 0) $errors[] = "cuotas";

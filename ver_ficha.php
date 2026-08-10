@@ -443,8 +443,8 @@ include 'includes/header.php';
                             <input type="text" name="client_whatsapp" value="<?= htmlspecialchars($order['client_whatsapp'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition font-mono">
                         </div>
                         <div class="col-span-2">
-                            <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Nro Llamada (Opcional)</label>
-                            <input type="text" name="client_phone" value="<?= htmlspecialchars($order['client_phone'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition font-mono">
+                            <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Nro Llamada</label>
+                            <input type="text" name="client_phone" required value="<?= htmlspecialchars($order['client_phone'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition font-mono">
                         </div>
                         <div class="col-span-2">
                             <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Domicilio</label>
@@ -471,7 +471,7 @@ include 'includes/header.php';
                         <div class="col-span-2">
                             <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:#0b6b46;">Enlace Google Maps</label>
                             <div class="relative">
-                                <input type="text" name="client_map_link" value="<?= htmlspecialchars($order['client_map_link'] ?? '') ?>" placeholder="Pegue aquí el enlace de ubicación" class="input-light w-full rounded-xl px-4 py-2.5 transition">
+                                <input type="text" name="client_map_link" required value="<?= htmlspecialchars($order['client_map_link'] ?? '') ?>" placeholder="Pegue aquí el enlace de ubicación" class="input-light w-full rounded-xl px-4 py-2.5 transition">
                                 <div class="absolute right-3 top-1/2 -translate-y-1/2" style="color:#0b6b46;"><i data-lucide="map-pin" class="w-4 h-4"></i></div>
                             </div>
                         </div>
