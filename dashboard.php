@@ -118,7 +118,8 @@ $pdfData = array_map(function($order) {
         'address' => $order['client_address'],
         'phone' => $order['client_whatsapp'],
         'item' => $order['item'],
-        'seller' => $order['seller_name'] ?? 'Yo'
+        'seller' => $order['seller_name'] ?? 'Yo',
+        'verifier' => $order['verifier_name'] ?? 'Sin asignar'
     ];
 }, $orders);
 
@@ -493,9 +494,9 @@ include 'includes/header.php';
         const pageWidth = doc.internal.pageSize.getWidth();
         doc.setFontSize(16); doc.setFont("helvetica", "bold");
         doc.text("VENTAS PENDIENTES DE REVISIÓN", pageWidth / 2, 15, { align: 'center' });
-        doc.autoTable({ 
-            head: [['#', 'Fecha', 'Cliente', 'Dirección', 'Artículo', 'Vendedor']],
-            body: salesData.map((r, i) => [i+1, r.date, r.client, r.address, r.item, r.seller]),
+        doc.autoTable({
+            head: [['#', 'Fecha', 'Cliente', 'Dirección', 'Artículo', 'Vendedor', 'Verificador']],
+            body: salesData.map((r, i) => [i+1, r.date, r.client, r.address, r.item, r.seller, r.verifier]),
             startY: 25, theme: 'grid', styles: { fontSize: 8 },
             headStyles: { fillColor: [99, 102, 241] }
         });
