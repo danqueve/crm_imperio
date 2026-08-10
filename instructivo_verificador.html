@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual del Verificador – CRM Imperio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+
+    /* ── Estilos exclusivos de impresión / PDF ── */
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white !important; color: #0f172a !important; }
+      .page-break { page-break-before: always; }
+      .avoid-break { page-break-inside: avoid; }
+      a { color: inherit !important; text-decoration: none !important; }
+
+      /* Forzar colores en print (navegadores modernos) */
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+      /* Cover page centrada */
+      #cover { display: flex !important; height: 100vh; }
+    }
+
+    /* Animación fade-in solo en pantalla */
+    @media screen {
+      .section-card { animation: fadeUp .4s ease both; }
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+    }
+
+    /* Badge de estado */
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 12px; border-radius: 9999px;
+      font-size: 13px; font-weight: 600;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+    /* Paso numerado */
+    .step-num {
+      width: 32px; height: 32px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 14px; flex-shrink: 0;
+    }
+
+    /* Tabla */
+    table { border-collapse: collapse; width: 100%; }
+    th, td { padding: 10px 14px; border: 1px solid #e2e8f0; font-size: 14px; }
+    th { background: #1e40af; color: white; font-weight: 600; }
+    tr:nth-child(even) td { background: #f8fafc; }
+
+    /* TOC link */
+    .toc-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 12px; border-radius: 8px; transition: background .15s;
+      text-decoration: none; color: #1e293b;
+    }
+    .toc-item:hover { background: #eff6ff; }
+
+    /* Tip box */
+    .tip { border-left: 4px solid #3b82f6; background: #eff6ff; padding: 12px 16px; border-radius: 0 8px 8px 0; }
+    .warn { border-left: 4px solid #f59e0b; background: #fffbeb; padding: 12px 16px; border-radius: 0 8px 8px 0; }
+    .danger { border-left: 4px solid #ef4444; background: #fef2f2; padding: 12px 16px; border-radius: 0 8px 8px 0; }
+    .success { border-left: 4px solid #10b981; background: #ecfdf5; padding: 12px 16px; border-radius: 0 8px 8px 0; }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen">
+
+  <!-- ══════════════════════════════════════════
+       BARRA DE HERRAMIENTAS (solo pantalla)
+  ══════════════════════════════════════════ -->
+  <div class="no-print sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+    <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- Logo textual -->
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
+          <span class="text-white font-bold text-xs">CI</span>
+        </div>
+        <span class="font-semibold text-slate-700 text-sm">CRM Imperio · Manual del Verificador</span>
+      </div>
+      <button onclick="window.print()"
+        class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition shadow">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+        </svg>
+        Exportar PDF
+      </button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PORTADA
+  ══════════════════════════════════════════ -->
+  <div id="cover" class="avoid-break max-w-4xl mx-auto mt-8 mb-6 no-print:mt-8">
+    <div class="bg-gradient-to-br from-blue-700 via-blue-800 to-indigo-900 rounded-2xl shadow-2xl overflow-hidden">
+      <div class="px-10 py-16 flex flex-col items-center text-center">
+        <!-- Logo / Isotipo -->
+        <div class="w-20 h-20 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center mb-6 shadow-lg">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+
+        <span class="text-blue-300 text-sm font-semibold uppercase tracking-widest mb-3">CRM Imperio</span>
+        <h1 class="text-4xl font-extrabold text-white leading-tight mb-4">
+          Manual del Verificador
+        </h1>
+        <p class="text-blue-200 text-lg max-w-lg mb-8">
+          Guía completa para revisar y decidir sobre las ventas que le fueron asignadas: qué mirar, cómo aprobar y cómo rechazar.
+        </p>
+
+        <div class="flex gap-4 flex-wrap justify-center">
+          <div class="bg-white/10 border border-white/20 rounded-xl px-5 py-3 text-center">
+            <p class="text-blue-300 text-xs uppercase tracking-wide font-medium">Versión</p>
+            <p class="text-white font-bold">1.0</p>
+          </div>
+          <div class="bg-white/10 border border-white/20 rounded-xl px-5 py-3 text-center">
+            <p class="text-blue-300 text-xs uppercase tracking-wide font-medium">Rol</p>
+            <p class="text-white font-bold">Verificador</p>
+          </div>
+          <div class="bg-white/10 border border-white/20 rounded-xl px-5 py-3 text-center">
+            <p class="text-blue-300 text-xs uppercase tracking-wide font-medium">Fecha</p>
+            <p class="text-white font-bold">Agosto 2026</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Franja inferior -->
+      <div class="bg-white/5 border-t border-white/10 px-10 py-4 flex items-center justify-between">
+        <span class="text-blue-300 text-xs">Documento interno · Uso exclusivo del equipo de verificación</span>
+        <div class="flex gap-1">
+          <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+          <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+          <span class="w-2 h-2 rounded-full bg-white/40"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       CONTENIDO PRINCIPAL
+  ══════════════════════════════════════════ -->
+  <main class="max-w-4xl mx-auto px-4 pb-16 space-y-8">
+
+    <!-- ── ÍNDICE ── -->
+    <div class="section-card avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-slate-50 border-b border-slate-200 px-6 py-4 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-slate-200 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+          </svg>
+        </div>
+        <h2 class="font-bold text-slate-700">Contenido</h2>
+      </div>
+      <div class="px-6 py-5 space-y-1">
+        <a href="#sec1" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">1</span>
+            <span class="font-medium">Ingreso al sistema</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 1</span>
+        </a>
+        <a href="#sec2" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">2</span>
+            <span class="font-medium">Panel principal (Dashboard)</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 1</span>
+        </a>
+        <a href="#sec3" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">3</span>
+            <span class="font-medium">Cómo le asignan una venta</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 2</span>
+        </a>
+        <a href="#sec4" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">4</span>
+            <span class="font-medium">Ver ficha de una venta (qué revisar)</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 2</span>
+        </a>
+        <a href="#sec5" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">5</span>
+            <span class="font-medium">Aprobar una venta</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 3</span>
+        </a>
+        <a href="#sec6" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">6</span>
+            <span class="font-medium">Rechazar una venta</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 4</span>
+        </a>
+        <a href="#sec7" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">7</span>
+            <span class="font-medium">Estados de una venta</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 4</span>
+        </a>
+        <a href="#sec8" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">8</span>
+            <span class="font-medium">De dónde viene la venta</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 5</span>
+        </a>
+        <a href="#sec9" class="toc-item">
+          <span class="flex items-center gap-3">
+            <span class="w-6 h-6 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">9</span>
+            <span class="font-medium">Preguntas frecuentes</span>
+          </span>
+          <span class="text-slate-400 text-sm">Pág. 5</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 1 – INGRESO AL SISTEMA
+    ══════════════════════════════════════════ -->
+    <div id="sec1" class="section-card avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 1</span>
+          <h2 class="text-white text-xl font-bold">Ingreso al sistema</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-5">
+        <p class="text-slate-600 leading-relaxed">
+          Para acceder al CRM Imperio debe ingresar con su usuario y contraseña asignados por el administrador.
+          La sesión se cierra automáticamente después de <strong>30 minutos</strong> de inactividad por seguridad.
+        </p>
+
+        <!-- Pasos -->
+        <div class="space-y-3">
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">1</div>
+            <div>
+              <p class="font-semibold text-slate-700">Abra el navegador</p>
+              <p class="text-slate-500 text-sm mt-0.5">Ingrese la dirección del sistema que le proporcionó su supervisor.</p>
+            </div>
+          </div>
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">2</div>
+            <div>
+              <p class="font-semibold text-slate-700">Complete sus datos</p>
+              <p class="text-slate-500 text-sm mt-0.5">
+                <span class="font-medium text-slate-600">Usuario:</span> su número de DNI (sin puntos ni espacios).<br>
+                <span class="font-medium text-slate-600">Contraseña:</span> la que le fue asignada.
+              </p>
+            </div>
+          </div>
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">3</div>
+            <div>
+              <p class="font-semibold text-slate-700">Presione <em>"Ingresar"</em></p>
+              <p class="text-slate-500 text-sm mt-0.5">Si los datos son correctos será redirigido al Panel principal.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tip">
+          <p class="text-sm text-blue-800">
+            <strong>Tip:</strong> Si el sistema le informa <em>"Sesión expirada"</em>, simplemente vuelva a iniciar sesión con su usuario y contraseña.
+          </p>
+        </div>
+
+        <div class="warn">
+          <p class="text-sm text-amber-800">
+            <strong>Importante:</strong> No comparta su contraseña con nadie. Cada aprobación o rechazo que realice queda registrado bajo su usuario en el historial de auditoría.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 2 – PANEL PRINCIPAL
+    ══════════════════════════════════════════ -->
+    <div id="sec2" class="section-card avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 2</span>
+          <h2 class="text-white text-xl font-bold">Panel principal</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-5">
+        <p class="text-slate-600 leading-relaxed">
+          Al ingresar verá su panel personal, con una bandeja titulada <strong>"Mis Verificaciones Asignadas"</strong>.
+          Ahí aparecen <strong>únicamente las ventas que un administrador o supervisor le asignó a usted</strong> para revisar —
+          no ve el resto de las ventas del sistema, ni las que están asignadas a otros verificadores.
+        </p>
+
+        <div class="tip">
+          <p class="text-sm text-blue-800">
+            <strong>A diferencia de otros roles:</strong> el verificador no ve tarjetas de estadísticas ni gráficos en el panel — esa vista es exclusiva del administrador. Su panel se centra únicamente en su bandeja de trabajo.
+          </p>
+        </div>
+
+        <!-- Columnas de la tabla -->
+        <h3 class="font-semibold text-slate-700">Columnas de la bandeja</h3>
+        <table>
+          <thead>
+            <tr><th>Columna</th><th>Qué muestra</th></tr>
+          </thead>
+          <tbody>
+            <tr><td class="font-medium">Fecha</td><td>Día y hora en que el vendedor cargó la venta</td></tr>
+            <tr><td class="font-medium">Cliente</td><td>Nombre y WhatsApp del cliente</td></tr>
+            <tr><td class="font-medium">Cargado por</td><td>Vendedor que registró la venta (link a su perfil)</td></tr>
+            <tr><td class="font-medium">Artículo / Total</td><td>Producto financiado y monto total del crédito</td></tr>
+            <tr><td class="font-medium">Estado</td><td>Siempre "En Revisión" mientras está en su bandeja</td></tr>
+            <tr><td class="font-medium">Acciones</td><td>Ver Ficha, Aprobar y Rechazar</td></tr>
+          </tbody>
+        </table>
+
+        <p class="text-slate-600 text-sm leading-relaxed">
+          Desde esta tabla puede aprobar o rechazar directamente, o hacer clic en <strong>Ver Ficha</strong> para revisar el detalle completo antes de decidir (recomendado).
+        </p>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 3 – CÓMO LE ASIGNAN UNA VENTA
+    ══════════════════════════════════════════ -->
+    <div id="sec3" class="section-card avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 3</span>
+          <h2 class="text-white text-xl font-bold">Cómo le asignan una venta</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-5">
+        <p class="text-slate-600 leading-relaxed">
+          La asignación de ventas es una tarea exclusiva de <strong>administradores y supervisores</strong> — el verificador no elige qué ventas atender,
+          las recibe asignadas. Cuando le asignan una venta nueva, automáticamente aparece en su bandeja <strong>"Mis Verificaciones Asignadas"</strong>.
+        </p>
+
+        <div class="success">
+          <p class="text-sm text-emerald-800">
+            <strong>Cómo saber si hay algo nuevo:</strong> simplemente vuelva a ingresar al Panel principal. Si le asignaron una venta desde la última vez que revisó, la va a ver ahí, ordenada por fecha de carga.
+          </p>
+        </div>
+
+        <div class="tip">
+          <p class="text-sm text-blue-800">
+            <strong>Tip:</strong> En la ficha de la venta (sección "Verificación") puede ver la fecha y hora exacta en que se le asignó, junto con su nombre.
+          </p>
+        </div>
+
+        <div class="warn">
+          <p class="text-sm text-amber-800">
+            <strong>Importante:</strong> Si le reasignan una venta a otro verificador, esta deja de aparecer en su panel automáticamente.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 4 – VER FICHA DE UNA VENTA (QUÉ REVISAR)
+    ══════════════════════════════════════════ -->
+    <div id="sec4" class="section-card bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden page-break">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 4</span>
+          <h2 class="text-white text-xl font-bold">Ver ficha de una venta</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-6">
+        <p class="text-slate-600 leading-relaxed">
+          Antes de aprobar o rechazar, haga clic en <strong>Ver Ficha</strong> para revisar toda la información del cliente y del crédito.
+          Esta es la base de una buena verificación.
+        </p>
+
+        <!-- Datos del cliente -->
+        <div class="avoid-break">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 text-sm font-bold flex items-center justify-center shrink-0">A</div>
+            <h3 class="font-semibold text-slate-700 text-lg">Datos del cliente</h3>
+          </div>
+          <ul class="text-sm text-slate-600 space-y-1 list-disc ml-4">
+            <li>Nombre y apellido, DNI</li>
+            <li>WhatsApp (enlace directo para llamar/escribir) y teléfono alternativo</li>
+            <li>Domicilio, barrio, localidad y ubicación en Google Maps (si fue cargada)</li>
+          </ul>
+        </div>
+
+        <!-- Datos laborales -->
+        <div class="avoid-break">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 text-sm font-bold flex items-center justify-center shrink-0">B</div>
+            <h3 class="font-semibold text-slate-700 text-lg">Datos laborales</h3>
+          </div>
+          <ul class="text-sm text-slate-600 space-y-1 list-disc ml-4">
+            <li>Tipo de empleo y ocupación</li>
+            <li>Empresa y domicilio laboral</li>
+          </ul>
+        </div>
+
+        <!-- Plan de pago -->
+        <div class="avoid-break">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 text-sm font-bold flex items-center justify-center shrink-0">C</div>
+            <h3 class="font-semibold text-slate-700 text-lg">Plan de pago y producto</h3>
+          </div>
+          <ul class="text-sm text-slate-600 space-y-1 list-disc ml-4">
+            <li>Artículo financiado</li>
+            <li>Cantidad de cuotas, monto por cuota y frecuencia (semanal/quincenal/mensual)</li>
+            <li>Día de cobro y adelanto entregado</li>
+            <li>Total final del crédito</li>
+          </ul>
+        </div>
+
+        <!-- Documentación -->
+        <div class="avoid-break">
+          <div class="flex items-center gap-3 mb-3">
+            <div class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 text-sm font-bold flex items-center justify-center shrink-0">D</div>
+            <h3 class="font-semibold text-slate-700 text-lg">Documentación adjunta</h3>
+          </div>
+          <p class="text-slate-600 text-sm">
+            Fotos o PDF del DNI, recibos de sueldo u otra documentación que el vendedor haya subido. Cada archivo se abre en una pestaña nueva al hacer clic.
+          </p>
+        </div>
+
+        <div class="warn avoid-break">
+          <p class="text-sm text-amber-800 font-semibold mb-1">Antes de decidir, verifique:</p>
+          <ul class="text-sm text-amber-700 space-y-1 ml-4 list-disc">
+            <li>Los datos del cliente son coherentes y están completos (DNI, domicilio, contacto).</li>
+            <li>La documentación adjunta respalda la información cargada.</li>
+            <li>El plan de pago (cuotas, monto, frecuencia) es razonable para el crédito solicitado.</li>
+            <li>Las observaciones de la venta, si las hay, no indican algo que requiera confirmar con el vendedor antes de decidir.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 5 – APROBAR UNA VENTA
+    ══════════════════════════════════════════ -->
+    <div id="sec5" class="section-card avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 5</span>
+          <h2 class="text-white text-xl font-bold">Aprobar una venta</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-5">
+        <p class="text-slate-600 leading-relaxed">
+          Si al revisar la ficha considera que el crédito puede otorgarse, apruébelo. Puede hacerlo desde la ficha completa o directamente desde su panel.
+        </p>
+
+        <div class="space-y-3">
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">1</div>
+            <div>
+              <p class="font-semibold text-slate-700">Abra la ficha de la venta</p>
+              <p class="text-slate-500 text-sm mt-0.5">Recomendado: revise todos los datos antes de decidir (ver sección anterior).</p>
+            </div>
+          </div>
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">2</div>
+            <div>
+              <p class="font-semibold text-slate-700">Presione <em>"Aprobar Venta"</em></p>
+              <p class="text-slate-500 text-sm mt-0.5">El botón verde aparece al pie de la ficha (o el ícono ✓ en la fila del panel).</p>
+            </div>
+          </div>
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">3</div>
+            <div>
+              <p class="font-semibold text-slate-700">Listo</p>
+              <p class="text-slate-500 text-sm mt-0.5">No requiere ningún dato adicional. La venta pasa a estado "Aprobado" al instante.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="success avoid-break">
+          <p class="text-sm text-emerald-800">
+            <strong>¿Qué pasa después?</strong> La venta sale de su bandeja "Mis Verificaciones Asignadas" (ya no está "En Revisión") y pasa a la etapa de entrega, a cargo del equipo de entregas. Queda registrado que usted la aprobó, con fecha y hora.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 6 – RECHAZAR UNA VENTA
+    ══════════════════════════════════════════ -->
+    <div id="sec6" class="section-card avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 6</span>
+          <h2 class="text-white text-xl font-bold">Rechazar una venta</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-5">
+        <p class="text-slate-600 leading-relaxed">
+          Si los datos no son suficientes o la documentación no respalda el crédito, rechace la venta indicando siempre el motivo —
+          es obligatorio y el vendedor lo va a ver para poder comunicárselo al cliente.
+        </p>
+
+        <div class="space-y-3">
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">1</div>
+            <div>
+              <p class="font-semibold text-slate-700">Presione <em>"Rechazar"</em></p>
+              <p class="text-slate-500 text-sm mt-0.5">Desde la ficha completa o con el ícono ✕ en la fila del panel. Se abre una pantalla dedicada.</p>
+            </div>
+          </div>
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">2</div>
+            <div>
+              <p class="font-semibold text-slate-700">Escriba el motivo del rechazo</p>
+              <p class="text-slate-500 text-sm mt-0.5">Campo obligatorio. Sea claro y específico — el vendedor y el cliente van a leer exactamente lo que escriba (ej: "DNI ilegible", "no responde al contacto", "domicilio no coincide").</p>
+            </div>
+          </div>
+          <div class="flex gap-4 items-start avoid-break">
+            <div class="step-num bg-blue-100 text-blue-700 mt-0.5">3</div>
+            <div>
+              <p class="font-semibold text-slate-700">Presione <em>"Confirmar Rechazo"</em></p>
+              <p class="text-slate-500 text-sm mt-0.5">La venta pasa a estado "Rechazado" de inmediato.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="danger avoid-break">
+          <p class="text-sm text-red-800">
+            <strong>Importante:</strong> El motivo de rechazo queda visible de forma permanente en la ficha de la venta. Escriba siempre algo claro y respetuoso, ya que también lo puede ver el vendedor.
+          </p>
+        </div>
+
+        <div class="tip avoid-break">
+          <p class="text-sm text-blue-800">
+            <strong>¿Se equivocó?</strong> Una vez confirmado el rechazo, usted ya no puede revertirlo. Avise a un administrador o supervisor — ellos pueden devolver la venta a revisión desde Historial de Ventas.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 7 – ESTADOS DE UNA VENTA
+    ══════════════════════════════════════════ -->
+    <div id="sec7" class="section-card avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 7</span>
+          <h2 class="text-white text-xl font-bold">Estados de una venta</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-5">
+        <p class="text-slate-600 leading-relaxed">
+          Su decisión es el paso clave del ciclo de vida de la venta. Así queda el flujo completo:
+        </p>
+
+        <!-- Flujo visual -->
+        <div class="flex flex-wrap gap-2 items-center text-sm font-medium">
+          <span class="badge bg-yellow-100 text-yellow-800"><span class="dot bg-yellow-500"></span>En Revisión</span>
+          <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+          <span class="badge bg-emerald-100 text-emerald-800"><span class="dot bg-emerald-500"></span>Aprobado</span>
+          <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+          </svg>
+          <span class="badge bg-blue-100 text-blue-800"><span class="dot bg-blue-500"></span>Entregado</span>
+          <span class="text-slate-400 mx-1">|</span>
+          <span class="badge bg-red-100 text-red-800"><span class="dot bg-red-500"></span>Rechazado</span>
+        </div>
+
+        <table>
+          <thead>
+            <tr><th>Estado</th><th>Significado</th><th>¿Qué hago yo?</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge bg-yellow-100 text-yellow-800"><span class="dot bg-yellow-500"></span>En Revisión</span></td>
+              <td>La venta le fue asignada y está esperando su decisión.</td>
+              <td>Revisar la ficha y aprobar o rechazar.</td>
+            </tr>
+            <tr>
+              <td><span class="badge bg-emerald-100 text-emerald-800"><span class="dot bg-emerald-500"></span>Aprobado</span></td>
+              <td>Usted aprobó el crédito. Pasa a la etapa de entrega.</td>
+              <td>Ninguna acción — ya no depende de usted.</td>
+            </tr>
+            <tr>
+              <td><span class="badge bg-blue-100 text-blue-800"><span class="dot bg-blue-500"></span>Entregado</span></td>
+              <td>El equipo de entregas ya le dio el producto al cliente.</td>
+              <td>Ninguna acción.</td>
+            </tr>
+            <tr>
+              <td><span class="badge bg-red-100 text-red-800"><span class="dot bg-red-500"></span>Rechazado</span></td>
+              <td>Usted rechazó el crédito. El motivo queda registrado en la ficha.</td>
+              <td>Ninguna acción salvo que un supervisor le pida revisar el caso nuevamente.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 8 – DE DÓNDE VIENE LA VENTA
+    ══════════════════════════════════════════ -->
+    <div id="sec8" class="section-card avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 8</span>
+          <h2 class="text-white text-xl font-bold">De dónde viene la venta</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-5">
+        <p class="text-slate-600 leading-relaxed">
+          El verificador no carga ventas — solo las revisa. Toda venta que le llega fue registrada por un <strong>vendedor</strong> desde
+          <em>"Nueva Venta"</em>, completando datos del cliente, información laboral, el plan de pago y, opcionalmente, documentación adjunta.
+        </p>
+
+        <div class="tip">
+          <p class="text-sm text-blue-800">
+            Si necesita el detalle completo de qué campos completa el vendedor al cargar una venta, consulte el <strong>Manual del Vendedor</strong>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SECCIÓN 9 – PREGUNTAS FRECUENTES
+    ══════════════════════════════════════════ -->
+    <div id="sec9" class="section-card bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-5 flex items-center gap-4">
+        <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <div>
+          <span class="text-blue-200 text-xs font-semibold uppercase tracking-widest">Sección 9</span>
+          <h2 class="text-white text-xl font-bold">Preguntas frecuentes</h2>
+        </div>
+      </div>
+
+      <div class="px-6 py-6 space-y-4">
+
+        <div class="avoid-break rounded-xl border border-slate-200 overflow-hidden">
+          <div class="bg-slate-50 px-5 py-3 flex items-start gap-3">
+            <span class="text-blue-600 font-extrabold text-lg leading-none mt-0.5">?</span>
+            <p class="font-semibold text-slate-700">No veo ninguna venta en mi panel, ¿por qué?</p>
+          </div>
+          <div class="px-5 py-4 text-sm text-slate-600 leading-relaxed">
+            Significa que actualmente no tiene ninguna venta asignada. La bandeja se completa cuando un administrador o supervisor le asigna una venta puntual — no hace falta que haga nada, simplemente espere o consulte con su supervisor.
+          </div>
+        </div>
+
+        <div class="avoid-break rounded-xl border border-slate-200 overflow-hidden">
+          <div class="bg-slate-50 px-5 py-3 flex items-start gap-3">
+            <span class="text-blue-600 font-extrabold text-lg leading-none mt-0.5">?</span>
+            <p class="font-semibold text-slate-700">¿Puedo ver o aprobar ventas que no me asignaron?</p>
+          </div>
+          <div class="px-5 py-4 text-sm text-slate-600 leading-relaxed">
+            No. Su panel muestra exclusivamente las ventas asignadas a usted. Si cree que debería tener una venta asignada y no aparece, consulte con un administrador o supervisor.
+          </div>
+        </div>
+
+        <div class="avoid-break rounded-xl border border-slate-200 overflow-hidden">
+          <div class="bg-slate-50 px-5 py-3 flex items-start gap-3">
+            <span class="text-blue-600 font-extrabold text-lg leading-none mt-0.5">?</span>
+            <p class="font-semibold text-slate-700">Rechacé o aprobé una venta por error, ¿qué hago?</p>
+          </div>
+          <div class="px-5 py-4 text-sm text-slate-600 leading-relaxed">
+            Usted no puede revertir la decisión una vez confirmada. Avise de inmediato a un administrador o supervisor: ellos pueden devolver la venta a estado "En Revisión" desde Historial de Ventas para que la vuelva a evaluar.
+          </div>
+        </div>
+
+        <div class="avoid-break rounded-xl border border-slate-200 overflow-hidden">
+          <div class="bg-slate-50 px-5 py-3 flex items-start gap-3">
+            <span class="text-blue-600 font-extrabold text-lg leading-none mt-0.5">?</span>
+            <p class="font-semibold text-slate-700">¿Qué debo revisar antes de aprobar?</p>
+          </div>
+          <div class="px-5 py-4 text-sm text-slate-600 leading-relaxed">
+            Como mínimo: que los datos del cliente sean coherentes y completos, que la documentación adjunta respalde lo cargado, y que el plan de pago sea razonable para el crédito solicitado. Vea la sección "Ver ficha de una venta" para el detalle completo.
+          </div>
+        </div>
+
+        <div class="avoid-break rounded-xl border border-slate-200 overflow-hidden">
+          <div class="bg-slate-50 px-5 py-3 flex items-start gap-3">
+            <span class="text-blue-600 font-extrabold text-lg leading-none mt-0.5">?</span>
+            <p class="font-semibold text-slate-700">¿Es obligatorio escribir un motivo al rechazar?</p>
+          </div>
+          <div class="px-5 py-4 text-sm text-slate-600 leading-relaxed">
+            Sí, siempre. El sistema no permite confirmar un rechazo sin motivo, porque el vendedor lo necesita para comunicárselo al cliente.
+          </div>
+        </div>
+
+        <div class="avoid-break rounded-xl border border-slate-200 overflow-hidden">
+          <div class="bg-slate-50 px-5 py-3 flex items-start gap-3">
+            <span class="text-blue-600 font-extrabold text-lg leading-none mt-0.5">?</span>
+            <p class="font-semibold text-slate-700">¿Puedo verificar desde el celular?</p>
+          </div>
+          <div class="px-5 py-4 text-sm text-slate-600 leading-relaxed">
+            Sí. El sistema es compatible con dispositivos móviles. Abra el navegador de su celular, ingrese a la dirección del CRM e inicie sesión normalmente.
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         PIE DE PÁGINA / FIRMA
+    ══════════════════════════════════════════ -->
+    <div class="avoid-break bg-white rounded-2xl shadow-sm border border-slate-200 px-6 py-6">
+      <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow">
+            <span class="text-white font-bold text-sm">CI</span>
+          </div>
+          <div>
+            <p class="font-bold text-slate-700 text-sm">CRM Imperio</p>
+            <p class="text-slate-400 text-xs">Manual del Verificador · Versión 1.0 · Agosto 2026</p>
+          </div>
+        </div>
+        <div class="text-center sm:text-right">
+          <p class="text-slate-400 text-xs">Documento interno. No distribuir fuera del equipo.</p>
+          <p class="text-slate-400 text-xs mt-0.5">Ante dudas, consulte con su supervisor.</p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</body>
+</html>
