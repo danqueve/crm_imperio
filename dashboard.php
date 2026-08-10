@@ -317,7 +317,12 @@ include 'includes/header.php';
                             <td class="hidden sm:table-cell font-bold" style="color:var(--ink-3);"><?= $counter++ ?></td>
                             <td class="hidden sm:table-cell font-mono text-xs whitespace-nowrap" style="color:var(--ink-2);"><?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></td>
                             <td class="p-3 sm:p-[13px]">
-                                <div class="font-bold" style="color:var(--ink);"><?= htmlspecialchars($order['client_name']) ?></div>
+                                <div class="font-bold flex items-center gap-1.5" style="color:var(--ink);">
+                                    <?= htmlspecialchars($order['client_name']) ?>
+                                    <?php if (($order['sale_type'] ?? 'credito') === 'contado'): ?>
+                                    <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded" style="background:var(--apr-bg);color:var(--apr-ink);">Contado</span>
+                                    <?php endif; ?>
+                                </div>
                                 <div class="text-[10px] font-mono flex items-center gap-1 mt-0.5" style="color:var(--apr-ink);">
                                     <i data-lucide="phone" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($order['client_whatsapp']) ?>
                                 </div>

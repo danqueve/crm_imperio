@@ -4,9 +4,18 @@ require 'includes/db.php';
 // SEGURIDAD: Permitir acceso a Vendedor, Admin, Supervisor, Verificador y Entregador
 $allowed_roles = ['vendedor', 'admin', 'supervisor', 'verificador', 'entregador'];
 
-if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) { 
-    header("Location: dashboard.php"); 
-    exit; 
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], $allowed_roles)) {
+    header("Location: dashboard.php");
+    exit;
+}
+
+// Sticky form: si venimos de un error de validación, recuperamos una sola vez lo que
+// el usuario había cargado para no obligarlo a re-escribir todo el formulario.
+$sticky = (isset($_GET['error']) && !empty($_SESSION['sale_form_sticky'])) ? $_SESSION['sale_form_sticky'] : [];
+unset($_SESSION['sale_form_sticky']);
+
+function old(string $key, array $sticky, string $default = ''): string {
+    return htmlspecialchars($sticky[$key] ?? $default);
 }
 
 include 'includes/header.php';
@@ -63,12 +72,37 @@ include 'includes/header.php';
                     }
                 ?>
             </p>
+            <?php if ($_GET['error'] === 'missing_data' && !empty($sticky)): ?>
+            <p class="text-xs opacity-75 mt-1">Los demás datos que había completado se mantuvieron. Si había adjuntado archivos, debe volver a seleccionarlos.</p>
+            <?php endif; ?>
         </div>
     </div>
     <?php endif; ?>
 
     <form action="save_sale.php" method="POST" enctype="multipart/form-data" class="space-y-8" id="ventaForm">
         <?= csrf_field() ?>
+
+        <!-- Tipo de Venta -->
+        <?php $cur_sale_type = ($sticky['sale_type'] ?? 'credito') === 'contado' ? 'contado' : 'credito'; ?>
+        <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+            <label class="block text-xs font-bold uppercase mb-3 ml-1" style="color:var(--ink-3);">Tipo de Venta</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label id="label_sale_type_credito" class="cursor-pointer rounded-xl p-4 flex items-start gap-3 transition" style="border:1.5px solid var(--accent);background:var(--accent-soft);">
+                    <input type="radio" name="sale_type" value="credito" id="sale_type_credito" class="mt-1" <?= $cur_sale_type === 'credito' ? 'checked' : '' ?>>
+                    <div>
+                        <p class="font-bold" style="color:var(--ink);">A Crédito</p>
+                        <p class="text-xs mt-0.5" style="color:var(--ink-3);">Requiere todos los datos del cliente para evaluar el crédito.</p>
+                    </div>
+                </label>
+                <label id="label_sale_type_contado" class="cursor-pointer rounded-xl p-4 flex items-start gap-3 transition" style="border:1.5px solid var(--line);">
+                    <input type="radio" name="sale_type" value="contado" id="sale_type_contado" class="mt-1" <?= $cur_sale_type === 'contado' ? 'checked' : '' ?>>
+                    <div>
+                        <p class="font-bold" style="color:var(--ink);">De Contado</p>
+                        <p class="text-xs mt-0.5" style="color:var(--ink-3);">Solo Nombre, Celular, Artículo y Ubicación.</p>
+                    </div>
+                </label>
+            </div>
+        </div>
 
         <!-- Sección 1: Datos del Cliente -->
         <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
@@ -78,78 +112,64 @@ include 'includes/header.php';
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div>
+                <div class="contado-hide">
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">DNI</label>
-                    <input type="text" name="client_dni" required placeholder="Sin puntos ni espacios" 
+                    <input type="text" name="client_dni" required data-required-credito placeholder="Sin puntos ni espacios" value="<?= old('client_dni', $sticky) ?>"
                            class="w-full input-light px-4 py-3 font-mono">
                 </div>
                 <div class="md:col-span-1 lg:col-span-2">
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Apellido y Nombre</label>
-                    <input type="text" name="client_name" required placeholder="Nombre completo" 
+                    <input type="text" name="client_name" required placeholder="Nombre completo" value="<?= old('client_name', $sticky) ?>"
                            class="w-full input-light px-4 py-3">
                 </div>
 
-                <div class="md:col-span-2">
+                <div class="md:col-span-2 contado-hide">
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Domicilio</label>
-                    <input type="text" name="client_address" required placeholder="Calle y número" 
+                    <input type="text" name="client_address" required data-required-credito placeholder="Calle y número" value="<?= old('client_address', $sticky) ?>"
                            class="w-full input-light px-4 py-3">
                 </div>
-                <div>
+                <div class="contado-hide">
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Barrio</label>
-                    <input type="text" name="client_neighborhood" required placeholder="Barrio" 
+                    <input type="text" name="client_neighborhood" required data-required-credito placeholder="Barrio" value="<?= old('client_neighborhood', $sticky) ?>"
                            class="w-full input-light px-4 py-3">
                 </div>
 
-                <div>
+                <div class="contado-hide">
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Localidad</label>
-                    <select name="client_locality" id="client_locality" required
+                    <?php
+                    $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Catamarca','Concepción','Famaillá','Leales','Lules','Manantial','Monteros','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Sgo','Villa Carmela','Yerba Buena'];
+                    $localidadesLabels = ['Sgo' => 'Sgo del Estero'];
+                    $cur_loc = $sticky['client_locality'] ?? '';
+                    ?>
+                    <select name="client_locality" id="client_locality" required data-required-credito
                             class="w-full input-light px-4 py-3">
-                        <option value="" disabled selected>Seleccionar localidad...</option>
-                        <option value="Acheral">Acheral</option>
-                        <option value="Aguilares">Aguilares</option>
-                        <option value="Alderete">Alderete</option>
-                        <option value="Banda del Río Salí">Banda del Río Salí</option>
-                        <option value="Bella Vista">Bella Vista</option>
-                        <option value="Burruyacu">Burruyacu</option>
-                        <option value="Catamarca">Catamarca</option>
-                        <option value="Concepción">Concepción</option>
-                        <option value="Famaillá">Famaillá</option>
-                        <option value="Leales">Leales</option>
-                        <option value="Lules">Lules</option>
-                        <option value="Manantial">Manantial</option>
-                        <option value="Monteros">Monteros</option>
-                        <option value="Río Colorado">Río Colorado</option>
-                        <option value="San Miguel de Tucumán">San Miguel de Tucumán</option>
-                        <option value="Simoca">Simoca</option>
-                        <option value="Tafí del Valle">Tafí del Valle</option>
-                        <option value="Tafí Viejo">Tafí Viejo</option>
-                        <option value="Termas">Termas</option>
-                        <option value="Sgo">Sgo del Estero</option>
-                        <option value="Villa Carmela">Villa Carmela</option>
-                        <option value="Yerba Buena">Yerba Buena</option>
+                        <option value="" disabled <?= $cur_loc === '' ? 'selected' : '' ?>>Seleccionar localidad...</option>
+                        <?php foreach ($localidades as $loc): ?>
+                        <option value="<?= htmlspecialchars($loc) ?>" <?= $cur_loc === $loc ? 'selected' : '' ?>><?= htmlspecialchars($localidadesLabels[$loc] ?? $loc) ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">WhatsApp</label>
-                    <input type="text" name="client_whatsapp" required placeholder="Ej: 381..." 
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">WhatsApp / Celular</label>
+                    <input type="text" name="client_whatsapp" required placeholder="Ej: 381..." value="<?= old('client_whatsapp', $sticky) ?>"
                            class="w-full input-light px-4 py-3 font-mono">
                 </div>
-                <div>
+                <div class="contado-hide">
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Nro Llamada</label>
-                    <input type="text" name="client_phone" required placeholder="Alternativo"
+                    <input type="text" name="client_phone" required data-required-credito placeholder="Alternativo" value="<?= old('client_phone', $sticky) ?>"
                            class="w-full input-light px-4 py-3 font-mono">
                 </div>
 
                 <div class="md:col-span-2 lg:col-span-3">
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Ubicación Google Maps</label>
-                    <input type="text" name="client_map_link" required placeholder="Pegue el enlace aquí (https://maps...)"
+                    <input type="text" name="client_map_link" required placeholder="Pegue el enlace aquí (https://maps...)" value="<?= old('client_map_link', $sticky) ?>"
                            class="w-full input-light px-4 py-3">
                 </div>
             </div>
         </div>
 
         <!-- Sección 2: Datos Laborales -->
-        <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+        <div class="rounded-2xl p-6 md:p-8 contado-hide" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
             <div class="flex items-center gap-3 mb-6 pb-4" style="color:var(--accent);border-bottom:1.5px solid var(--line);">
                 <i data-lucide="briefcase"></i>
                 <h2 class="font-bold text-lg tracking-tight uppercase" style="color:var(--ink);">DATOS LABORALES</h2>
@@ -158,22 +178,22 @@ include 'includes/header.php';
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Tipo de Empleo</label>
-                    <input type="text" name="job_type" placeholder="Ej: Rel. Dependencia, Monotributo" 
+                    <input type="text" name="job_type" placeholder="Ej: Rel. Dependencia, Monotributo" value="<?= old('job_type', $sticky) ?>"
                            class="w-full input-light px-4 py-3">
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Ocupación</label>
-                    <input type="text" name="job_occupation" placeholder="Ej: Empleado de comercio" 
+                    <input type="text" name="job_occupation" placeholder="Ej: Empleado de comercio" value="<?= old('job_occupation', $sticky) ?>"
                            class="w-full input-light px-4 py-3">
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Nombre del Trabajo</label>
-                    <input type="text" name="job_name" placeholder="Nombre de la empresa o lugar" 
+                    <input type="text" name="job_name" placeholder="Nombre de la empresa o lugar" value="<?= old('job_name', $sticky) ?>"
                            class="w-full input-light px-4 py-3">
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Domicilio Laboral</label>
-                    <input type="text" name="job_address" placeholder="Dirección del trabajo" 
+                    <input type="text" name="job_address" placeholder="Dirección del trabajo" value="<?= old('job_address', $sticky) ?>"
                            class="w-full input-light px-4 py-3">
                 </div>
             </div>
@@ -190,46 +210,48 @@ include 'includes/header.php';
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <div>
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Artículo</label>
-                    <input type="text" name="item" required placeholder="Producto vendido" 
+                    <input type="text" name="item" required placeholder="Producto vendido" value="<?= old('item', $sticky) ?>"
                            class="w-full input-light px-4 py-3">
                 </div>
-                <div>
+                <div class="contado-hide">
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Día de Cobro</label>
-                    <select name="payment_day" id="payment_day" required 
+                    <?php $cur_day = $sticky['payment_day'] ?? ''; ?>
+                    <select name="payment_day" id="payment_day" required data-required-credito
                             class="w-full input-light px-4 py-3 cursor-pointer">
-                        <option value="" disabled selected>Seleccionar día...</option>
-                        <option value="Lunes">Lunes</option>
-                        <option value="Martes">Martes</option>
-                        <option value="Miércoles">Miércoles</option>
-                        <option value="Sábado" id="opt-sabado">Sábado</option>
+                        <option value="" disabled <?= $cur_day === '' ? 'selected' : '' ?>>Seleccionar día...</option>
+                        <option value="Lunes" <?= $cur_day === 'Lunes' ? 'selected' : '' ?>>Lunes</option>
+                        <option value="Martes" <?= $cur_day === 'Martes' ? 'selected' : '' ?>>Martes</option>
+                        <option value="Miércoles" <?= $cur_day === 'Miércoles' ? 'selected' : '' ?>>Miércoles</option>
+                        <option value="Sábado" id="opt-sabado" <?= $cur_day === 'Sábado' ? 'selected' : '' ?>>Sábado</option>
                     </select>
                 </div>
-                <div>
+                <div class="contado-hide">
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Cuotas</label>
-                    <input type="number" name="installments_count" id="installments_count" required placeholder="Cant." 
+                    <input type="number" name="installments_count" id="installments_count" required data-required-credito placeholder="Cant." value="<?= old('installments_count', $sticky) ?>"
                            class="w-full input-light px-4 py-3" oninput="calculateTotal()">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Monto ($)</label>
-                    <input type="number" name="installment_amount" id="installment_amount" required placeholder="Monto" 
+                    <label id="label_installment_amount" class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Monto ($)</label>
+                    <input type="number" name="installment_amount" id="installment_amount" required placeholder="Monto" value="<?= old('installment_amount', $sticky) ?>"
                            class="w-full input-light px-4 py-3" oninput="calculateTotal()">
                 </div>
             </div>
 
             <!-- Fila frecuencia y adelanto -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 contado-hide">
                 <div>
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Frecuencia de Pago</label>
-                    <select name="payment_frequency" required 
+                    <?php $cur_freq = $sticky['payment_frequency'] ?? 'semanal'; ?>
+                    <select name="payment_frequency"
                             class="w-full input-light px-4 py-3 cursor-pointer">
-                        <option value="semanal" selected>Semanal</option>
-                        <option value="quincenal">Quincenal</option>
-                        <option value="mensual">Mensual</option>
+                        <option value="semanal" <?= $cur_freq === 'semanal' ? 'selected' : '' ?>>Semanal</option>
+                        <option value="quincenal" <?= $cur_freq === 'quincenal' ? 'selected' : '' ?>>Quincenal</option>
+                        <option value="mensual" <?= $cur_freq === 'mensual' ? 'selected' : '' ?>>Mensual</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Adelanto ($)</label>
-                    <input type="number" name="down_payment" value="0"
+                    <input type="number" name="down_payment" value="<?= old('down_payment', $sticky, '0') ?>"
                            class="w-full input-light px-4 py-3">
                 </div>
             </div>
@@ -239,7 +261,7 @@ include 'includes/header.php';
                 <span class="text-xs uppercase text-emerald-500 font-bold tracking-widest">TOTAL CALCULADO</span>
                 <div class="flex items-center gap-1 text-2xl font-bold text-emerald-400">
                     <span>$</span>
-                    <input type="number" name="total_amount" id="total_amount" value="0" readonly 
+                    <input type="number" name="total_amount" id="total_amount" value="<?= old('total_amount', $sticky, '0') ?>" readonly
                            class="bg-transparent border-none p-0 w-32 focus:ring-0 text-right outline-none cursor-default">
                 </div>
             </div>
@@ -270,7 +292,7 @@ include 'includes/header.php';
                     <h2 class="font-bold text-lg tracking-tight uppercase" style="color:var(--ink);">OBSERVACIONES</h2>
                 </div>
                 <textarea name="observations" rows="5" placeholder="Horarios de entrega, aclaraciones del crédito, etc."
-                          class="w-full input-light px-4 py-4 resize-none h-[145px]"></textarea>
+                          class="w-full input-light px-4 py-4 resize-none h-[145px]"><?= old('observations', $sticky) ?></textarea>
             </div>
         </div>
 
@@ -282,6 +304,42 @@ include 'includes/header.php';
 </main>
 
 <script>
+    // Alternar entre venta a Crédito y de Contado: muestra/oculta secciones
+    // y activa/desactiva los campos "required" correspondientes.
+    function updateSaleTypeUI() {
+        const isContado = document.getElementById('sale_type_contado').checked;
+
+        document.querySelectorAll('.contado-hide').forEach(function(el) {
+            el.style.display = isContado ? 'none' : '';
+        });
+
+        document.querySelectorAll('[data-required-credito]').forEach(function(el) {
+            el.required = !isContado;
+        });
+
+        const labelMonto = document.getElementById('label_installment_amount');
+        if (labelMonto) labelMonto.textContent = isContado ? 'Monto Total ($)' : 'Monto ($)';
+
+        const creditoBox = document.getElementById('label_sale_type_credito');
+        const contadoBox = document.getElementById('label_sale_type_contado');
+        if (creditoBox && contadoBox) {
+            creditoBox.style.borderColor = isContado ? 'var(--line)' : 'var(--accent)';
+            creditoBox.style.background  = isContado ? '' : 'var(--accent-soft)';
+            contadoBox.style.borderColor = isContado ? 'var(--accent)' : 'var(--line)';
+            contadoBox.style.background  = isContado ? 'var(--accent-soft)' : '';
+        }
+
+        if (isContado) {
+            document.getElementById('installments_count').value = 1;
+            calculateTotal();
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        updateSaleTypeUI();
+        document.getElementById('sale_type_credito').addEventListener('change', updateSaleTypeUI);
+        document.getElementById('sale_type_contado').addEventListener('change', updateSaleTypeUI);
+    });
+
     // Función para calcular el total en tiempo real (Cuotas * Monto)
     function calculateTotal() {
         const installments = parseFloat(document.getElementById('installments_count').value) || 0;

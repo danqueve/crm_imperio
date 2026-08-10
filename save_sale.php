@@ -22,6 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $user_id = $_SESSION['user_id'];
 
+    // Tipo de venta: crédito (default, requiere todos los datos) o contado (datos mínimos)
+    $sale_type = ($_POST['sale_type'] ?? 'credito') === 'contado' ? 'contado' : 'credito';
+
     // 2. CAPTURA DE DATOS - SECCIÓN CLIENTE
     $client_dni          = trim($_POST['client_dni'] ?? '');
     $client_name         = trim($_POST['client_name'] ?? '');
@@ -46,9 +49,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $installment_amount  = (float)($_POST['installment_amount'] ?? 0);
     $payment_frequency   = $_POST['payment_frequency'] ?? 'semanal';
     $down_payment        = (float)($_POST['down_payment'] ?? 0);
-    
-    // Bug 1 fix: siempre recalcular server-side, no confiar en el valor enviado por JS
-    $total_amount        = $installments_count * $installment_amount;
     $observations        = trim($_POST['observations'] ?? '');
 
     // Validar URL del mapa (si se proporcionó)
@@ -60,22 +60,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // --- VALIDACIÓN DE DATOS OBLIGATORIOS ---
+    // Comunes a cualquier tipo de venta
     $errors = [];
-    if (empty($client_dni)) $errors[] = "dni";
-    if (!empty($client_dni) && !preg_match('/^\d{7,8}$/', $client_dni)) $errors[] = "dni_formato";
     if (empty($client_name)) $errors[] = "nombre";
     if (!empty($client_whatsapp) && !preg_match('/^\d{7,15}$/', $client_whatsapp)) $errors[] = "whatsapp_formato";
-    if (empty($client_phone)) $errors[] = "telefono";
-    if (!empty($client_phone) && !preg_match('/^\d{7,15}$/', $client_phone)) $errors[] = "telefono_formato";
     if (empty($client_map_link)) $errors[] = "maps";
     if (empty($item)) $errors[] = "articulo";
     if ($installment_amount <= 0) $errors[] = "monto";
-    if ($installments_count <= 0) $errors[] = "cuotas";
 
-    // Si hay errores, redirigir con los códigos de error
+    if ($sale_type === 'credito') {
+        // Venta a crédito: se necesitan todos los datos para evaluar el crédito
+        if (empty($client_dni)) $errors[] = "dni";
+        if (!empty($client_dni) && !preg_match('/^\d{7,8}$/', $client_dni)) $errors[] = "dni_formato";
+        if (empty($client_phone)) $errors[] = "telefono";
+        if (!empty($client_phone) && !preg_match('/^\d{7,15}$/', $client_phone)) $errors[] = "telefono_formato";
+        if ($installments_count <= 0) $errors[] = "cuotas";
+    } else {
+        // Venta de contado: pago único, no hay plan de cuotas
+        $installments_count = 1;
+        $down_payment       = 0;
+    }
+
+    // Bug 1 fix: siempre recalcular server-side, no confiar en el valor enviado por JS
+    // (se calcula después de normalizar installments_count para venta de contado)
+    $total_amount = $installments_count * $installment_amount;
+
+    // Si hay errores, conservar lo cargado (sticky form) y redirigir con los códigos de error
     if (!empty($errors)) {
+        $_SESSION['sale_form_sticky'] = $_POST;
         $error_string = implode(',', $errors);
         header("Location: cargar_venta.php?error=missing_data&fields=" . $error_string);
+        exit;
+    }
+
+    // --- PREVENCIÓN DE DUPLICADOS ---
+    // Si ya existe una venta idéntica reciente del mismo vendedor (doble click, botón atrás,
+    // reintento de red), no la volvemos a insertar: tratamos la operación como exitosa.
+    $dupStmt = $pdo->prepare(
+        "SELECT id FROM sales
+         WHERE user_id = ? AND client_dni = ? AND item = ? AND total_amount = ?
+           AND created_at >= (NOW() - INTERVAL 2 MINUTE)
+         LIMIT 1"
+    );
+    $dupStmt->execute([$user_id, $client_dni, $item, $total_amount]);
+    $duplicate = $dupStmt->fetch();
+    if ($duplicate) {
+        unset($_SESSION['sale_form_sticky']);
+        header("Location: dashboard.php?msg=saved");
         exit;
     }
 
@@ -85,28 +116,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // 5. INSERTAR VENTA EN LA TABLA 'sales'
         $sql = "INSERT INTO sales (
-                    user_id, client_dni, client_name, client_address, client_neighborhood, 
+                    user_id, client_dni, client_name, client_address, client_neighborhood,
                     client_locality, client_whatsapp, client_phone, client_map_link,
                     job_type, job_occupation, job_name, job_address,
-                    item, installments_count, installment_amount, total_amount, 
-                    payment_day, payment_frequency, down_payment, observations, 
-                    status, created_at
+                    item, installments_count, installment_amount, total_amount,
+                    payment_day, payment_frequency, down_payment, observations,
+                    sale_type, status, created_at
                 ) VALUES (
-                    ?, ?, ?, ?, ?, 
-                    ?, ?, ?, ?, 
-                    ?, ?, ?, ?, 
-                    ?, ?, ?, ?, 
-                    ?, ?, ?, ?, 
-                    'revision', NOW()
+                    ?, ?, ?, ?, ?,
+                    ?, ?, ?, ?,
+                    ?, ?, ?, ?,
+                    ?, ?, ?, ?,
+                    ?, ?, ?, ?,
+                    ?, 'revision', NOW()
                 )";
-        
+
         $stmt = $pdo->prepare($sql);
         $stmt->execute([
             $user_id, $client_dni, $client_name, $client_address, $client_neighborhood,
             $client_locality, $client_whatsapp, $client_phone, $client_map_link,
             $job_type, $job_occupation, $job_name, $job_address,
             $item, $installments_count, $installment_amount, $total_amount,
-            $payment_day, $payment_frequency, $down_payment, $observations
+            $payment_day, $payment_frequency, $down_payment, $observations,
+            $sale_type
         ]);
 
         $sale_id = $pdo->lastInsertId();
@@ -174,6 +206,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // 7. FINALIZAR OPERACIÓN
         $pdo->commit();
         log_audit($pdo, 'create_sale', 'sale', $sale_id, "Venta creada: $item - $client_name");
+        unset($_SESSION['sale_form_sticky']);
 
         // Redirigir al panel con mensaje de éxito
         header("Location: dashboard.php?msg=saved");

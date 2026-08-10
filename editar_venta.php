@@ -31,6 +31,10 @@ if (!$order) {
     exit;
 }
 
+// Las ventas de contado se cargaron con datos mínimos: estos campos no son obligatorios al editarlas
+$is_contado = ($order['sale_type'] ?? 'credito') === 'contado';
+$req_credito = $is_contado ? '' : 'required';
+
 // Obtener archivos adjuntos con sus IDs (para botón eliminar)
 $stmtFiles = $pdo->prepare("SELECT id, file_path FROM sale_files WHERE sale_id = ?");
 $stmtFiles->execute([$sale_id]);
@@ -66,10 +70,17 @@ include 'includes/header.php';
     </div>
     <?php endif; ?>
 
-    <?php if (isset($_GET['msg']) && $_GET['msg'] === 'error'): ?>
+    <?php if (isset($_GET['msg']) && $_GET['msg'] === 'error'):
+        $field_messages = [
+            'telefono' => 'El número de llamada (teléfono alternativo) es obligatorio.',
+            'maps'     => 'La ubicación de Google Maps es obligatoria (debe ser un enlace válido).',
+        ];
+        $fields = array_filter(explode(',', $_GET['fields'] ?? ''));
+        $specific_msgs = array_filter(array_map(fn($f) => $field_messages[$f] ?? null, $fields));
+    ?>
     <div class="mb-6 flex items-center gap-3 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl px-5 py-4 text-sm">
         <i data-lucide="alert-octagon" class="w-5 h-5 shrink-0"></i>
-        <span>Ocurrió un error al guardar los cambios. Intente nuevamente.</span>
+        <span><?= !empty($specific_msgs) ? implode(' ', $specific_msgs) : 'Ocurrió un error al guardar los cambios. Intente nuevamente.' ?></span>
     </div>
     <?php endif; ?>
 
@@ -86,8 +97,8 @@ include 'includes/header.php';
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
-                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">DNI <span class="text-red-400">*</span></label>
-                    <input type="text" name="client_dni" required
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">DNI <?= $is_contado ? '' : '<span class="text-red-400">*</span>' ?></label>
+                    <input type="text" name="client_dni" <?= $req_credito ?>
                            value="<?= htmlspecialchars($order['client_dni'] ?? '') ?>"
                            class="w-full input-light px-4 py-3 font-mono">
                 </div>
@@ -99,26 +110,26 @@ include 'includes/header.php';
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Domicilio <span class="text-red-400">*</span></label>
-                    <input type="text" name="client_address" required
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Domicilio <?= $is_contado ? '' : '<span class="text-red-400">*</span>' ?></label>
+                    <input type="text" name="client_address" <?= $req_credito ?>
                            value="<?= htmlspecialchars($order['client_address'] ?? '') ?>"
                            class="w-full input-light px-4 py-3">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Barrio <span class="text-red-400">*</span></label>
-                    <input type="text" name="client_neighborhood" required
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Barrio <?= $is_contado ? '' : '<span class="text-red-400">*</span>' ?></label>
+                    <input type="text" name="client_neighborhood" <?= $req_credito ?>
                            value="<?= htmlspecialchars($order['client_neighborhood'] ?? '') ?>"
                            class="w-full input-light px-4 py-3">
                 </div>
 
                 <div>
-                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Localidad <span class="text-red-400">*</span></label>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Localidad <?= $is_contado ? '' : '<span class="text-red-400">*</span>' ?></label>
                     <?php
                     $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Concepción','Famaillá','Leales','Lules','Manantial','Monteros','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Sgo','Villa Carmela','Yerba Buena'];
                     $localidadesLabels = ['Sgo' => 'Sgo del Estero'];
                     $current_locality = $order['client_locality'] ?? '';
                     ?>
-                    <select name="client_locality" id="client_locality" required
+                    <select name="client_locality" id="client_locality" <?= $req_credito ?>
                             class="w-full input-light px-4 py-3">
                         <option value="" disabled <?= $current_locality === '' ? 'selected' : '' ?>>Seleccionar localidad...</option>
                         <?php foreach ($localidades as $loc): ?>
@@ -133,8 +144,8 @@ include 'includes/header.php';
                            class="w-full input-light px-4 py-3 font-mono">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Nro Llamada <span class="text-red-400">*</span></label>
-                    <input type="text" name="client_phone" required
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Nro Llamada <?= $is_contado ? '' : '<span class="text-red-400">*</span>' ?></label>
+                    <input type="text" name="client_phone" <?= $req_credito ?>
                            value="<?= htmlspecialchars($order['client_phone'] ?? '') ?>"
                            class="w-full input-light px-4 py-3 font-mono">
                 </div>

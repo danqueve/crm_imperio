@@ -51,9 +51,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    // Las ventas de contado no exigen teléfono alternativo (nunca se pidió al cargarlas)
+    $saleTypeStmt = $pdo->prepare("SELECT sale_type FROM sales WHERE id = ?");
+    $saleTypeStmt->execute([$sale_id]);
+    $is_contado = $saleTypeStmt->fetchColumn() === 'contado';
+
     // Validar campos obligatorios (defensa en profundidad además del required del HTML)
-    if (empty($client_phone) || empty($client_map_link)) {
-        $redirect = $is_vendedor ? "editar_venta.php?id={$sale_id}&msg=error" : "ver_ficha.php?id={$sale_id}&msg=error";
+    $errors = [];
+    if (!$is_contado && empty($client_phone)) $errors[] = 'telefono';
+    if (empty($client_map_link)) $errors[] = 'maps';
+
+    if (!empty($errors)) {
+        $error_string = implode(',', $errors);
+        $redirect = $is_vendedor
+            ? "editar_venta.php?id={$sale_id}&msg=error&fields={$error_string}"
+            : "ver_ficha.php?id={$sale_id}&msg=error&fields={$error_string}";
         header("Location: $redirect");
         exit;
     }

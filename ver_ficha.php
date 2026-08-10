@@ -71,9 +71,16 @@ include 'includes/header.php';
     <div class="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 rounded-xl flex items-center gap-3 shadow-lg">
         <i data-lucide="alert-triangle" class="w-5 h-5"></i> <span>No se pudo eliminar el archivo.</span>
     </div>
-    <?php elseif (isset($_GET['msg']) && $_GET['msg'] == 'error'): ?>
+    <?php elseif (isset($_GET['msg']) && $_GET['msg'] == 'error'):
+        $field_messages = [
+            'telefono' => 'El número de llamada (teléfono alternativo) es obligatorio.',
+            'maps'     => 'La ubicación de Google Maps es obligatoria (debe ser un enlace válido).',
+        ];
+        $fields = array_filter(explode(',', $_GET['fields'] ?? ''));
+        $specific_msgs = array_filter(array_map(fn($f) => $field_messages[$f] ?? null, $fields));
+    ?>
     <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl flex items-center gap-3 shadow-lg">
-        <i data-lucide="alert-octagon" class="w-5 h-5"></i> <span>Ocurrió un error al guardar los cambios. Intente nuevamente.</span>
+        <i data-lucide="alert-octagon" class="w-5 h-5"></i> <span><?= !empty($specific_msgs) ? implode(' ', $specific_msgs) : 'Ocurrió un error al guardar los cambios. Intente nuevamente.' ?></span>
     </div>
     <?php endif; ?>
 
@@ -84,7 +91,12 @@ include 'includes/header.php';
                 <i data-lucide="arrow-left"></i>
             </a>
             <div>
-                <h1 class="text-2xl font-bold tracking-tight" style="color:var(--ink);">Ficha de Venta #<?= $order['id'] ?></h1>
+                <h1 class="text-2xl font-bold tracking-tight flex items-center gap-2" style="color:var(--ink);">
+                    Ficha de Venta #<?= $order['id'] ?>
+                    <?php if (($order['sale_type'] ?? 'credito') === 'contado'): ?>
+                    <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style="background:var(--apr-bg);color:var(--apr-ink);">Contado</span>
+                    <?php endif; ?>
+                </h1>
                 <p class="text-sm font-medium" style="color:var(--ink-2);">Cargado por <span class="text-blue-500 font-bold"><?= htmlspecialchars($order['seller_name'] ?? 'Desconocido') ?></span></p>
             </div>
         </div>
@@ -444,7 +456,7 @@ include 'includes/header.php';
                         </div>
                         <div class="col-span-2">
                             <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Nro Llamada</label>
-                            <input type="text" name="client_phone" required value="<?= htmlspecialchars($order['client_phone'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition font-mono">
+                            <input type="text" name="client_phone" <?= ($order['sale_type'] ?? 'credito') === 'contado' ? '' : 'required' ?> value="<?= htmlspecialchars($order['client_phone'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition font-mono">
                         </div>
                         <div class="col-span-2">
                             <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Domicilio</label>
