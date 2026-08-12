@@ -56,10 +56,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $saleTypeStmt->execute([$sale_id]);
     $is_contado = $saleTypeStmt->fetchColumn() === 'contado';
 
-    // Validar campos obligatorios (defensa en profundidad además del required del HTML)
+    // Normalizar WhatsApp y teléfono antes de validar: quitar todo lo que no sea dígito
+    // (espacios, +, guiones, puntos, nbsp, etc. que suelen venir al pegar un número copiado)
+    if (!empty($client_whatsapp)) $client_whatsapp = preg_replace('/\D/', '', $client_whatsapp);
+    if (!empty($client_phone))    $client_phone    = preg_replace('/\D/', '', $client_phone);
+
+    // Validar campos obligatorios y formato (defensa en profundidad además del required del HTML)
     $errors = [];
     if (!$is_contado && empty($client_phone)) $errors[] = 'telefono';
     if (empty($client_map_link)) $errors[] = 'maps';
+    if (!empty($client_whatsapp) && !preg_match('/^\d{7,15}$/', $client_whatsapp)) $errors[] = 'whatsapp_formato';
+    if (!empty($client_phone) && !preg_match('/^\d{7,15}$/', $client_phone)) $errors[] = 'telefono_formato';
 
     if (!empty($errors)) {
         $error_string = implode(',', $errors);
@@ -76,15 +83,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $job_name            = trim($_POST['job_name'] ?? '');
     $job_address         = trim($_POST['job_address'] ?? '');
 
-    // Validar formato DNI y teléfonos
+    // Validar formato DNI (defensa en profundidad)
     if (!empty($client_dni) && !preg_match('/^\d{7,8}$/', $client_dni)) {
         $client_dni = preg_replace('/\D/', '', $client_dni);
-    }
-    if (!empty($client_whatsapp) && !preg_match('/^\d{7,15}$/', $client_whatsapp)) {
-        $client_whatsapp = preg_replace('/\D/', '', $client_whatsapp);
-    }
-    if (!empty($client_phone) && !preg_match('/^\d{7,15}$/', $client_phone)) {
-        $client_phone = preg_replace('/\D/', '', $client_phone);
     }
 
     // 4. CAPTURA DE DATOS - PLAN DE PAGO

@@ -151,12 +151,12 @@ include 'includes/header.php';
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">WhatsApp / Celular</label>
-                    <input type="text" name="client_whatsapp" required placeholder="Ej: 381..." value="<?= old('client_whatsapp', $sticky) ?>"
+                    <input type="text" name="client_whatsapp" required inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)" placeholder="Ej: 381..." value="<?= old('client_whatsapp', $sticky) ?>"
                            class="w-full input-light px-4 py-3 font-mono">
                 </div>
                 <div class="contado-hide">
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Nro Llamada</label>
-                    <input type="text" name="client_phone" required data-required-credito placeholder="Alternativo" value="<?= old('client_phone', $sticky) ?>"
+                    <input type="text" name="client_phone" required data-required-credito inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)" placeholder="Alternativo" value="<?= old('client_phone', $sticky) ?>"
                            class="w-full input-light px-4 py-3 font-mono">
                 </div>
 

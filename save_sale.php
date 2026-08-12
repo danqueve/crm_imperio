@@ -31,9 +31,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $client_address      = trim($_POST['client_address'] ?? '');
     $client_neighborhood = trim($_POST['client_neighborhood'] ?? '');
     $client_locality     = trim($_POST['client_locality'] ?? '');
-    // Bug 2 fix: normalizar teléfonos antes de validar (quitar +, espacios, guiones)
-    $client_whatsapp     = preg_replace('/[\s\+\-\(\)]/', '', trim($_POST['client_whatsapp'] ?? ''));
-    $client_phone        = preg_replace('/[\s\+\-\(\)]/', '', trim($_POST['client_phone'] ?? ''));
+    // Normalizar teléfonos antes de validar: quitar todo lo que no sea dígito
+    // (espacios, +, guiones, puntos, nbsp, etc. que suelen venir al pegar un número copiado)
+    $client_whatsapp     = preg_replace('/\D/', '', trim($_POST['client_whatsapp'] ?? ''));
+    $client_phone        = preg_replace('/\D/', '', trim($_POST['client_phone'] ?? ''));
     $client_map_link    = trim($_POST['client_map_link'] ?? '');
 
     // 3. CAPTURA DE DATOS - SECCIÓN LABORAL
