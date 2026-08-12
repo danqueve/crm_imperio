@@ -454,11 +454,11 @@ include 'includes/header.php';
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">WhatsApp</label>
-                            <input type="text" name="client_whatsapp" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)" value="<?= htmlspecialchars($order['client_whatsapp'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition font-mono">
+                            <input type="tel" name="client_whatsapp" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)" value="<?= htmlspecialchars($order['client_whatsapp'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition font-mono">
                         </div>
                         <div class="col-span-2">
                             <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Nro Llamada</label>
-                            <input type="text" name="client_phone" <?= ($order['sale_type'] ?? 'credito') === 'contado' ? '' : 'required' ?> inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)" value="<?= htmlspecialchars($order['client_phone'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition font-mono">
+                            <input type="tel" name="client_phone" <?= ($order['sale_type'] ?? 'credito') === 'contado' ? '' : 'required' ?> inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)" value="<?= htmlspecialchars($order['client_phone'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition font-mono">
                         </div>
                         <div class="col-span-2">
                             <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Domicilio</label>

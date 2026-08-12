@@ -141,13 +141,13 @@ include 'includes/header.php';
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">WhatsApp <span class="text-red-400">*</span></label>
-                    <input type="text" name="client_whatsapp" required inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)"
+                    <input type="tel" name="client_whatsapp" required inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)"
                            value="<?= htmlspecialchars($order['client_whatsapp'] ?? '') ?>"
                            class="w-full input-light px-4 py-3 font-mono">
                 </div>
                 <div>
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Nro Llamada <?= $is_contado ? '' : '<span class="text-red-400">*</span>' ?></label>
-                    <input type="text" name="client_phone" <?= $req_credito ?> inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)"
+                    <input type="tel" name="client_phone" <?= $req_credito ?> inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)"
                            value="<?= htmlspecialchars($order['client_phone'] ?? '') ?>"
                            class="w-full input-light px-4 py-3 font-mono">
                 </div>
