@@ -580,20 +580,28 @@ include 'includes/header.php';
             tableBody = data.map((r, i) => [i + 1, r.id, r.date_loaded, r.date_delivered, r.client, r.address, r.locality, r.item, r.deliverer]);
         }
 
-        if (zonas.length > 0) title += ' — ' + zonas.join(', ');
-
         doc.setFontSize(18); doc.setFont("helvetica", "bold");
         doc.text(title, pageWidth / 2, 15, { align: 'center' });
+
+        let headerY = 22;
+        if (zonas.length > 0) {
+            doc.setFontSize(9); doc.setFont("helvetica", "bolditalic");
+            const zonaLines = doc.splitTextToSize('Zonas: ' + zonas.join(', '), pageWidth - 20);
+            doc.text(zonaLines, pageWidth / 2, headerY, { align: 'center' });
+            headerY += zonaLines.length * 4;
+        }
+
         doc.setFontSize(9); doc.setFont("helvetica", "normal");
-        doc.text("Generado: " + new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString(), pageWidth / 2, 22, { align: 'center' });
+        doc.text("Generado: " + new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString(), pageWidth / 2, headerY, { align: 'center' });
+        const tableStartY = headerY + 6;
 
         doc.autoTable({
-            head: headRow, body: tableBody, startY: 28,
+            head: headRow, body: tableBody, startY: tableStartY,
             theme: 'grid',
             styles: { fontSize: 7, cellPadding: 2, lineColor: [0,0,0], lineWidth: 0.1, textColor: [0,0,0], overflow: 'linebreak' },
             headStyles: { fillColor: [255,255,255], textColor: [0,0,0], fontStyle: 'bolditalic', lineWidth: 0.1 },
             columnStyles: columnStyles,
-            margin: { top: 28, right: 10, bottom: 20, left: 10 }
+            margin: { top: tableStartY, right: 10, bottom: 20, left: 10 }
         });
 
         window.open(doc.output('bloburl'), '_blank');
