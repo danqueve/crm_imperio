@@ -174,15 +174,46 @@ include 'includes/header.php';
                 <p class="text-sm font-medium" style="color:var(--ink-2);">Control de logística y despachos.</p>
             </div>
         </div>
-        <?php if ($tab === 'pendientes'): ?>
-        <button onclick="exportarPDF('pendientes')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl transition flex items-center gap-2 text-sm font-bold shadow-lg shadow-blue-900/30 shrink-0">
-            <i data-lucide="file-text" class="w-4 h-4"></i> Exportar PDF
-        </button>
-        <?php else: ?>
-        <button onclick="exportarPDF('entregados')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl transition flex items-center gap-2 text-sm font-bold shadow-lg shadow-emerald-900/30 shrink-0">
-            <i data-lucide="file-text" class="w-4 h-4"></i> Exportar PDF
-        </button>
-        <?php endif; ?>
+        <div class="flex flex-col sm:flex-row gap-2 shrink-0">
+            <div class="relative shrink-0" id="zonaFilterWrap">
+                <button type="button" onclick="toggleZonaDropdown()" id="zonaFilterBtn"
+                        class="input-light rounded-xl px-3 py-2.5 text-sm flex items-center gap-2 w-full sm:w-auto justify-between">
+                    <span class="flex items-center gap-1.5">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                        <span id="zonaFilterLabel">Todas las zonas</span>
+                    </span>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                </button>
+                <div id="zonaFilterDropdown" class="hidden absolute z-20 mt-2 w-64 rounded-xl shadow-lg p-3"
+                     style="background:var(--card);border:1.5px solid var(--line);">
+                    <div class="flex justify-between mb-2 text-[10px] font-bold uppercase tracking-widest" style="color:var(--ink-3);">
+                        <span>Zonas a exportar</span>
+                        <button type="button" onclick="toggleAllZonas(false)" class="hover:underline">Limpiar</button>
+                    </div>
+                    <div class="max-h-56 overflow-y-auto space-y-0.5">
+                        <?php foreach ($localidades_con_conteo as $loc_row): ?>
+                        <label class="flex items-center gap-2 text-sm px-1.5 py-1.5 rounded-lg cursor-pointer hover:bg-black/5">
+                            <input type="checkbox" class="zona-checkbox" value="<?= htmlspecialchars($loc_row['client_locality']) ?>"
+                                   onchange="updateZonaLabel()"
+                                   <?= $filter_locality === $loc_row['client_locality'] ? 'checked' : '' ?>>
+                            <span style="color:var(--ink-2);"><?= htmlspecialchars($loc_row['client_locality']) ?>
+                                <span style="color:var(--ink-3);">(<?= $loc_row['total'] ?>)</span>
+                            </span>
+                        </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+            <?php if ($tab === 'pendientes'): ?>
+            <button onclick="exportarPDF('pendientes')" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl transition flex items-center gap-2 text-sm font-bold shadow-lg shadow-blue-900/30 shrink-0">
+                <i data-lucide="file-text" class="w-4 h-4"></i> Exportar PDF
+            </button>
+            <?php else: ?>
+            <button onclick="exportarPDF('entregados')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 rounded-xl transition flex items-center gap-2 text-sm font-bold shadow-lg shadow-emerald-900/30 shrink-0">
+                <i data-lucide="file-text" class="w-4 h-4"></i> Exportar PDF
+            </button>
+            <?php endif; ?>
+        </div>
     </div>
 
     <!-- Tabs -->
@@ -490,14 +521,38 @@ include 'includes/header.php';
 <script>
     const allDeliveryData = <?= json_encode($pdfData) ?>;
 
+    // Dropdown de zonas a exportar (multi-selección con checkboxes)
+    function toggleZonaDropdown() {
+        document.getElementById('zonaFilterDropdown').classList.toggle('hidden');
+    }
+    function toggleAllZonas(checked) {
+        document.querySelectorAll('.zona-checkbox').forEach(cb => cb.checked = checked);
+        updateZonaLabel();
+    }
+    function updateZonaLabel() {
+        const zonas = Array.from(document.querySelectorAll('.zona-checkbox:checked')).map(cb => cb.value);
+        const label = document.getElementById('zonaFilterLabel');
+        if (zonas.length === 0) label.textContent = 'Todas las zonas';
+        else if (zonas.length === 1) label.textContent = zonas[0];
+        else label.textContent = zonas.length + ' zonas seleccionadas';
+    }
+    document.addEventListener('DOMContentLoaded', updateZonaLabel);
+    document.addEventListener('click', function(e) {
+        const wrap = document.getElementById('zonaFilterWrap');
+        if (wrap && !wrap.contains(e.target)) {
+            document.getElementById('zonaFilterDropdown').classList.add('hidden');
+        }
+    });
+
     function exportarPDF(tipo) {
         const { jsPDF } = window.jspdf;
         const doc       = new jsPDF('p', 'mm', 'a4');
         const pageWidth = doc.internal.pageSize.getWidth();
-        const data      = allDeliveryData;
+        const zonas     = Array.from(document.querySelectorAll('.zona-checkbox:checked')).map(cb => cb.value);
+        const data      = zonas.length > 0 ? allDeliveryData.filter(r => zonas.includes(r.locality)) : allDeliveryData;
 
         if (data.length === 0) {
-            alert("No hay registros disponibles para generar este reporte.");
+            alert(zonas.length > 0 ? `No hay registros para: ${zonas.join(', ')}.` : "No hay registros disponibles para generar este reporte.");
             return;
         }
 
@@ -524,6 +579,8 @@ include 'includes/header.php';
             };
             tableBody = data.map((r, i) => [i + 1, r.id, r.date_loaded, r.date_delivered, r.client, r.address, r.locality, r.item, r.deliverer]);
         }
+
+        if (zonas.length > 0) title += ' — ' + zonas.join(', ');
 
         doc.setFontSize(18); doc.setFont("helvetica", "bold");
         doc.text(title, pageWidth / 2, 15, { align: 'center' });
