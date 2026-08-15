@@ -119,7 +119,8 @@ $pdfData = array_map(function($order) {
         'phone' => $order['client_whatsapp'],
         'item' => $order['item'],
         'seller' => $order['seller_name'] ?? 'Yo',
-        'verifier' => $order['verifier_name'] ?? 'Sin asignar'
+        'verifier' => $order['verifier_name'] ?? 'Sin asignar',
+        'verifier_id' => (int)($order['assigned_verifier_id'] ?? 0)
     ];
 }, $orders);
 
@@ -161,6 +162,35 @@ include 'includes/header.php';
             <p class="text-sm mt-1" style="color:var(--ink-3);">Bienvenido, <span class="font-bold" style="color:var(--accent-ink);"><?= htmlspecialchars($name) ?></span>.</p>
         </div>
         <div class="flex flex-wrap gap-3">
+            <?php if ($can_assign): ?>
+            <div class="relative shrink-0" id="verifierFilterWrap">
+                <button type="button" onclick="toggleVerifierDropdown()" id="verifierFilterBtn"
+                        class="input-light rounded-xl px-3 py-2 text-sm flex items-center gap-2">
+                    <i data-lucide="user-check" class="w-3.5 h-3.5"></i>
+                    <span id="verifierFilterLabel">Todos</span>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                </button>
+                <div id="verifierFilterDropdown" class="hidden absolute z-20 mt-2 w-60 rounded-xl shadow-lg p-3"
+                     style="background:var(--card);border:1.5px solid var(--line);">
+                    <div class="flex justify-between mb-2 text-[10px] font-bold uppercase tracking-widest" style="color:var(--ink-3);">
+                        <span>Verificador asignado</span>
+                        <button type="button" onclick="toggleAllVerifiers(false)" class="hover:underline">Limpiar</button>
+                    </div>
+                    <div class="max-h-56 overflow-y-auto space-y-0.5">
+                        <label class="flex items-center gap-2 text-sm px-1.5 py-1.5 rounded-lg cursor-pointer hover:bg-black/5">
+                            <input type="checkbox" class="verifier-checkbox" value="0" onchange="updateVerifierLabel()">
+                            <span style="color:var(--ink-2);">Sin asignar</span>
+                        </label>
+                        <?php foreach ($verifiers as $v): ?>
+                        <label class="flex items-center gap-2 text-sm px-1.5 py-1.5 rounded-lg cursor-pointer hover:bg-black/5">
+                            <input type="checkbox" class="verifier-checkbox" value="<?= $v['id'] ?>" onchange="updateVerifierLabel()">
+                            <span style="color:var(--ink-2);"><?= htmlspecialchars($v['name']) ?></span>
+                        </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
             <button onclick="exportarPDF()" class="flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition" style="background:var(--rec-bg);color:var(--rec-ink);border:1.5px solid rgba(159,18,57,.2);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
                 <i data-lucide="file-down" class="w-4 h-4"></i> PDF Pendientes
             </button>
@@ -490,20 +520,66 @@ include 'includes/header.php';
     });
     <?php endif; ?>
 
+    // Dropdown de verificador (multi-selección con checkboxes) para el PDF
+    function toggleVerifierDropdown() {
+        const el = document.getElementById('verifierFilterDropdown');
+        if (el) el.classList.toggle('hidden');
+    }
+    function toggleAllVerifiers(checked) {
+        document.querySelectorAll('.verifier-checkbox').forEach(cb => cb.checked = checked);
+        updateVerifierLabel();
+    }
+    function updateVerifierLabel() {
+        const checked = document.querySelectorAll('.verifier-checkbox:checked');
+        const label = document.getElementById('verifierFilterLabel');
+        if (!label) return;
+        if (checked.length === 0) label.textContent = 'Todos';
+        else if (checked.length === 1) label.textContent = checked[0].parentElement.querySelector('span').textContent.trim();
+        else label.textContent = checked.length + ' seleccionados';
+    }
+    document.addEventListener('click', function(e) {
+        const wrap = document.getElementById('verifierFilterWrap');
+        if (wrap && !wrap.contains(e.target)) {
+            document.getElementById('verifierFilterDropdown').classList.add('hidden');
+        }
+    });
+
     // Lógica Exportación PDF
     const salesData = <?= json_encode($pdfData) ?>;
     function exportarPDF() {
-        if (salesData.length === 0) { alert("No hay ventas para exportar."); return; }
+        const checkedBoxes = document.querySelectorAll('.verifier-checkbox:checked');
+        const verifierIds  = Array.from(checkedBoxes).map(cb => cb.value);
+        const verifierNames = Array.from(checkedBoxes).map(cb => cb.parentElement.querySelector('span').textContent.trim());
+        const data = verifierIds.length > 0
+            ? salesData.filter(r => verifierIds.includes(String(r.verifier_id)))
+            : salesData;
+
+        if (data.length === 0) {
+            alert(verifierIds.length > 0 ? `No hay ventas para: ${verifierNames.join(', ')}.` : "No hay ventas para exportar.");
+            return;
+        }
+
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
         const pageWidth = doc.internal.pageSize.getWidth();
         doc.setFontSize(16); doc.setFont("helvetica", "bold");
         doc.text("VENTAS PENDIENTES DE REVISIÓN", pageWidth / 2, 15, { align: 'center' });
+
+        let headerY = 22;
+        if (verifierNames.length > 0) {
+            doc.setFontSize(9); doc.setFont("helvetica", "bolditalic");
+            const verifierLines = doc.splitTextToSize('Verificador: ' + verifierNames.join(', '), pageWidth - 20);
+            doc.text(verifierLines, pageWidth / 2, headerY, { align: 'center' });
+            headerY += verifierLines.length * 4;
+        }
+        const tableStartY = headerY + 3;
+
         doc.autoTable({
             head: [['#', 'Fecha', 'Cliente', 'Dirección', 'Artículo', 'Vendedor', 'Verificador']],
-            body: salesData.map((r, i) => [i+1, r.date, r.client, r.address, r.item, r.seller, r.verifier]),
-            startY: 25, theme: 'grid', styles: { fontSize: 8 },
-            headStyles: { fillColor: [99, 102, 241] }
+            body: data.map((r, i) => [i+1, r.date, r.client, r.address, r.item, r.seller, r.verifier]),
+            startY: tableStartY, theme: 'grid', styles: { fontSize: 8 },
+            headStyles: { fillColor: [99, 102, 241] },
+            margin: { top: tableStartY }
         });
         window.open(doc.output('bloburl'), '_blank');
     }
