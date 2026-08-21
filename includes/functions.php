@@ -4,6 +4,11 @@
  * Propósito: Funciones auxiliares reutilizables.
  */
 
+// Comisión fija para ventas de contado con método de pago RapiCompra (ignora commission_rate del vendedor)
+if (!defined('RAPICOMPRA_COMMISSION_RATE')) {
+    define('RAPICOMPRA_COMMISSION_RATE', 6.00);
+}
+
 // --- CSRF Protection ---
 
 if (!function_exists('csrf_token')) {

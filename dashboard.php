@@ -352,6 +352,9 @@ include 'includes/header.php';
                                     <?php if (($order['sale_type'] ?? 'credito') === 'contado'): ?>
                                     <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded" style="background:var(--apr-bg);color:var(--apr-ink);">Contado</span>
                                     <?php endif; ?>
+                                    <?php if (($order['payment_method'] ?? 'normal') === 'rapicompra'): ?>
+                                    <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded" style="background:var(--accent-soft);color:var(--accent-ink);">RapiCompra</span>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="text-[10px] font-mono flex items-center gap-1 mt-0.5" style="color:var(--apr-ink);">
                                     <i data-lucide="phone" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($order['client_whatsapp']) ?>

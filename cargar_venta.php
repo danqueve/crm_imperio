@@ -104,6 +104,28 @@ include 'includes/header.php';
             </div>
         </div>
 
+        <!-- Método de Pago (solo Contado) -->
+        <?php $cur_payment_method = ($sticky['payment_method'] ?? 'normal') === 'rapicompra' ? 'rapicompra' : 'normal'; ?>
+        <div id="paymentMethodBlock" class="contado-only rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
+            <label class="block text-xs font-bold uppercase mb-3 ml-1" style="color:var(--ink-3);">Método de Pago</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label id="label_payment_method_normal" class="cursor-pointer rounded-xl p-4 flex items-start gap-3 transition" style="border:1.5px solid var(--accent);background:var(--accent-soft);">
+                    <input type="radio" name="payment_method" value="normal" id="payment_method_normal" class="mt-1" <?= $cur_payment_method === 'normal' ? 'checked' : '' ?>>
+                    <div>
+                        <p class="font-bold" style="color:var(--ink);">Normal</p>
+                        <p class="text-xs mt-0.5" style="color:var(--ink-3);">Comisión estándar del vendedor.</p>
+                    </div>
+                </label>
+                <label id="label_payment_method_rapicompra" class="cursor-pointer rounded-xl p-4 flex items-start gap-3 transition" style="border:1.5px solid var(--line);">
+                    <input type="radio" name="payment_method" value="rapicompra" id="payment_method_rapicompra" class="mt-1" <?= $cur_payment_method === 'rapicompra' ? 'checked' : '' ?>>
+                    <div>
+                        <p class="font-bold" style="color:var(--ink);">RapiCompra</p>
+                        <p class="text-xs mt-0.5" style="color:var(--ink-3);">Comisión fija del 6% para esta venta.</p>
+                    </div>
+                </label>
+            </div>
+        </div>
+
         <!-- Sección 1: Datos del Cliente -->
         <div class="rounded-2xl p-6 md:p-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
             <div class="flex items-center gap-3 mb-6 pb-4" style="color:var(--accent);border-bottom:1.5px solid var(--line);">
@@ -313,6 +335,10 @@ include 'includes/header.php';
             el.style.display = isContado ? 'none' : '';
         });
 
+        document.querySelectorAll('.contado-only').forEach(function(el) {
+            el.style.display = isContado ? '' : 'none';
+        });
+
         document.querySelectorAll('[data-required-credito]').forEach(function(el) {
             el.required = !isContado;
         });
@@ -334,10 +360,26 @@ include 'includes/header.php';
             calculateTotal();
         }
     }
+
+    // Resalta la tarjeta activa (Normal / RapiCompra), mismo criterio que updateSaleTypeUI()
+    function updatePaymentMethodUI() {
+        const isRapi = document.getElementById('payment_method_rapicompra').checked;
+        const normalBox = document.getElementById('label_payment_method_normal');
+        const rapiBox = document.getElementById('label_payment_method_rapicompra');
+        if (normalBox && rapiBox) {
+            normalBox.style.borderColor = isRapi ? 'var(--line)' : 'var(--accent)';
+            normalBox.style.background  = isRapi ? '' : 'var(--accent-soft)';
+            rapiBox.style.borderColor = isRapi ? 'var(--accent)' : 'var(--line)';
+            rapiBox.style.background  = isRapi ? 'var(--accent-soft)' : '';
+        }
+    }
     document.addEventListener('DOMContentLoaded', function() {
         updateSaleTypeUI();
+        updatePaymentMethodUI();
         document.getElementById('sale_type_credito').addEventListener('change', updateSaleTypeUI);
         document.getElementById('sale_type_contado').addEventListener('change', updateSaleTypeUI);
+        document.getElementById('payment_method_normal').addEventListener('change', updatePaymentMethodUI);
+        document.getElementById('payment_method_rapicompra').addEventListener('change', updatePaymentMethodUI);
     });
 
     // Función para calcular el total en tiempo real (Cuotas * Monto)

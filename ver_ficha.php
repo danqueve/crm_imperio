@@ -98,6 +98,9 @@ include 'includes/header.php';
                     <?php if (($order['sale_type'] ?? 'credito') === 'contado'): ?>
                     <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style="background:var(--apr-bg);color:var(--apr-ink);">Contado</span>
                     <?php endif; ?>
+                    <?php if (($order['payment_method'] ?? 'normal') === 'rapicompra'): ?>
+                    <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style="background:var(--accent-soft);color:var(--accent-ink);">RapiCompra</span>
+                    <?php endif; ?>
                 </h1>
                 <p class="text-sm font-medium" style="color:var(--ink-2);">Cargado por <span class="text-blue-500 font-bold"><?= htmlspecialchars($order['seller_name'] ?? 'Desconocido') ?></span></p>
             </div>

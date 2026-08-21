@@ -22,8 +22,9 @@ $endSql = $end . ' 23:59:59';
 $filtros = ['start' => $start, 'end' => $end];
 
 // --- 2. OBTENER TOTALES GENERALES DEL PERIODO (Para las tarjetas de resumen) ---
+// Comisión: tasa propia del vendedor, salvo ventas RapiCompra que siempre cobran RAPICOMPRA_COMMISSION_RATE
 $sqlTotals = "SELECT SUM(s.total_amount) as total_ventas,
-                     SUM(s.total_amount * (u.commission_rate / 100)) as total_comisiones,
+                     SUM(s.total_amount * (CASE WHEN s.payment_method = 'rapicompra' THEN " . RAPICOMPRA_COMMISSION_RATE . " ELSE u.commission_rate END / 100)) as total_comisiones,
                      COUNT(*) as total_registros
               FROM sales s
               JOIN users u ON s.user_id = u.id
@@ -44,7 +45,7 @@ $offset = ($pagina_actual - 1) * $registros_por_pagina;
 
 // --- 4. OBTENER DATOS PAGINADOS PARA LA TABLA ---
 $sqlTable = "SELECT sales.*, users.name as seller_name, users.commission_rate,
-                    (sales.total_amount * (users.commission_rate / 100)) as commission
+                    (sales.total_amount * (CASE WHEN sales.payment_method = 'rapicompra' THEN " . RAPICOMPRA_COMMISSION_RATE . " ELSE users.commission_rate END / 100)) as commission
              FROM sales JOIN users ON sales.user_id = users.id
              WHERE status = 'entregado' AND delivered_at BETWEEN :start AND :end
              ORDER BY delivered_at DESC
@@ -60,7 +61,7 @@ $displaySales = $stmtTable->fetchAll(PDO::FETCH_ASSOC);
 
 // --- 5. OBTENER TODO EL PERIODO PARA EL PDF ---
 $sqlFull = "SELECT sales.*, users.name as seller_name, users.commission_rate,
-                   (sales.total_amount * (users.commission_rate / 100)) as commission
+                   (sales.total_amount * (CASE WHEN sales.payment_method = 'rapicompra' THEN " . RAPICOMPRA_COMMISSION_RATE . " ELSE users.commission_rate END / 100)) as commission
             FROM sales JOIN users ON sales.user_id = users.id
             WHERE status = 'entregado' AND delivered_at BETWEEN ? AND ?
             ORDER BY seller_name ASC, delivered_at DESC";

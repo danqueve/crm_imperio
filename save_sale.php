@@ -25,6 +25,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Tipo de venta: crédito (default, requiere todos los datos) o contado (datos mínimos)
     $sale_type = ($_POST['sale_type'] ?? 'credito') === 'contado' ? 'contado' : 'credito';
 
+    // Método de pago (solo aplica a contado): Normal o RapiCompra (comisión fija 6%).
+    // Se fuerza 'normal' para crédito sin importar lo enviado, para que nunca quede en un estado inconsistente.
+    $payment_method = ($sale_type === 'contado' && ($_POST['payment_method'] ?? '') === 'rapicompra')
+        ? 'rapicompra' : 'normal';
+
     // 2. CAPTURA DE DATOS - SECCIÓN CLIENTE
     $client_dni          = trim($_POST['client_dni'] ?? '');
     $client_name         = trim($_POST['client_name'] ?? '');
@@ -122,14 +127,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     job_type, job_occupation, job_name, job_address,
                     item, installments_count, installment_amount, total_amount,
                     payment_day, payment_frequency, down_payment, observations,
-                    sale_type, status, created_at
+                    sale_type, payment_method, status, created_at
                 ) VALUES (
                     ?, ?, ?, ?, ?,
                     ?, ?, ?, ?,
                     ?, ?, ?, ?,
                     ?, ?, ?, ?,
                     ?, ?, ?, ?,
-                    ?, 'revision', NOW()
+                    ?, ?, 'revision', NOW()
                 )";
 
         $stmt = $pdo->prepare($sql);
@@ -139,7 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $job_type, $job_occupation, $job_name, $job_address,
             $item, $installments_count, $installment_amount, $total_amount,
             $payment_day, $payment_frequency, $down_payment, $observations,
-            $sale_type
+            $sale_type, $payment_method
         ]);
 
         $sale_id = $pdo->lastInsertId();
