@@ -322,6 +322,7 @@ include 'includes/header.php';
                         <th class="hidden sm:table-cell">#</th>
                         <th class="hidden sm:table-cell">Fecha</th>
                         <th>Cliente</th>
+                        <th class="hidden lg:table-cell">Localidad</th>
                         <th class="hidden lg:table-cell">Cargado por</th>
                         <th>Artículo / Total</th>
                         <th class="hidden sm:table-cell">Estado</th>
@@ -330,7 +331,7 @@ include 'includes/header.php';
                 </thead>
                 <tbody>
                     <?php if (empty($orders)): ?>
-                        <tr><td colspan="7" class="p-16 text-center">
+                        <tr><td colspan="8" class="p-16 text-center">
                             <div class="flex flex-col items-center gap-4">
                                 <div class="p-5 rounded-2xl" style="background:var(--paper);border:1.5px solid var(--line);">
                                     <i data-lucide="inbox" class="w-10 h-10" style="color:var(--ink-3);"></i>
@@ -360,6 +361,12 @@ include 'includes/header.php';
                                     <i data-lucide="phone" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($order['client_whatsapp']) ?>
                                 </div>
                                 <div class="text-[10px] font-mono mt-0.5 sm:hidden" style="color:var(--ink-3);"><?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></div>
+                            </td>
+                            <td class="hidden lg:table-cell" style="color:var(--ink-2);">
+                                <div class="flex items-center gap-1.5">
+                                    <i data-lucide="map-pin" class="w-3.5 h-3.5" style="color:var(--ink-3);"></i>
+                                    <?= htmlspecialchars($order['client_locality'] ?: '-') ?>
+                                </div>
                             </td>
                             <td class="hidden lg:table-cell" style="color:var(--ink-2);">
                                 <div class="flex items-center gap-1.5">
