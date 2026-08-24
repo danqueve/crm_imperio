@@ -90,6 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // 4. CAPTURA DE DATOS - PLAN DE PAGO
     $item                = trim($_POST['item'] ?? '');
+    // Método de pago (solo aplica a contado): Normal o RapiCompra (comisión fija 6%).
+    // Se fuerza 'normal' para crédito sin importar lo enviado, igual criterio que save_sale.php.
+    $payment_method      = ($is_contado && ($_POST['payment_method'] ?? '') === 'rapicompra') ? 'rapicompra' : 'normal';
     $payment_frequency   = $_POST['payment_frequency'] ?? 'semanal';
     $payment_day         = $_POST['payment_day'] ?? '';
     $installments        = (int)($_POST['installments'] ?? 0);
@@ -116,6 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     job_name = ?,
                     job_address = ?,
                     item = ?,
+                    payment_method = ?,
                     payment_frequency = ?,
                     payment_day = ?,
                     installments_count = ?,
@@ -140,6 +144,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $job_name,
             $job_address,
             $item,
+            $payment_method,
             $payment_frequency,
             $payment_day,
             $installments,

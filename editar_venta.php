@@ -221,6 +221,15 @@ include 'includes/header.php';
                            placeholder="Producto vendido"
                            class="w-full input-light px-4 py-3">
                 </div>
+                <?php if ($is_contado): ?>
+                <div class="md:col-span-2">
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Método de Pago</label>
+                    <select name="payment_method" class="w-full input-light px-4 py-3 cursor-pointer">
+                        <option value="normal" <?= (($order['payment_method'] ?? 'normal') === 'normal') ? 'selected' : '' ?>>Normal</option>
+                        <option value="rapicompra" <?= (($order['payment_method'] ?? 'normal') === 'rapicompra') ? 'selected' : '' ?>>RapiCompra (comisión 6%)</option>
+                    </select>
+                </div>
+                <?php endif; ?>
                 <div>
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Día de Cobro <span class="text-red-400">*</span></label>
                     <select name="payment_day" id="payment_day" required

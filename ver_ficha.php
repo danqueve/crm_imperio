@@ -528,6 +528,15 @@ include 'includes/header.php';
                                 <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Artículo</label>
                                 <input type="text" name="item" value="<?= htmlspecialchars($order['item'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition" required>
                             </div>
+                            <?php if (($order['sale_type'] ?? 'credito') === 'contado'): ?>
+                            <div class="col-span-2">
+                                <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Método de Pago</label>
+                                <select name="payment_method" class="input-light w-full rounded-xl px-4 py-2.5 transition appearance-none cursor-pointer">
+                                    <option value="normal" <?= (($order['payment_method'] ?? 'normal') === 'normal') ? 'selected' : '' ?>>Normal</option>
+                                    <option value="rapicompra" <?= (($order['payment_method'] ?? 'normal') === 'rapicompra') ? 'selected' : '' ?>>RapiCompra (comisión 6%)</option>
+                                </select>
+                            </div>
+                            <?php endif; ?>
                             <div>
                                 <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Frecuencia</label>
                                 <select name="payment_frequency" class="input-light w-full rounded-xl px-4 py-2.5 transition appearance-none cursor-pointer">
