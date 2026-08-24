@@ -48,11 +48,16 @@ $stmt->execute([$seller_id, $startSql, $endSql]);
 $sales = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // 4. Calcular Totales
+// Comisión: tasa propia del vendedor, salvo ventas RapiCompra que siempre cobran RAPICOMPRA_COMMISSION_RATE
+// (misma fórmula que comisiones.php, para no mostrar cifras distintas entre pantallas)
+$sellerRate = (float)($seller['commission_rate'] ?? 5.00);
 $totalVentas = 0;
 $totalComisiones = 0;
-foreach ($sales as $s) {
+foreach ($sales as $i => $s) {
+    $rate = (($s['payment_method'] ?? 'normal') === 'rapicompra') ? RAPICOMPRA_COMMISSION_RATE : $sellerRate;
+    $commission = $s['total_amount'] * ($rate / 100);
+    $sales[$i]['commission'] = $commission;
     $totalVentas += $s['total_amount'];
-    $commission = $s['total_amount'] * 0.05;
     $totalComisiones += $commission;
 }
 
@@ -147,7 +152,7 @@ include 'includes/header.php';
                     <p class="text-xs text-slate-600 mt-1"><?= count($sales) ?> operaciones</p>
                 </div>
                 <div class="bg-emerald-900/10 p-4 rounded-xl border border-emerald-500/20">
-                    <p class="text-xs text-emerald-500 uppercase font-bold">Comisiones (5%)</p>
+                    <p class="text-xs text-emerald-500 uppercase font-bold">Comisiones</p>
                     <p class="text-2xl font-bold text-emerald-400 mt-1">$<?= number_format($totalComisiones, 0, ',', '.') ?></p>
                     <p class="text-xs text-emerald-500/60 mt-1">A cobrar</p>
                 </div>
@@ -182,7 +187,7 @@ include 'includes/header.php';
                             <td class="p-4 font-medium text-black"><?= htmlspecialchars($s['client_name']) ?></td>
                             <td class="p-4 text-black"><?= htmlspecialchars($s['item']) ?></td>
                             <td class="p-4 text-right font-mono text-black">$<?= number_format($s['total_amount'], 0, ',', '.') ?></td>
-                            <td class="p-4 text-right font-bold text-emerald-400">$<?= number_format($s['total_amount'] * 0.05, 0, ',', '.') ?></td>
+                            <td class="p-4 text-right font-bold text-emerald-400">$<?= number_format($s['commission'], 0, ',', '.') ?></td>
                             <td class="p-4 text-center">
                                 <a href="ver_ficha.php?id=<?= $s['id'] ?>" class="p-1.5 rounded transition inline-block" style="color:var(--accent-ink);" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='var(--accent-ink)'"><i data-lucide="eye" class="w-4 h-4"></i></a>
                             </td>
