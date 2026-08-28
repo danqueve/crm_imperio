@@ -39,6 +39,8 @@ include 'includes/header.php';
         $field_messages = [
             'dni'              => 'DNI es obligatorio.',
             'dni_formato'      => 'El DNI debe tener 7 u 8 dígitos numéricos.',
+            'dni_rechazado'    => 'Este DNI tiene un rechazo previo sin una compra exitosa posterior. Comuníquese con el Administrador.',
+            'whatsapp_rechazado' => 'Este número de WhatsApp/Celular tiene un rechazo previo sin una compra exitosa posterior. Comuníquese con el Administrador.',
             'nombre'           => 'El nombre del cliente es obligatorio.',
             'whatsapp_formato' => 'El WhatsApp debe contener solo dígitos (7 a 15 caracteres).',
             'telefono'         => 'El número de llamada (teléfono alternativo) es obligatorio.',

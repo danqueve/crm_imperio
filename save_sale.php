@@ -74,6 +74,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($item)) $errors[] = "articulo";
     if ($installment_amount <= 0) $errors[] = "monto";
 
+    // DNI con rechazo previo sin compra exitosa posterior: bloquea para cualquier rol
+    if (!empty($client_dni)) {
+        $dniDigits = preg_replace('/\D/', '', $client_dni);
+        if ($dniDigits !== '') {
+            $lastRejStmt = $pdo->prepare(
+                "SELECT created_at FROM sales WHERE client_dni = ? AND status = 'rechazado' ORDER BY created_at DESC LIMIT 1"
+            );
+            $lastRejStmt->execute([$dniDigits]);
+            $lastRejectedAt = $lastRejStmt->fetchColumn();
+
+            if ($lastRejectedAt) {
+                $resolvedStmt = $pdo->prepare(
+                    "SELECT id FROM sales WHERE client_dni = ? AND status IN ('aprobado','entregado') AND created_at > ? LIMIT 1"
+                );
+                $resolvedStmt->execute([$dniDigits, $lastRejectedAt]);
+                if (!$resolvedStmt->fetch()) {
+                    $errors[] = "dni_rechazado";
+                }
+            }
+        }
+    }
+
+    // Mismo criterio con el WhatsApp/Celular: cubre las ventas de contado, donde el DNI es opcional
+    if (!empty($client_whatsapp)) {
+        $lastRejStmtWa = $pdo->prepare(
+            "SELECT created_at FROM sales WHERE client_whatsapp = ? AND status = 'rechazado' ORDER BY created_at DESC LIMIT 1"
+        );
+        $lastRejStmtWa->execute([$client_whatsapp]);
+        $lastRejectedAtWa = $lastRejStmtWa->fetchColumn();
+
+        if ($lastRejectedAtWa) {
+            $resolvedStmtWa = $pdo->prepare(
+                "SELECT id FROM sales WHERE client_whatsapp = ? AND status IN ('aprobado','entregado') AND created_at > ? LIMIT 1"
+            );
+            $resolvedStmtWa->execute([$client_whatsapp, $lastRejectedAtWa]);
+            if (!$resolvedStmtWa->fetch()) {
+                $errors[] = "whatsapp_rechazado";
+            }
+        }
+    }
+
     if ($sale_type === 'credito') {
         // Venta a crédito: se necesitan todos los datos para evaluar el crédito
         if (empty($client_dni)) $errors[] = "dni";
