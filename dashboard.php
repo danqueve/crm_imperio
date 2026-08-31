@@ -585,8 +585,8 @@ include 'includes/header.php';
         const tableStartY = headerY + 3;
 
         doc.autoTable({
-            head: [['#', 'Fecha', 'Cliente', 'Dirección', 'Artículo', 'Vendedor', 'Verificador']],
-            body: data.map((r, i) => [i+1, r.date, r.client, r.address, r.item, r.seller, r.verifier]),
+            head: [['#', 'Fecha', 'Cliente', 'Celular', 'Dirección', 'Artículo', 'Vendedor', 'Verificador']],
+            body: data.map((r, i) => [i+1, r.date, r.client, r.phone, r.address, r.item, r.seller, r.verifier]),
             startY: tableStartY, theme: 'grid', styles: { fontSize: 8 },
             headStyles: { fillColor: [99, 102, 241] },
             margin: { top: tableStartY }
