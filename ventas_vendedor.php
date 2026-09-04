@@ -142,6 +142,7 @@ include 'includes/header.php';
                                     <?php elseif ($s['status'] === 'rechazado'): ?>
                                         <span class="block font-bold text-red-400/80 mb-0.5 uppercase tracking-tighter">Rechazado por:</span> 
                                         <span class="flex items-center gap-1 mb-1"><i data-lucide="shield-alert" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($s['rejected_by_name'] ?? 'Admin') ?></span>
+                                        <span class="inline-block font-bold mb-1 px-1.5 py-0.5 rounded" style="background:var(--rec-bg);color:var(--rec-ink);"><?= htmlspecialchars(rejection_type_label($s['rejected_type'] ?? null)) ?></span>
                                         <div class="italic pl-2 line-clamp-1" style="color:var(--ink-3);border-left:2px solid var(--rev-bg);">"<?= htmlspecialchars($s['rejected_reason'] ?? 'Sin motivo') ?>"</div>
                                     <?php elseif ($s['status'] === 'aprobado'): ?>
                                         <span class="text-emerald-500/60 italic">Venta aprobada, pendiente de entrega.</span>

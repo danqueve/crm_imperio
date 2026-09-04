@@ -23,10 +23,25 @@ if ($role === 'vendedor' && $id) {
     }
 }
 
+$form_error = '';
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     csrf_verify();
     $reason  = trim($_POST['reason'] ?? '');
     $sale_id = (int)($_POST['sale_id'] ?? 0);
+
+    // Tipo de rechazo: whitelist, nunca confiar en lo que llega por POST.
+    // Solo 'no_potable' deja al cliente en lista negra (ver rejection_type_blocks()).
+    $reject_type = $_POST['reject_type'] ?? '';
+    if (!in_array($reject_type, REJECTION_TYPES_SELECTABLE, true)) {
+        $reject_type = '';
+        $form_error  = 'Elegí el motivo del rechazo.';
+    }
+
+    // La explicación solo es obligatoria cuando se rechaza por "no es potable"
+    if ($reject_type === 'no_potable' && $reason === '') {
+        $form_error = 'Si rechazás por "No es potable" tenés que dejar una explicación.';
+    }
 
     // Re-verificar propiedad en POST para vendedores
     if ($role === 'vendedor') {
@@ -39,10 +54,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if ($reason) {
-        $stmt = $pdo->prepare("UPDATE sales SET status = 'rechazado', rejected_reason = ?, rejected_by = ? WHERE id = ?");
-        $stmt->execute([$reason, $user_id, $sale_id]);
-        log_audit($pdo, 'reject', 'sale', $sale_id, "Motivo: $reason");
+    if (!$form_error) {
+        $stmt = $pdo->prepare("UPDATE sales SET status = 'rechazado', rejected_reason = ?, rejected_type = ?, rejected_by = ? WHERE id = ?");
+        $stmt->execute([$reason, $reject_type, $user_id, $sale_id]);
+
+        $typeLabel = rejection_type_label($reject_type);
+        $detail    = "Tipo: $typeLabel" . ($reason !== '' ? " | Motivo: $reason" : '');
+        log_audit($pdo, 'reject', 'sale', $sale_id, $detail);
 
         header("Location: dashboard.php");
         exit;
@@ -77,13 +95,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
 
-            <form method="POST" class="space-y-4">
+            <?php if ($form_error): ?>
+            <div class="mb-4 p-3 rounded-xl text-sm flex items-start gap-2" style="background:var(--rec-bg);color:var(--rec-ink);border:1px solid var(--rec-ink);">
+                <i data-lucide="alert-circle" class="w-4 h-4 shrink-0 mt-0.5"></i>
+                <span><?= htmlspecialchars($form_error) ?></span>
+            </div>
+            <?php endif; ?>
+
+            <form method="POST" class="space-y-4" id="rechazoForm">
                 <?= csrf_field() ?>
                 <input type="hidden" name="sale_id" value="<?= htmlspecialchars($id) ?>">
 
+                <?php
+                $cur_type = $_POST['reject_type'] ?? '';
+                $opciones = [
+                    'mora'       => ['Mora', 'El cliente se puede volver a cargar más adelante.'],
+                    'no_quiere'  => ['El cliente no lo quiere en este momento', 'También se puede volver a cargar más adelante.'],
+                    'no_potable' => ['No es potable', 'Queda en lista negra. Requiere explicación.'],
+                ];
+                ?>
                 <div>
-                    <label class="block text-xs font-bold uppercase mb-1.5 ml-1" style="color:var(--ink-3);">Motivo del Rechazo</label>
-                    <textarea name="reason" rows="4" class="w-full input-light p-4 resize-none" placeholder="Ej: DNI ilegible, el cliente no atiende, dirección inexistente..." required autofocus></textarea>
+                    <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Motivo del Rechazo</label>
+                    <div class="space-y-2">
+                        <?php foreach ($opciones as $val => [$titulo, $ayuda]): ?>
+                        <label id="label_type_<?= $val ?>" class="cursor-pointer rounded-xl p-3 flex items-start gap-3 transition" style="border:1.5px solid <?= $cur_type === $val ? 'var(--rec-ink)' : 'var(--line)' ?>;<?= $cur_type === $val ? 'background:var(--rec-bg);' : '' ?>">
+                            <input type="radio" name="reject_type" value="<?= $val ?>" id="type_<?= $val ?>" class="mt-1" <?= $cur_type === $val ? 'checked' : '' ?> required>
+                            <div>
+                                <p class="font-bold text-sm" style="color:var(--ink);"><?= htmlspecialchars($titulo) ?></p>
+                                <p class="text-xs mt-0.5" style="color:var(--ink-3);"><?= htmlspecialchars($ayuda) ?></p>
+                            </div>
+                        </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase mb-1.5 ml-1" style="color:var(--ink-3);">
+                        Explicación <span id="reasonHint" style="color:var(--ink-3);text-transform:none;font-weight:400;">(opcional)</span>
+                    </label>
+                    <textarea name="reason" id="reasonField" rows="4" class="w-full input-light p-4 resize-none" placeholder="Ej: DNI ilegible, el cliente no atiende, dirección inexistente..."><?= htmlspecialchars($_POST['reason'] ?? '') ?></textarea>
                 </div>
 
                 <div class="flex gap-3 pt-2">
@@ -96,6 +146,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
-    <script>lucide.createIcons();</script>
+    <script>
+        lucide.createIcons();
+
+        // Resalta la tarjeta elegida y hace obligatoria la explicación solo para "No es potable".
+        // El servidor revalida lo mismo, esto es solo la ayuda visual.
+        (function () {
+            const radios     = document.querySelectorAll('input[name="reject_type"]');
+            const reasonEl   = document.getElementById('reasonField');
+            const hintEl     = document.getElementById('reasonHint');
+
+            function updateUI() {
+                let selected = null;
+                radios.forEach(function (r) {
+                    const box = document.getElementById('label_type_' + r.value);
+                    if (box) {
+                        box.style.borderColor = r.checked ? 'var(--rec-ink)' : 'var(--line)';
+                        box.style.background  = r.checked ? 'var(--rec-bg)' : '';
+                    }
+                    if (r.checked) selected = r.value;
+                });
+
+                const requiere = (selected === 'no_potable');
+                reasonEl.required = requiere;
+                hintEl.textContent = requiere ? '(obligatoria)' : '(opcional)';
+                if (requiere) reasonEl.focus();
+            }
+
+            radios.forEach(function (r) { r.addEventListener('change', updateUI); });
+            updateUI();
+        })();
+    </script>
 </body>
 </html>

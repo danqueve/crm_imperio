@@ -136,3 +136,35 @@ if (!function_exists('status_badge')) {
         );
     }
 }
+
+// --- Tipos de rechazo ---
+// Solo 'no_potable' deja al cliente en lista negra (bloquea futuras cargas en save_sale.php).
+// 'mora' y 'no_quiere' permiten volver a cargarlo; 'sin_clasificar' son los rechazos
+// históricos anteriores a esta función, que tampoco bloquean.
+
+if (!defined('REJECTION_TYPES')) {
+    define('REJECTION_TYPES', [
+        'mora'           => 'Mora',
+        'no_quiere'      => 'No lo quiere ahora',
+        'no_potable'     => 'No es potable',
+        'sin_clasificar' => 'Sin clasificar',
+    ]);
+}
+
+// Tipos que puede elegir el verificador al rechazar (sin_clasificar es solo histórico)
+if (!defined('REJECTION_TYPES_SELECTABLE')) {
+    define('REJECTION_TYPES_SELECTABLE', ['mora', 'no_quiere', 'no_potable']);
+}
+
+if (!function_exists('rejection_type_label')) {
+    function rejection_type_label(?string $type): string {
+        return REJECTION_TYPES[$type] ?? 'Sin clasificar';
+    }
+}
+
+if (!function_exists('rejection_type_blocks')) {
+    /** Única definición de la regla: qué tipo de rechazo manda a lista negra. */
+    function rejection_type_blocks(?string $type): bool {
+        return $type === 'no_potable';
+    }
+}

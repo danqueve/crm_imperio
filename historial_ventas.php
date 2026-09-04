@@ -184,6 +184,7 @@ if (isset($_GET['ajax'])) {
                         <div class="text-[10px] max-w-[200px]" style="color:var(--ink-2);">
                             <span class="block font-bold mb-0.5 uppercase tracking-tighter" style="color:var(--rec-ink);">Rechazado por:</span>
                             <span class="flex items-center gap-1 mb-1"><i data-lucide="shield-alert" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($h['rejected_by_name'] ?? 'Admin') ?></span>
+                            <span class="inline-block font-bold mb-1 px-1.5 py-0.5 rounded" style="background:var(--rec-bg);color:var(--rec-ink);"><?= htmlspecialchars(rejection_type_label($h['rejected_type'] ?? null)) ?></span>
                             <div class="italic pl-2 line-clamp-2" style="color:var(--ink-3);border-left:2px solid var(--rev-bg);">"<?= htmlspecialchars($h['rejected_reason'] ?? 'Sin motivo') ?>"</div>
                         </div>
                     <?php endif; ?>

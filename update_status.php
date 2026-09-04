@@ -58,7 +58,7 @@ if ($id && $status) {
     if ($status === 'revision') {
         // Limpiamos TODO el historial para reiniciar el proceso limpiamente
         // Se borran datos de aprobación, entrega y rechazo previo
-        $updateFields .= ", approved_at = NULL, approved_by = NULL, delivered_at = NULL, delivered_by = NULL, rejected_reason = NULL, rejected_by = NULL";
+        $updateFields .= ", approved_at = NULL, approved_by = NULL, delivered_at = NULL, delivered_by = NULL, rejected_reason = NULL, rejected_by = NULL, rejected_type = NULL";
     }
 
     // Agregamos el ID de la venta al final para el WHERE

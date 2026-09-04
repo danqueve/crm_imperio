@@ -77,6 +77,8 @@ include 'includes/header.php';
             'maps'             => 'La ubicación de Google Maps es obligatoria (debe ser un enlace válido).',
             'whatsapp_formato' => 'El WhatsApp debe contener solo dígitos (7 a 15 caracteres).',
             'telefono_formato' => 'El teléfono alternativo tiene un formato inválido.',
+            'tipo_rechazo'     => 'No se pudo reclasificar el rechazo: tipo inválido o la venta no está rechazada.',
+            'explicacion_requerida' => 'Para dejar el rechazo como "No es potable" tiene que haber una explicación cargada.',
         ];
         $fields = array_filter(explode(',', $_GET['fields'] ?? ''));
         $specific_msgs = array_filter(array_map(fn($f) => $field_messages[$f] ?? null, $fields));
@@ -242,9 +244,32 @@ include 'includes/header.php';
                 <div class="p-2 rounded-xl shrink-0" style="background:rgba(159,18,57,.12);color:var(--rec-ink);">
                     <i data-lucide="alert-triangle" class="w-6 h-6"></i>
                 </div>
-                <div>
+                <div class="flex-1">
                     <h4 class="uppercase text-[10px] font-bold tracking-widest mb-1" style="color:var(--rec-ink);">Operación Rechazada</h4>
+                    <?php $rt = $order['rejected_type'] ?? null; ?>
+                    <p class="text-sm font-bold mb-1" style="color:var(--ink);">
+                        <?= htmlspecialchars(rejection_type_label($rt)) ?>
+                        <?php if (rejection_type_blocks($rt)): ?>
+                        <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ml-1" style="background:rgba(159,18,57,.15);color:var(--rec-ink);">Queda en lista negra</span>
+                        <?php else: ?>
+                        <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ml-1" style="background:var(--apr-bg);color:var(--apr-ink);">Se puede volver a cargar</span>
+                        <?php endif; ?>
+                    </p>
                     <p class="text-sm italic" style="color:var(--ink);">"<?= htmlspecialchars($order['rejected_reason'] ?? 'Sin motivo especificado') ?>"</p>
+
+                    <?php if ($can_assign): // admin y supervisor pueden reclasificar ?>
+                    <form method="POST" action="reclasificar_rechazo.php" class="mt-3 flex flex-wrap items-center gap-2">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="sale_id" value="<?= (int)$order['id'] ?>">
+                        <label class="text-[10px] uppercase font-bold" style="color:var(--rec-ink);">Reclasificar:</label>
+                        <select name="reject_type" class="input-light rounded-lg px-3 py-1.5 text-xs cursor-pointer">
+                            <?php foreach (REJECTION_TYPES_SELECTABLE as $t): ?>
+                            <option value="<?= $t ?>" <?= $rt === $t ? 'selected' : '' ?>><?= htmlspecialchars(rejection_type_label($t)) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button type="submit" class="text-xs font-bold px-3 py-1.5 rounded-lg text-white transition" style="background:var(--rec-ink);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Guardar</button>
+                    </form>
+                    <?php endif; ?>
                 </div>
             </div>
             <?php endif; ?>

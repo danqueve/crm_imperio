@@ -35,7 +35,7 @@ $sql = "SELECT
             s.client_locality, s.client_whatsapp, s.item,
             s.installments_count, s.installment_amount, s.total_amount,
             s.down_payment, s.payment_frequency, s.status,
-            s.delivered_at, s.rejected_reason,
+            s.delivered_at, s.rejected_type, s.rejected_reason,
             u_seller.name AS vendedor,
             u_del.name    AS entregado_por,
             u_rej.name    AS rechazado_por
@@ -68,7 +68,7 @@ fwrite($output, "\xEF\xBB\xBF");
 fputcsv($output, [
     'Fecha Carga', 'Cliente', 'DNI', 'Direccion', 'Localidad', 'WhatsApp',
     'Articulo', 'Cuotas', 'Monto Cuota', 'Total', 'Entrada',
-    'Frecuencia', 'Estado', 'Fecha Entrega', 'Motivo Rechazo',
+    'Frecuencia', 'Estado', 'Fecha Entrega', 'Tipo Rechazo', 'Motivo Rechazo',
     'Vendedor', 'Entregado por', 'Rechazado por'
 ]);
 
@@ -88,6 +88,7 @@ foreach ($rows as $row) {
         $row['payment_frequency'],
         $row['status'],
         $row['delivered_at'] ? date('d/m/Y', strtotime($row['delivered_at'])) : '',
+        $row['status'] === 'rechazado' ? rejection_type_label($row['rejected_type'] ?? null) : '',
         $row['rejected_reason'] ?? '',
         $row['vendedor'] ?? '',
         $row['entregado_por'] ?? '',

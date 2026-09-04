@@ -74,12 +74,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (empty($item)) $errors[] = "articulo";
     if ($installment_amount <= 0) $errors[] = "monto";
 
-    // DNI con rechazo previo sin compra exitosa posterior: bloquea para cualquier rol
+    // DNI con rechazo por "no potable" sin compra exitosa posterior: bloquea para cualquier rol.
+    // Los rechazos por mora o porque el cliente no lo quiso en el momento NO bloquean
+    // (ver rejection_type_blocks() en includes/functions.php).
     if (!empty($client_dni)) {
         $dniDigits = preg_replace('/\D/', '', $client_dni);
         if ($dniDigits !== '') {
             $lastRejStmt = $pdo->prepare(
-                "SELECT created_at FROM sales WHERE client_dni = ? AND status = 'rechazado' ORDER BY created_at DESC LIMIT 1"
+                "SELECT created_at FROM sales WHERE client_dni = ? AND status = 'rechazado' AND rejected_type = 'no_potable' ORDER BY created_at DESC LIMIT 1"
             );
             $lastRejStmt->execute([$dniDigits]);
             $lastRejectedAt = $lastRejStmt->fetchColumn();
@@ -99,7 +101,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Mismo criterio con el WhatsApp/Celular: cubre las ventas de contado, donde el DNI es opcional
     if (!empty($client_whatsapp)) {
         $lastRejStmtWa = $pdo->prepare(
-            "SELECT created_at FROM sales WHERE client_whatsapp = ? AND status = 'rechazado' ORDER BY created_at DESC LIMIT 1"
+            "SELECT created_at FROM sales WHERE client_whatsapp = ? AND status = 'rechazado' AND rejected_type = 'no_potable' ORDER BY created_at DESC LIMIT 1"
         );
         $lastRejStmtWa->execute([$client_whatsapp]);
         $lastRejectedAtWa = $lastRejStmtWa->fetchColumn();
