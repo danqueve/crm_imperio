@@ -459,12 +459,11 @@ include 'includes/header.php';
             <table class="table-light w-full text-left text-sm border-collapse">
                 <thead>
                     <tr>
-                        <th class="p-4 pl-5 w-10">#</th>
-                        <th class="p-4 w-16">ID</th>
+                        <th class="p-4 pl-5 w-16">ID</th>
                         <th class="p-4 whitespace-nowrap">
                             <a href="<?= sortUrl('fecha', $sort_key ?? '', $sort_dir, $tab, $filter_locality, $filter_search, $filter_from, $filter_to) ?>"
                                class="flex items-center gap-1 transition hover:opacity-70">
-                                Fechas <?= sortIcon('fecha', $sort_key, $sort_dir) ?>
+                                <?= $tab === 'pendientes' ? 'Carga / Espera' : 'Fechas' ?> <?= sortIcon('fecha', $sort_key, $sort_dir) ?>
                             </a>
                         </th>
                         <th class="p-4">
@@ -475,23 +474,17 @@ include 'includes/header.php';
                         </th>
                         <th class="p-4">Artículo / Monto</th>
                         <th class="p-4 hidden lg:table-cell">Vendedor</th>
-                        <th class="p-4">
-                            <?php if ($tab === 'pendientes'): ?>
-                                <a href="<?= sortUrl('fecha', $sort_key ?? '', $sort_dir, $tab, $filter_locality, $filter_search, $filter_from, $filter_to) ?>"
-                                   class="flex items-center gap-1 transition hover:opacity-70">
-                                    Espera <?= sortIcon('fecha', $sort_key, $sort_dir) ?>
-                                </a>
-                            <?php else: ?>
-                                Entregado por
-                            <?php endif; ?>
-                        </th>
+                        <?php if ($tab === 'entregadas'): ?>
+                        <th class="p-4">Entregado por</th>
+                        <?php endif; ?>
                         <th class="p-4 text-right">Gestión</th>
                     </tr>
                 </thead>
                 <tbody>
+                    <?php $colCount = $tab === 'entregadas' ? 7 : 6; ?>
                     <?php if (empty($orders)): ?>
                         <tr>
-                            <td colspan="8" class="p-20 text-center">
+                            <td colspan="<?= $colCount ?>" class="p-20 text-center">
                                 <div class="flex flex-col items-center gap-4">
                                     <div class="p-5 rounded-2xl" style="background:var(--paper);border:1.5px solid var(--line);">
                                         <i data-lucide="<?= $tab === 'pendientes' ? 'package' : 'check-circle' ?>" class="w-10 h-10" style="color:var(--ink-3);"></i>
@@ -508,14 +501,13 @@ include 'includes/header.php';
                             </td>
                         </tr>
                     <?php else: ?>
-                        <?php $counter = $offset + 1; foreach ($orders as $order): [$days_wait, $waitClass, $waitLabel] = waitInfo($order); ?>
-                        <tr class="transition-colors group <?= ($tab === 'pendientes' && $days_wait > 3) ? 'border-l-2 border-l-red-400/60' : '' ?>" style="border-bottom:1px dashed var(--line);">
-                            <td class="p-4 pl-5 font-bold" style="color:var(--ink-3);"><?= $counter++ ?></td>
-                            <td class="p-4 font-mono text-xs" style="color:var(--ink-3);">#<?= $order['id'] ?></td>
+                        <?php foreach ($orders as $order): [$days_wait, $waitClass, $waitLabel] = waitInfo($order); $isOverdue = ($tab === 'pendientes' && $days_wait > 3); ?>
+                        <tr class="transition-colors group" style="border-bottom:1px dashed var(--line);<?= $isOverdue ? ' border-left:4px solid var(--rec-ink);' : '' ?>">
+                            <td class="p-4 pl-5 font-mono text-xs" style="color:var(--ink-3);">#<?= $order['id'] ?></td>
 
-                            <!-- Fechas: Carga siempre; Entrega solo en tab Entregadas -->
+                            <!-- Carga (+ Espera integrada, Pendientes) / Carga+Entrega (Entregadas) -->
                             <td class="p-4 whitespace-nowrap" style="color:var(--ink-2);">
-                                <div class="flex flex-col gap-1">
+                                <div class="flex flex-col gap-1.5">
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase" style="background:var(--paper);color:var(--ink-3);">Carga</span>
                                         <span class="text-xs"><?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></span>
@@ -525,6 +517,10 @@ include 'includes/header.php';
                                         <span class="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase" style="background:var(--apr-bg);color:var(--apr-ink);">Entrega</span>
                                         <span class="text-xs" style="color:var(--apr-ink);"><?= !empty($order['delivered_at']) ? date('d/m/Y H:i', strtotime($order['delivered_at'])) : '-' ?></span>
                                     </div>
+                                    <?php else: ?>
+                                    <span class="inline-flex items-center gap-1 w-fit px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border <?= $waitClass ?>">
+                                        <i data-lucide="clock" class="w-2.5 h-2.5"></i> <?= $waitLabel ?>
+                                    </span>
                                     <?php endif; ?>
                                 </div>
                             </td>
@@ -543,7 +539,7 @@ include 'includes/header.php';
                                 </div>
                                 <?php if (!empty($order['client_map_link'])): ?>
                                 <a href="<?= htmlspecialchars($order['client_map_link']) ?>" target="_blank"
-                                   class="text-[10px] text-blue-500 hover:text-blue-600 flex items-center gap-1 mt-1 transition">
+                                   class="text-[10px] flex items-center gap-1 mt-1 transition" style="color:var(--accent-ink);">
                                     <i data-lucide="external-link" class="w-2.5 h-2.5"></i> Ver en Maps
                                 </a>
                                 <?php endif; ?>
@@ -561,7 +557,7 @@ include 'includes/header.php';
                             <!-- Vendedor (oculto en mobile) -->
                             <td class="p-4 hidden lg:table-cell" style="color:var(--ink-2);">
                                 <?php if ($can_view_profile): ?>
-                                    <a href="perfil_vendedor.php?id=<?= $order['user_id'] ?>" class="hover:text-blue-500 hover:underline transition flex items-center gap-1 group/seller">
+                                    <a href="perfil_vendedor.php?id=<?= $order['user_id'] ?>" class="hover:underline transition flex items-center gap-1 group/seller" onmouseover="this.style.color='var(--accent-ink)'" onmouseout="this.style.color=''">
                                         <?= htmlspecialchars($order['seller_name']) ?>
                                         <i data-lucide="external-link" class="w-3 h-3 opacity-0 group-hover/seller:opacity-100 transition-opacity"></i>
                                     </a>
@@ -578,23 +574,19 @@ include 'includes/header.php';
                                 <?php endif; ?>
                             </td>
 
-                            <!-- Días de espera (Pendientes) / Entregado por (Entregadas) -->
+                            <?php if ($tab === 'entregadas'): ?>
+                            <!-- Entregado por -->
                             <td class="p-4">
-                                <?php if ($tab === 'pendientes'): ?>
-                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase border <?= $waitClass ?>">
-                                        <i data-lucide="clock" class="w-3 h-3"></i> <?= $waitLabel ?>
-                                    </span>
+                                <?php if (!empty($order['deliverer_name'])): ?>
+                                <div class="flex items-center gap-1.5 text-xs" style="color:var(--ink-2);">
+                                    <i data-lucide="user-check" class="w-3.5 h-3.5 shrink-0" style="color:var(--apr-ink);"></i>
+                                    <?= htmlspecialchars($order['deliverer_name']) ?>
+                                </div>
                                 <?php else: ?>
-                                    <?php if (!empty($order['deliverer_name'])): ?>
-                                    <div class="flex items-center gap-1.5 text-xs" style="color:var(--ink-2);">
-                                        <i data-lucide="user-check" class="w-3.5 h-3.5 shrink-0" style="color:var(--apr-ink);"></i>
-                                        <?= htmlspecialchars($order['deliverer_name']) ?>
-                                    </div>
-                                    <?php else: ?>
-                                    <span class="text-xs" style="color:var(--ink-3);">—</span>
-                                    <?php endif; ?>
+                                <span class="text-xs" style="color:var(--ink-3);">—</span>
                                 <?php endif; ?>
                             </td>
+                            <?php endif; ?>
 
                             <!-- Gestión -->
                             <td class="p-4 text-right">
@@ -610,7 +602,7 @@ include 'includes/header.php';
                                             <input type="hidden" name="id" value="<?= $order['id'] ?>">
                                             <input type="hidden" name="status" value="entregado">
                                             <button type="submit"
-                                                    class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-lg shadow-blue-900/30 <?= $days_wait > 3 ? 'ring-1 ring-red-400/50' : '' ?>">
+                                                    class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-sm <?= $isOverdue ? 'ring-1 ring-red-400/50' : '' ?>">
                                                 <i data-lucide="truck" class="w-3.5 h-3.5"></i>
                                                 <span class="hidden sm:inline">Entregar</span>
                                             </button>
