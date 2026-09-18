@@ -158,10 +158,10 @@ include 'includes/header.php';
                            class="w-full input-light px-4 py-3">
                 </div>
 
-                <div class="contado-hide">
+                <div>
                     <label class="block text-xs font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Localidad</label>
                     <?php
-                    $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Catamarca','Concepción','Famaillá','Leales','Lules','Manantial','Monteros','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Sgo','Villa Carmela','Yerba Buena'];
+                    $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Catamarca','Concepción','Cruz Alta','Famaillá','La Florida','Leales','Lules','Manantial','Monteros','Ranchillos','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Sgo','Villa Carmela','Yerba Buena'];
                     $localidadesLabels = ['Sgo' => 'Sgo del Estero'];
                     $cur_loc = $sticky['client_locality'] ?? '';
                     ?>

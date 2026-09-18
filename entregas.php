@@ -305,14 +305,12 @@ include 'includes/header.php';
                     <tr>
                         <th class="p-4 pl-5 hidden sm:table-cell w-10">#</th>
                         <th class="p-4 hidden sm:table-cell w-16">ID</th>
-                        <?php if ($tab === 'entregadas'): ?>
                         <th class="p-4 whitespace-nowrap">
                             <a href="<?= sortUrl('fecha', $sort_key ?? '', $sort_dir, $tab, $filter_locality, $filter_search, $filter_from, $filter_to) ?>"
                                class="flex items-center gap-1 transition hover:opacity-70">
                                 Fechas <?= sortIcon('fecha', $sort_key, $sort_dir) ?>
                             </a>
                         </th>
-                        <?php endif; ?>
                         <th class="p-4">
                             <a href="<?= sortUrl('cliente', $sort_key ?? '', $sort_dir, $tab, $filter_locality, $filter_search, $filter_from, $filter_to) ?>"
                                class="flex items-center gap-1 transition hover:opacity-70">
@@ -367,21 +365,21 @@ include 'includes/header.php';
                             <td class="p-4 pl-5 font-bold hidden sm:table-cell" style="color:var(--ink-3);"><?= $counter++ ?></td>
                             <td class="p-4 font-mono text-xs hidden sm:table-cell" style="color:var(--ink-3);">#<?= $order['id'] ?></td>
 
-                            <?php if ($tab === 'entregadas'): ?>
-                            <!-- Fechas (solo en tab Entregadas) -->
+                            <!-- Fechas: Carga siempre; Entrega solo en tab Entregadas -->
                             <td class="p-4 whitespace-nowrap" style="color:var(--ink-2);">
                                 <div class="flex flex-col gap-1">
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase" style="background:var(--paper);color:var(--ink-3);">Carga</span>
                                         <span class="text-xs"><?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></span>
                                     </div>
+                                    <?php if ($tab === 'entregadas'): ?>
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase" style="background:var(--apr-bg);color:var(--apr-ink);">Entrega</span>
                                         <span class="text-xs" style="color:var(--apr-ink);"><?= !empty($order['delivered_at']) ? date('d/m/Y H:i', strtotime($order['delivered_at'])) : '-' ?></span>
                                     </div>
+                                    <?php endif; ?>
                                 </div>
                             </td>
-                            <?php endif; ?>
 
                             <!-- Cliente + Dirección + Localidad -->
                             <td class="p-4">
