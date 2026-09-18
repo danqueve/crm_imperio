@@ -149,6 +149,15 @@ function sortIcon(string $col, ?string $currentSort, string $currentDir): string
         : '<i data-lucide="chevron-down" class="w-3 h-3 text-blue-500"></i>';
 }
 
+// --- HELPER: indicador de antigüedad (usado en la tabla de escritorio y en las tarjetas mobile) ---
+function waitInfo(array $order): array {
+    $refDate = !empty($order['approved_at']) ? $order['approved_at'] : $order['created_at'];
+    $days    = (int)floor((time() - strtotime($refDate)) / 86400);
+    if ($days === 0)    return [$days, 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20', 'Hoy'];
+    if ($days <= 2)     return [$days, 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20', $days . ' día' . ($days > 1 ? 's' : '')];
+    return [$days, 'bg-red-500/10 text-red-600 border-red-500/20', $days . ' días'];
+}
+
 // --- EXTRA PARAMS para paginación ---
 $extraParams = array_filter(['tab' => $tab, 'locality' => $filter_locality, 'search' => $filter_search, 'date_from' => $filter_from, 'date_to' => $filter_to, 'sort' => $sort_key, 'dir' => $sort_key ? strtolower($sort_dir) : null]);
 
@@ -297,14 +306,161 @@ include 'includes/header.php';
         </div>
     </form>
 
-    <!-- Tabla -->
+    <!-- Listado -->
     <div class="rounded-2xl overflow-hidden flex flex-col min-h-[500px]" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-        <div class="overflow-x-auto flex-1">
+
+        <!-- Vista mobile: tarjetas (mejor que forzar scroll horizontal de una tabla ancha) -->
+        <div class="sm:hidden flex-1">
+            <?php if (empty($orders)): ?>
+                <div class="p-16 text-center flex flex-col items-center gap-4">
+                    <div class="p-5 rounded-2xl" style="background:var(--paper);border:1.5px solid var(--line);">
+                        <i data-lucide="<?= $tab === 'pendientes' ? 'package' : 'check-circle' ?>" class="w-10 h-10" style="color:var(--ink-3);"></i>
+                    </div>
+                    <div>
+                        <p class="font-semibold text-base" style="color:var(--ink-2);">
+                            <?= $tab === 'pendientes' ? 'No hay pedidos pendientes de entrega' : 'Aún no hay entregas registradas' ?>
+                        </p>
+                        <?php if ($hasFilters): ?>
+                        <p class="text-sm mt-1" style="color:var(--ink-3);">Probá ajustando los filtros aplicados.</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php else: ?>
+                <div class="divide-y" style="border-color:var(--line);">
+                    <?php foreach ($orders as $order): [$days_wait, $waitClass, $waitLabel] = waitInfo($order); ?>
+                    <div class="p-4 space-y-3 <?= ($tab === 'pendientes' && $days_wait > 3) ? 'border-l-2 border-l-red-400/60' : '' ?>">
+
+                        <!-- Cliente + espera -->
+                        <div class="flex items-start justify-between gap-2">
+                            <div class="min-w-0">
+                                <div class="font-bold flex items-center gap-1.5" style="color:var(--ink);">
+                                    <span class="font-mono text-[10px] font-normal" style="color:var(--ink-3);">#<?= $order['id'] ?></span>
+                                    <?= htmlspecialchars($order['client_name']) ?>
+                                </div>
+                                <div class="text-xs flex items-center gap-1 mt-0.5" style="color:var(--ink-3);">
+                                    <i data-lucide="map-pin" class="w-3 h-3 shrink-0"></i> <?= htmlspecialchars($order['client_address']) ?>
+                                </div>
+                            </div>
+                            <?php if ($tab === 'pendientes'): ?>
+                            <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-bold uppercase border <?= $waitClass ?>">
+                                <i data-lucide="clock" class="w-3 h-3"></i> <?= $waitLabel ?>
+                            </span>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Localidad + Maps -->
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:var(--paper);color:var(--ink-2);border:1px solid var(--line);">
+                                <?= htmlspecialchars($order['client_locality']) ?>
+                            </span>
+                            <?php if (!empty($order['client_map_link'])): ?>
+                            <a href="<?= htmlspecialchars($order['client_map_link']) ?>" target="_blank"
+                               class="text-[10px] text-blue-500 flex items-center gap-1">
+                                <i data-lucide="external-link" class="w-2.5 h-2.5"></i> Ver en Maps
+                            </a>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Artículo / Monto -->
+                        <div class="flex items-center justify-between gap-2 pt-2" style="border-top:1px dashed var(--line);">
+                            <div class="min-w-0">
+                                <div class="text-sm font-medium truncate" style="color:var(--accent);"><?= htmlspecialchars($order['item']) ?></div>
+                                <div class="text-[10px] italic" style="color:var(--ink-3);"><?= $order['installments_count'] ?> x $<?= number_format($order['installment_amount'], 0, ',', '.') ?></div>
+                            </div>
+                            <span class="text-sm font-bold shrink-0" style="color:var(--apr-ink);">$<?= number_format($order['total_amount'], 0, ',', '.') ?></span>
+                        </div>
+
+                        <!-- Fechas -->
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-[10px]" style="color:var(--ink-3);">
+                            <span class="flex items-center gap-1"><i data-lucide="calendar-plus" class="w-3 h-3"></i> Carga: <?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></span>
+                            <?php if ($tab === 'entregadas'): ?>
+                            <span class="flex items-center gap-1" style="color:var(--apr-ink);"><i data-lucide="calendar-check" class="w-3 h-3"></i> Entrega: <?= !empty($order['delivered_at']) ? date('d/m/Y H:i', strtotime($order['delivered_at'])) : '-' ?></span>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Vendedor / Verificador / Entregó -->
+                        <div class="text-xs flex flex-wrap items-center gap-x-3 gap-y-1" style="color:var(--ink-2);">
+                            <span class="flex items-center gap-1">
+                                <i data-lucide="user" class="w-3 h-3 shrink-0" style="color:var(--ink-3);"></i>
+                                <?= htmlspecialchars($order['seller_name']) ?>
+                            </span>
+                            <?php if (!empty($order['verifier_name'])): ?>
+                            <span class="flex items-center gap-1" style="color:var(--accent-ink);">
+                                <i data-lucide="user-check" class="w-3 h-3 shrink-0"></i> <?= htmlspecialchars($order['verifier_name']) ?>
+                            </span>
+                            <?php endif; ?>
+                            <?php if ($tab === 'entregadas'): ?>
+                                <?php if (!empty($order['deliverer_name'])): ?>
+                                <span class="flex items-center gap-1" style="color:var(--apr-ink);">
+                                    <i data-lucide="truck" class="w-3 h-3 shrink-0"></i> Entregó: <?= htmlspecialchars($order['deliverer_name']) ?>
+                                </span>
+                                <?php else: ?>
+                                <span style="color:var(--ink-3);">Entregó: —</span>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Gestión -->
+                        <div class="flex flex-wrap gap-1.5 pt-2" style="border-top:1px solid var(--line);">
+                            <a href="ver_ficha.php?id=<?= $order['id'] ?>"
+                               class="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-blue-600 hover:text-white transition shadow-sm" style="background:var(--paper);color:var(--accent);border:1.5px solid var(--line);" title="Ver Ficha">
+                                <i data-lucide="search" class="w-4 h-4"></i>
+                            </a>
+
+                            <?php if ($order['status'] === 'aprobado'): ?>
+                                <form method="POST" action="update_status.php" class="inline">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= $order['id'] ?>">
+                                    <input type="hidden" name="status" value="entregado">
+                                    <button type="submit"
+                                            class="h-11 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold flex items-center gap-1.5 transition shadow-lg shadow-blue-900/30 <?= $days_wait > 3 ? 'ring-1 ring-red-400/50' : '' ?>">
+                                        <i data-lucide="truck" class="w-3.5 h-3.5"></i> Entregar
+                                    </button>
+                                </form>
+
+                                <?php if (in_array($role, ['admin', 'supervisor'])): ?>
+                                <form method="POST" action="update_status.php" class="inline">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= $order['id'] ?>">
+                                    <input type="hidden" name="status" value="revision">
+                                    <button type="submit" class="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-yellow-500 hover:text-white transition shadow-sm" style="background:var(--rev-bg);color:var(--rev-ink);border:1.5px solid var(--rev-ink);" title="Devolver a Revisión">
+                                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                                <a href="rechazar_venta.php?id=<?= $order['id'] ?>"
+                                   class="w-11 h-11 flex items-center justify-center rounded-lg hover:bg-red-600 hover:text-white transition shadow-sm" style="background:var(--rec-bg);color:var(--rec-ink);border:1.5px solid var(--rec-ink);" title="Rechazar"
+                                   onclick="return confirm('¿Confirma que desea rechazar esta venta?')">
+                                    <i data-lucide="x" class="w-4 h-4"></i>
+                                </a>
+                                <?php endif; ?>
+
+                            <?php else: ?>
+                                <?php if (in_array($role, ['admin', 'supervisor', 'entregador'])): ?>
+                                <form method="POST" action="update_status.php" class="inline"
+                                      onsubmit="return confirm('¿Confirma anular la entrega? El pedido volverá a estado pendiente.');">
+                                    <?= csrf_field() ?>
+                                    <input type="hidden" name="id" value="<?= $order['id'] ?>">
+                                    <input type="hidden" name="status" value="aprobado">
+                                    <button type="submit" class="h-11 px-4 flex items-center justify-center gap-1.5 rounded-lg hover:bg-red-600 hover:text-white transition shadow-sm text-xs font-bold" style="background:var(--rec-bg);color:var(--rec-ink);border:1.5px solid var(--rec-ink);">
+                                        <i data-lucide="x-circle" class="w-4 h-4"></i> Anular Entrega
+                                    </button>
+                                </form>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Vista tablet/escritorio: tabla -->
+        <div class="hidden sm:block overflow-x-auto flex-1">
             <table class="table-light w-full text-left text-sm border-collapse">
                 <thead>
                     <tr>
-                        <th class="p-4 pl-5 hidden sm:table-cell w-10">#</th>
-                        <th class="p-4 hidden sm:table-cell w-16">ID</th>
+                        <th class="p-4 pl-5 w-10">#</th>
+                        <th class="p-4 w-16">ID</th>
                         <th class="p-4 whitespace-nowrap">
                             <a href="<?= sortUrl('fecha', $sort_key ?? '', $sort_dir, $tab, $filter_locality, $filter_search, $filter_from, $filter_to) ?>"
                                class="flex items-center gap-1 transition hover:opacity-70">
@@ -352,18 +508,10 @@ include 'includes/header.php';
                             </td>
                         </tr>
                     <?php else: ?>
-                        <?php $counter = $offset + 1; foreach ($orders as $order): ?>
-                        <?php
-                            // Indicador de antigüedad (solo Pendientes)
-                            $refDate    = !empty($order['approved_at']) ? $order['approved_at'] : $order['created_at'];
-                            $days_wait  = (int)floor((time() - strtotime($refDate)) / 86400);
-                            if ($days_wait === 0)      { $waitClass = 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'; $waitLabel = 'Hoy'; }
-                            elseif ($days_wait <= 2)   { $waitClass = 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';   $waitLabel = $days_wait . ' día' . ($days_wait > 1 ? 's' : ''); }
-                            else                       { $waitClass = 'bg-red-500/10 text-red-600 border-red-500/20';            $waitLabel = $days_wait . ' días'; }
-                        ?>
+                        <?php $counter = $offset + 1; foreach ($orders as $order): [$days_wait, $waitClass, $waitLabel] = waitInfo($order); ?>
                         <tr class="transition-colors group <?= ($tab === 'pendientes' && $days_wait > 3) ? 'border-l-2 border-l-red-400/60' : '' ?>" style="border-bottom:1px dashed var(--line);">
-                            <td class="p-4 pl-5 font-bold hidden sm:table-cell" style="color:var(--ink-3);"><?= $counter++ ?></td>
-                            <td class="p-4 font-mono text-xs hidden sm:table-cell" style="color:var(--ink-3);">#<?= $order['id'] ?></td>
+                            <td class="p-4 pl-5 font-bold" style="color:var(--ink-3);"><?= $counter++ ?></td>
+                            <td class="p-4 font-mono text-xs" style="color:var(--ink-3);">#<?= $order['id'] ?></td>
 
                             <!-- Fechas: Carga siempre; Entrega solo en tab Entregadas -->
                             <td class="p-4 whitespace-nowrap" style="color:var(--ink-2);">
@@ -398,9 +546,6 @@ include 'includes/header.php';
                                    class="text-[10px] text-blue-500 hover:text-blue-600 flex items-center gap-1 mt-1 transition">
                                     <i data-lucide="external-link" class="w-2.5 h-2.5"></i> Ver en Maps
                                 </a>
-                                <?php endif; ?>
-                                <?php if ($tab === 'pendientes'): ?>
-                                <div class="text-[10px] mt-0.5 sm:hidden" style="color:var(--ink-3);">Carga: <?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></div>
                                 <?php endif; ?>
                             </td>
 
