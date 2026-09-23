@@ -9,6 +9,41 @@ if (!defined('RAPICOMPRA_COMMISSION_RATE')) {
     define('RAPICOMPRA_COMMISSION_RATE', 6.00);
 }
 
+// --- WhatsApp (Argentina) ---
+
+if (!function_exists('normalize_ar_whatsapp')) {
+    /**
+     * Arma el número en formato internacional que exige wa.me para celulares
+     * argentinos: 54 (país) + 9 (obligatorio para celulares) + 10 dígitos
+     * (área + abonado). Devuelve null si no se puede reconstruir un número
+     * válido (dato basura, longitud imposible, etc.) para que el que llama
+     * pueda mostrar el dato como texto plano en vez de un link roto.
+     */
+    function normalize_ar_whatsapp(string $raw): ?string {
+        $digits = preg_replace('/\D/', '', $raw);
+        if ($digits === '') return null;
+
+        // Sacar el 0 de larga distancia nacional si está adelante (ej "0381...")
+        if (strlen($digits) > 10 && $digits[0] === '0') {
+            $digits = substr($digits, 1);
+        }
+
+        if (str_starts_with($digits, '54')) {
+            // Ya tiene código de país: asegurar el 9 de celular después del 54
+            $rest = substr($digits, 2);
+            if (!str_starts_with($rest, '9')) $rest = '9' . $rest;
+            $digits = '54' . $rest;
+        } elseif (strlen($digits) === 10) {
+            // Número local (área + abonado), sin código de país
+            $digits = '549' . $digits;
+        } else {
+            return null; // no se puede inferir un número válido
+        }
+
+        return (strlen($digits) === 13) ? $digits : null; // 54 + 9 + 10 dígitos
+    }
+}
+
 // --- CSRF Protection ---
 
 if (!function_exists('csrf_token')) {

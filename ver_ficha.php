@@ -293,9 +293,16 @@ include 'includes/header.php';
                             </div>
                             <div>
                                 <p class="text-[10px] uppercase font-bold mb-1" style="color:var(--ink-3);">WhatsApp</p>
-                                <a href="https://wa.me/<?= preg_replace('/[^0-9]/', '', $order['client_whatsapp'] ?? '') ?>" target="_blank" class="text-emerald-600 font-bold flex items-center gap-1 hover:text-emerald-500 transition">
+                                <?php $wa_link = normalize_ar_whatsapp($order['client_whatsapp'] ?? ''); ?>
+                                <?php if ($wa_link): ?>
+                                <a href="https://wa.me/<?= $wa_link ?>" target="_blank" class="text-emerald-600 font-bold flex items-center gap-1 hover:text-emerald-500 transition">
                                     <i data-lucide="message-circle" class="w-3 h-3"></i> <?= htmlspecialchars($order['client_whatsapp'] ?? '-') ?>
                                 </a>
+                                <?php else: ?>
+                                <span class="font-bold flex items-center gap-1" style="color:var(--ink-3);" title="No se pudo generar un enlace de WhatsApp válido para este número">
+                                    <i data-lucide="message-circle-off" class="w-3 h-3"></i> <?= htmlspecialchars($order['client_whatsapp'] ?? '-') ?>
+                                </span>
+                                <?php endif; ?>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
