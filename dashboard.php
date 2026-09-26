@@ -84,19 +84,26 @@ $myProgress = (int)($myGoal['progress_sales'] ?? 0);
 $myPct      = $myTarget > 0 ? round($myProgress / $myTarget * 100) : 0;
 
 // --- 3. LISTADO DE TABLA (BANDEJA DE ENTRADA) ---
+// Subconsulta compartida: cuántos intentos de contacto tiene registrados cada venta
+// (historial de contacto durante la verificación, guardado en audit_log)
+$contactAttemptsSql = "(SELECT COUNT(*) FROM audit_log
+                        WHERE audit_log.action = 'contact_log' AND audit_log.target_type = 'sale'
+                          AND audit_log.target_id = sales.id) as contact_attempts";
+
 if ($is_limited_view) {
-    $stmt = $pdo->prepare("SELECT * FROM sales WHERE user_id = ? AND status IN ('revision', 'aprobado') ORDER BY created_at DESC");
+    $stmt = $pdo->prepare("SELECT sales.*, $contactAttemptsSql
+        FROM sales WHERE user_id = ? AND status IN ('revision', 'aprobado') ORDER BY created_at DESC");
     $stmt->execute([$user_id]);
 } elseif ($role === 'verificador') {
     // Modelo estricto: el verificador solo ve las ventas que le fueron asignadas puntualmente
-    $stmt = $pdo->prepare("SELECT sales.*, users.name as seller_name
+    $stmt = $pdo->prepare("SELECT sales.*, users.name as seller_name, $contactAttemptsSql
         FROM sales JOIN users ON sales.user_id = users.id
         WHERE sales.status = 'revision' AND sales.assigned_verifier_id = ?
         ORDER BY sales.created_at DESC");
     $stmt->execute([$user_id]);
 } else {
     // Admin/Supervisor ven todo el pool en revisión, junto a quién está asignada cada venta
-    $stmt = $pdo->query("SELECT sales.*, users.name as seller_name, av.name as verifier_name
+    $stmt = $pdo->query("SELECT sales.*, users.name as seller_name, av.name as verifier_name, $contactAttemptsSql
         FROM sales JOIN users ON sales.user_id = users.id
         LEFT JOIN users av ON sales.assigned_verifier_id = av.id
         WHERE sales.status = 'revision' ORDER BY sales.created_at DESC");
@@ -355,6 +362,11 @@ include 'includes/header.php';
                                     <?php endif; ?>
                                     <?php if (($order['payment_method'] ?? 'normal') === 'rapicompra'): ?>
                                     <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded" style="background:var(--accent-soft);color:var(--accent-ink);">RapiCompra</span>
+                                    <?php endif; ?>
+                                    <?php if ((int)($order['contact_attempts'] ?? 0) > 0): ?>
+                                    <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded flex items-center gap-0.5" style="background:var(--rev-bg);color:var(--rev-ink);" title="Tiene intentos de contacto registrados">
+                                        <i data-lucide="history" class="w-2.5 h-2.5"></i> <?= (int)$order['contact_attempts'] ?> intento<?= (int)$order['contact_attempts'] > 1 ? 's' : '' ?>
+                                    </span>
                                     <?php endif; ?>
                                 </div>
                                 <div class="text-[10px] font-mono flex items-center gap-1 mt-0.5" style="color:var(--apr-ink);">

@@ -37,6 +37,16 @@ $verifiers = $can_assign
     ? $pdo->query("SELECT id, name FROM users WHERE role = 'verificador' AND is_active = 1 ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC)
     : [];
 
+// Historial de intentos de contacto durante la verificación (guardado en audit_log, no en tabla propia)
+$stmtContacts = $pdo->prepare(
+    "SELECT al.*, u.name as user_name
+     FROM audit_log al JOIN users u ON al.user_id = u.id
+     WHERE al.target_type = 'sale' AND al.target_id = ? AND al.action = 'contact_log'
+     ORDER BY al.created_at DESC"
+);
+$stmtContacts->execute([$id]);
+$contact_log = $stmtContacts->fetchAll(PDO::FETCH_ASSOC);
+
 // Seguridad: Vendedores solo ven sus propias ventas
 // Entregadores pueden ver sus ventas + cualquier venta aprobada/entregada (para gestionar la entrega)
 if ($role === 'vendedor' && $order['user_id'] != $_SESSION['user_id']) {
@@ -79,6 +89,8 @@ include 'includes/header.php';
             'telefono_formato' => 'El teléfono alternativo tiene un formato inválido.',
             'tipo_rechazo'     => 'No se pudo reclasificar el rechazo: tipo inválido o la venta no está rechazada.',
             'explicacion_requerida' => 'Para dejar el rechazo como "No es potable" tiene que haber una explicación cargada.',
+            'contacto_invalido' => 'No se pudo registrar el contacto: resultado inválido o la venta ya no está en revisión.',
+            'nota_requerida'   => 'Para registrar el contacto como "Otro" tenés que escribir una nota.',
         ];
         $fields = array_filter(explode(',', $_GET['fields'] ?? ''));
         $specific_msgs = array_filter(array_map(fn($f) => $field_messages[$f] ?? null, $fields));
@@ -216,6 +228,68 @@ include 'includes/header.php';
                         Asignar
                     </button>
                 </form>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+
+            <!-- HISTORIAL DE CONTACTO (intentos de contacto durante la verificación) -->
+            <?php if (!empty($contact_log) || ($can_manage && $order['status'] === 'revision')): ?>
+            <div class="p-5 rounded-2xl" style="background:var(--paper);border:1.5px solid var(--line);">
+                <h4 class="uppercase text-[10px] font-bold tracking-widest mb-3 flex items-center gap-1.5" style="color:var(--ink-3);">
+                    <i data-lucide="history" class="w-3.5 h-3.5"></i> Historial de Contacto
+                </h4>
+
+                <?php if (!empty($contact_log)): ?>
+                <div class="space-y-3 mb-4">
+                    <?php foreach ($contact_log as $c): $cdata = json_decode($c['details'] ?? '{}', true) ?: []; ?>
+                    <div class="flex items-start gap-3 pb-3" style="border-bottom:1px dashed var(--line);">
+                        <div class="p-1.5 rounded-lg shrink-0" style="background:var(--accent-soft);color:var(--accent-ink);">
+                            <i data-lucide="phone" class="w-3.5 h-3.5"></i>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold" style="color:var(--ink);"><?= htmlspecialchars(contact_result_label($cdata['result'] ?? null)) ?></p>
+                            <?php if (!empty($cdata['note'])): ?>
+                            <p class="text-sm italic mt-0.5" style="color:var(--ink-2);">"<?= htmlspecialchars($cdata['note']) ?>"</p>
+                            <?php endif; ?>
+                            <p class="text-xs mt-1" style="color:var(--ink-3);">
+                                <?= htmlspecialchars($c['user_name']) ?> · <?= date('d/m/Y H:i', strtotime($c['created_at'])) ?> hs.
+                            </p>
+                        </div>
+                    </div>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
+
+                <?php if ($can_manage && $order['status'] === 'revision'): ?>
+                <form method="POST" action="registrar_contacto.php" class="space-y-2" id="contactoForm">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="sale_id" value="<?= (int)$order['id'] ?>">
+                    <div class="flex flex-wrap gap-2">
+                        <select name="contact_result" id="contact_result" class="input-light text-xs min-h-[44px] py-2 px-3 rounded-lg cursor-pointer min-w-[220px]">
+                            <?php foreach (CONTACT_RESULT_TYPES as $key => $label): ?>
+                            <option value="<?= $key ?>"><?= htmlspecialchars($label) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                        <button type="submit" class="min-h-[44px] px-4 rounded-lg font-bold text-xs transition shrink-0" style="background:var(--accent);color:#fff;">
+                            Registrar contacto
+                        </button>
+                    </div>
+                    <textarea name="note" id="contact_note" rows="2" placeholder="Nota (opcional)" class="w-full input-light px-3 py-2 text-sm resize-none"></textarea>
+                </form>
+                <script>
+                    (function () {
+                        const select = document.getElementById('contact_result');
+                        const note   = document.getElementById('contact_note');
+                        const hint   = document.createElement('span');
+                        function updateHint() {
+                            const requiere = select.value === 'otro';
+                            note.required = requiere;
+                            note.placeholder = requiere ? 'Nota (obligatoria para "Otro")' : 'Nota (opcional)';
+                        }
+                        select.addEventListener('change', updateHint);
+                        updateHint();
+                    })();
+                </script>
                 <?php endif; ?>
             </div>
             <?php endif; ?>

@@ -203,3 +203,24 @@ if (!function_exists('rejection_type_blocks')) {
         return $type === 'no_potable';
     }
 }
+
+// --- Historial de contacto durante la verificación ---
+// Se guarda como una entrada más de audit_log (action='contact_log', target_type='sale'),
+// no como tabla propia: es exactamente el mismo patrón que ya usa el resto del sistema
+// para registrar eventos de una venta (reject, assign_verifier, create_sale, etc.).
+
+if (!defined('CONTACT_RESULT_TYPES')) {
+    define('CONTACT_RESULT_TYPES', [
+        'efectivo'          => 'Contactado - Efectivo',
+        'no_efectivo'       => 'Contactado - No efectivo, reagendado',
+        'sin_respuesta'     => 'No contestó',
+        'numero_incorrecto' => 'Número incorrecto',
+        'otro'              => 'Otro',
+    ]);
+}
+
+if (!function_exists('contact_result_label')) {
+    function contact_result_label(?string $result): string {
+        return CONTACT_RESULT_TYPES[$result] ?? 'Sin especificar';
+    }
+}
