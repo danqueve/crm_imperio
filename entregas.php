@@ -2,13 +2,13 @@
 require 'includes/db.php';
 require_once 'includes/functions.php';
 
-if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'supervisor', 'verificador', 'entregador'])) {
+if (!isset($_SESSION['role']) || !in_array($_SESSION['role'], ['admin', 'supervisor', 'entregador'])) {
     header("Location: dashboard.php");
     exit;
 }
 
 $role = $_SESSION['role'];
-$can_view_profile = in_array($role, ['admin', 'supervisor', 'verificador']);
+$can_view_profile = in_array($role, ['admin', 'supervisor']);
 
 // --- TAB ---
 $tab          = (isset($_GET['tab']) && $_GET['tab'] === 'entregadas') ? 'entregadas' : 'pendientes';

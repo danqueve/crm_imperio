@@ -201,7 +201,7 @@ include 'includes/header.php';
             <button onclick="exportarPDF()" class="flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition" style="background:var(--rec-bg);color:var(--rec-ink);border:1.5px solid rgba(159,18,57,.2);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
                 <i data-lucide="file-down" class="w-4 h-4"></i> PDF Pendientes
             </button>
-            <?php if ($can_manage || $is_entregador): ?>
+            <?php if (in_array($role, ['admin', 'supervisor']) || $is_entregador): ?>
             <a href="entregas.php" class="flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition" style="background:var(--apr-bg);color:var(--apr-ink);border:1.5px solid rgba(11,107,70,.2);">
                 <i data-lucide="truck" class="w-4 h-4"></i> Gestión Entregas
             </a>

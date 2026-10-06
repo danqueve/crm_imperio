@@ -31,6 +31,12 @@ if ($_SESSION['role'] === 'entregador' && !in_array($status, ['entregado', 'apro
     exit;
 }
 
+// RESTRICCIÓN DE VERIFICADOR: no gestiona entregas, no puede marcar una venta como entregada
+if ($_SESSION['role'] === 'verificador' && $status === 'entregado') {
+    header("Location: dashboard.php");
+    exit;
+}
+
 if ($id && $status) {
     $updateFields = "status = ?";
     $params = [$status];

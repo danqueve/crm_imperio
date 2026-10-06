@@ -9,7 +9,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 $role    = $_SESSION['role'] ?? '';
 $user_id = $_SESSION['user_id'] ?? 0;
 
-$can_manage_deliveries = in_array($role, ['admin', 'supervisor', 'verificador', 'entregador']);
+$can_manage_deliveries = in_array($role, ['admin', 'supervisor', 'entregador']);
 $can_see_commissions   = in_array($role, ['admin', 'supervisor']);
 
 $pending_count = 0;
