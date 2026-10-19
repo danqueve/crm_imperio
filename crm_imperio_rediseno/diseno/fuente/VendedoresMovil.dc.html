@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Vendedores · CRM Imperio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#f6f8fb}
+a{color:#0e7fe6}a:hover{color:#108dff}
+.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.tab{font-variant-numeric:tabular-nums}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #f6f8fb; color: #2f384f; font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; letter-spacing: -0.01em; font-size: 14px; line-height: 20px; display: flex; flex-direction: column">
+
+  <header style="background: #ffffff; border-bottom: 1px solid #dee2e6; padding: 4px 16px 12px; display: flex; flex-direction: column; gap: 10px">
+    <a href="MasMovil.dc.html" style="align-self: flex-start; display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -8px; font-size: 15px; font-weight: 600; text-decoration: none">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><path d="m15 18-6-6 6-6"></path></svg>
+      Más
+    </a>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <h1 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -0.04em">Vendedores</h1>
+      <span class="tab" style="font-size: 13px; line-height: 18px; color: #4a5a6b">38 ventas en octubre · todos los vendedores</span>
+    </div>
+    <div role="group" aria-label="Período" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; padding: 2px; background: #f0f4f7; border: 1px solid #dee2e6; border-radius: 4px">
+      <button type="button" style="height: 36px; border: 0; border-radius: 4px; background: transparent; font-size: 13px; color: #4a5a6b">Semana</button>
+      <button type="button" aria-pressed="true" style="height: 36px; border: 0; border-radius: 4px; background: #ffffff; box-shadow: 0 2px 8px rgba(9, 30, 66, .06); font-size: 13px; font-weight: 600; color: #2f384f">Mes</button>
+      <button type="button" style="height: 36px; border: 0; border-radius: 4px; background: transparent; font-size: 13px; color: #4a5a6b">Elegir fechas</button>
+    </div>
+  </header>
+
+  <div style="flex: 1; overflow: hidden; padding: 14px 16px 100px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; flex-wrap: wrap; gap: 14px; padding: 0 4px; font-size: 12px; line-height: 16px; color: #4a5a6b">
+      <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 2px; background: #287f71"></span>Entregadas</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 2px; background: #108dff"></span>Aprobadas</span>
+      <span style="display: inline-flex; align-items: center; gap: 6px"><span style="width: 10px; height: 10px; border-radius: 2px; background: #e7366b"></span>Rechazadas</span>
+    </div>
+    <div style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden">
+      <sc-for list="{{sellers}}" as="v" hint-placeholder-count="5">
+        <a href="MisVentasMovil.dc.html" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: {{v.border}}; text-decoration: none; color: #2f384f">
+          <span class="tab" style="width: 18px; font-size: 13px; font-weight: 700; color: #4a5a6b; text-align: center">{{v.rank}}</span>
+          <span style="width: 40px; height: 40px; border-radius: 50%; background: {{v.avatar}}; color: #ffffff; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0">{{v.ini}}</span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+            <span style="display: flex; justify-content: space-between; gap: 8px">
+              <span style="font-size: 15px; line-height: 20px; font-weight: 600">{{v.name}}</span>
+              <span class="tab" style="font-size: 13px; line-height: 20px; font-weight: 600">{{v.eff}}</span>
+            </span>
+            <span aria-hidden="true" style="display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: #f0f4f7; gap: 2px">
+              <span style="width: {{v.wEnt}}; background: #287f71"></span>
+              <span style="width: {{v.wApr}}; background: #108dff"></span>
+              <span style="width: {{v.wRec}}; background: #e7366b"></span>
+            </span>
+            <span class="tab" style="font-size: 12px; line-height: 16px; color: #4a5a6b">{{v.detail}}</span>
+          </span>
+        </a>
+      </sc-for>
+    </div>
+  </div>
+
+  <nav aria-label="Secciones" style="position: absolute; left: 0; right: 0; bottom: 0; height: 84px; padding-bottom: 20px; box-sizing: border-box; background: #ffffff; border-top: 1px solid #dee2e6; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr))">
+    <a href="Movil.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #4a5a6b">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      <span style="font-size: 11px; line-height: 14px">Panel</span>
+    </a>
+    <a href="HistorialMovil.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #4a5a6b">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><rect width="20" height="5" x="2" y="3" rx="1"></rect><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path><path d="M10 12h4"></path></svg>
+      <span style="font-size: 11px; line-height: 14px">Historial</span>
+    </a>
+    <a href="EntregasMovil.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #4a5a6b">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"></path><path d="M15 18H9"></path><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"></path><circle cx="17" cy="18" r="2"></circle><circle cx="7" cy="18" r="2"></circle></svg>
+      <span style="font-size: 11px; line-height: 14px">Entregas</span>
+    </a>
+    <a href="ComisionesMovil.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #4a5a6b">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><line x1="12" x2="12" y1="2" y2="22"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+      <span style="font-size: 11px; line-height: 14px">Comisiones</span>
+    </a>
+    <a href="MasMovil.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #108dff">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+      <span style="font-size: 11px; line-height: 14px; font-weight: 600; color: #2f384f">Más</span>
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const raw = [
+      { ini: 'CM', avatar: '#108dff', name: 'Carla Medina', ent: 10, apr: 4, rec: 1, last: 'hoy 14:32' },
+      { ini: 'JS', avatar: '#522c8f', name: 'Javier Sosa', ent: 9, apr: 3, rec: 2, last: 'hoy 12:05' },
+      { ini: 'MA', avatar: '#287f71', name: 'Martín Albornoz', ent: 7, apr: 2, rec: 1, last: 'ayer' },
+      { ini: 'RD', avatar: '#963b68', name: 'Rocío Díaz', ent: 4, apr: 2, rec: 3, last: 'ayer' },
+      { ini: 'EV', avatar: '#db398a', name: 'Emilia Vera', ent: 2, apr: 1, rec: 0, last: '12/10' }
+    ];
+    const max = Math.max(...raw.map((r) => r.ent + r.apr + r.rec));
+    const sellers = raw.map((r, i) => {
+      const tot = r.ent + r.apr + r.rec;
+      const eff = r.ent + r.rec > 0 ? Math.round((r.ent / (r.ent + r.rec)) * 100) : 0;
+      return {
+        ...r, rank: i + 1,
+        border: i === 0 ? '0' : '1px solid #dee2e6',
+        eff: eff + '% efectividad',
+        wEnt: (r.ent / max) * 100 + '%', wApr: (r.apr / max) * 100 + '%', wRec: (r.rec / max) * 100 + '%',
+        detail: tot + ' ventas · ' + r.ent + ' entr · ' + r.apr + ' aprob · ' + r.rec + ' rech · última ' + r.last
+      };
+    });
+    return { sellers };
+  }
+}
+</script>
+</body>
+</html>

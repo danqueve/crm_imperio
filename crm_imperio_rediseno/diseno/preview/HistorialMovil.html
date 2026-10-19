@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Historial · CRM Imperio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#f6f8fb}
+a{color:#0e7fe6}a:hover{color:#108dff}
+.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.tab{font-variant-numeric:tabular-nums}
+input{font-family:inherit}
+</style>
+</head>
+<body>
+<div style="min-height:100vh;display:flex;justify-content:center;align-items:flex-start;padding:24px 0;background:#e9edf2"><div style="box-shadow:0 16px 48px rgba(9,30,66,.20);border-radius:24px;overflow:hidden"><div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #f6f8fb; color: #2f384f; font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; letter-spacing: -0.01em; font-size: 14px; line-height: 20px; display: flex; flex-direction: column">
+
+  <header style="background: #ffffff; border-bottom: 1px solid #dee2e6; padding: 24px 16px 12px; display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; align-items: flex-end; justify-content: space-between">
+      <h1 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -0.04em">Historial</h1>
+      <button type="button" aria-label="Exportar PDF" style="width: 44px; height: 44px; margin-right: -10px; border: 0; background: transparent; color: #108dff; display: inline-flex; align-items: center; justify-content: center"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M12 18v-6"></path><path d="m9 15 3 3 3-3"></path></svg></button>
+    </div>
+    <label style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; background: #f0f4f7; border: 1px solid #dee2e6; border-radius: 4px; color: #4a5a6b">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input type="search" aria-label="Buscar" placeholder="Buscar cliente o DNI" style="flex: 1; min-width: 0; border: 0; background: transparent; font-size: 16px; color: #2f384f; outline: none">
+    </label>
+    <div style="display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px; padding: 0 16px">
+      <button type="button" style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 13px; font-weight: 600; color: #2f384f">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 15px; height: 15px; color: #108dff"><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M16 2v4"></path><path d="M8 2v4"></path><path d="M3 10h18"></path></svg>
+        1 – 17 oct
+      </button>
+      <button type="button" aria-pressed="true" style="flex-shrink: 0; height: 34px; padding: 0 12px; border: 1px solid #108dff; border-radius: 4px; background: rgba(16, 141, 255, .10); font-size: 13px; font-weight: 600; color: #2f384f">Todas · 46</button>
+      <button type="button" style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 13px; color: #2f384f"><span style="width: 8px; height: 8px; border-radius: 50%; background: #287f71"></span>Entregadas</button>
+      <button type="button" style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 13px; color: #2f384f"><span style="width: 8px; height: 8px; border-radius: 50%; background: #108dff"></span>Aprobadas</button>
+      <button type="button" style="flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 13px; color: #2f384f"><span style="width: 8px; height: 8px; border-radius: 50%; background: #e7366b"></span>Rechazadas</button>
+    </div>
+  </header>
+
+  <div style="flex: 1; overflow: hidden; padding: 14px 16px 100px; display: flex; flex-direction: column; gap: 16px">
+    
+      <section style="display: flex; flex-direction: column; gap: 8px">
+        <h2 style="margin: 0; padding: 0 4px; font-size: 12px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #4a5a6b">Hoy</h2>
+        <div style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden">
+          
+            <a href="FichaMovil.html" style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; box-sizing: border-box; border-top: 0; text-decoration: none; color: #2f384f">
+              <span style="width: 40px; height: 40px; border-radius: 50%; background: #108dff; color: #ffffff; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0">LG</span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+                <span style="display: flex; justify-content: space-between; gap: 8px">
+                  <span style="font-size: 15px; line-height: 20px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Lorena Gramajo</span>
+                  <span class="tab" style="font-size: 13px; line-height: 20px; font-weight: 600; flex-shrink: 0">$1.080.000</span>
+                </span>
+                <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; color: #2f384f">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #287f71; flex-shrink: 0"></span>
+                  <span style="font-weight: 600">Entregada</span>
+                  <span style="color: #4a5a6b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">· Entregó Diego Ruiz · 16:40</span>
+                </span>
+              </span>
+            </a>
+          
+            <a href="FichaMovil.html" style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; box-sizing: border-box; border-top: 1px solid #dee2e6; text-decoration: none; color: #2f384f">
+              <span style="width: 40px; height: 40px; border-radius: 50%; background: #963b68; color: #ffffff; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0">MS</span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+                <span style="display: flex; justify-content: space-between; gap: 8px">
+                  <span style="font-size: 15px; line-height: 20px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Mario Sánchez Alderete</span>
+                  <span class="tab" style="font-size: 13px; line-height: 20px; font-weight: 600; flex-shrink: 0">$650.000</span>
+                </span>
+                <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; color: #2f384f">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #108dff; flex-shrink: 0"></span>
+                  <span style="font-weight: 600">Aprobada</span>
+                  <span style="color: #4a5a6b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">· Aprobó Pablo Ibáñez · 11:05</span>
+                </span>
+              </span>
+            </a>
+          
+        </div>
+      </section>
+    
+      <section style="display: flex; flex-direction: column; gap: 8px">
+        <h2 style="margin: 0; padding: 0 4px; font-size: 12px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #4a5a6b">Ayer</h2>
+        <div style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden">
+          
+            <a href="FichaMovil.html" style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; box-sizing: border-box; border-top: 0; text-decoration: none; color: #2f384f">
+              <span style="width: 40px; height: 40px; border-radius: 50%; background: #287f71; color: #ffffff; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0">NC</span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+                <span style="display: flex; justify-content: space-between; gap: 8px">
+                  <span style="font-size: 15px; line-height: 20px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Natalia Coronel</span>
+                  <span class="tab" style="font-size: 13px; line-height: 20px; font-weight: 600; flex-shrink: 0">$420.000</span>
+                </span>
+                <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; color: #2f384f">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #287f71; flex-shrink: 0"></span>
+                  <span style="font-weight: 600">Entregada</span>
+                  <span style="color: #4a5a6b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">· Entregó Diego Ruiz · 18:12</span>
+                </span>
+              </span>
+            </a>
+          
+            <a href="FichaMovil.html" style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; box-sizing: border-box; border-top: 1px solid #dee2e6; text-decoration: none; color: #2f384f">
+              <span style="width: 40px; height: 40px; border-radius: 50%; background: #e7366b; color: #ffffff; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0">FR</span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+                <span style="display: flex; justify-content: space-between; gap: 8px">
+                  <span style="font-size: 15px; line-height: 20px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Fabián Robles</span>
+                  <span class="tab" style="font-size: 13px; line-height: 20px; font-weight: 600; flex-shrink: 0">$1.900.000</span>
+                </span>
+                <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; color: #2f384f">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #e7366b; flex-shrink: 0"></span>
+                  <span style="font-weight: 600">Rechazada</span>
+                  <span style="color: #4a5a6b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">· Lista negra · Lucas Ferreyra</span>
+                </span>
+              </span>
+            </a>
+          
+            <a href="FichaMovil.html" style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; box-sizing: border-box; border-top: 1px solid #dee2e6; text-decoration: none; color: #2f384f">
+              <span style="width: 40px; height: 40px; border-radius: 50%; background: #522c8f; color: #ffffff; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0">VT</span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+                <span style="display: flex; justify-content: space-between; gap: 8px">
+                  <span style="font-size: 15px; line-height: 20px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Valeria Toledo</span>
+                  <span class="tab" style="font-size: 13px; line-height: 20px; font-weight: 600; flex-shrink: 0">$780.000</span>
+                </span>
+                <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; color: #2f384f">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #287f71; flex-shrink: 0"></span>
+                  <span style="font-weight: 600">Entregada</span>
+                  <span style="color: #4a5a6b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">· Entregó Diego Ruiz · 10:30</span>
+                </span>
+              </span>
+            </a>
+          
+        </div>
+      </section>
+    
+      <section style="display: flex; flex-direction: column; gap: 8px">
+        <h2 style="margin: 0; padding: 0 4px; font-size: 12px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #4a5a6b">Jueves 15 de octubre</h2>
+        <div style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden">
+          
+            <a href="FichaMovil.html" style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; box-sizing: border-box; border-top: 0; text-decoration: none; color: #2f384f">
+              <span style="width: 40px; height: 40px; border-radius: 50%; background: #db398a; color: #ffffff; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0">GM</span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+                <span style="display: flex; justify-content: space-between; gap: 8px">
+                  <span style="font-size: 15px; line-height: 20px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Gustavo Medina</span>
+                  <span class="tab" style="font-size: 13px; line-height: 20px; font-weight: 600; flex-shrink: 0">$560.000</span>
+                </span>
+                <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; color: #2f384f">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #e7366b; flex-shrink: 0"></span>
+                  <span style="font-weight: 600">Rechazada</span>
+                  <span style="color: #4a5a6b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">· Se puede volver a cargar</span>
+                </span>
+              </span>
+            </a>
+          
+            <a href="FichaMovil.html" style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; box-sizing: border-box; border-top: 1px solid #dee2e6; text-decoration: none; color: #2f384f">
+              <span style="width: 40px; height: 40px; border-radius: 50%; background: #108dff; color: #ffffff; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0">PA</span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+                <span style="display: flex; justify-content: space-between; gap: 8px">
+                  <span style="font-size: 15px; line-height: 20px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Patricia Aybar</span>
+                  <span class="tab" style="font-size: 13px; line-height: 20px; font-weight: 600; flex-shrink: 0">$1.350.000</span>
+                </span>
+                <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; color: #2f384f">
+                  <span style="width: 8px; height: 8px; border-radius: 50%; background: #287f71; flex-shrink: 0"></span>
+                  <span style="font-weight: 600">Entregada</span>
+                  <span style="color: #4a5a6b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">· Entregó Diego Ruiz · 17:55</span>
+                </span>
+              </span>
+            </a>
+          
+        </div>
+      </section>
+    
+  </div>
+
+  <nav aria-label="Secciones" style="position: absolute; left: 0; right: 0; bottom: 0; height: 84px; padding-bottom: 20px; box-sizing: border-box; background: #ffffff; border-top: 1px solid #dee2e6; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr))">
+    <a href="Movil.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #4a5a6b">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      <span style="font-size: 11px; line-height: 14px">Panel</span>
+    </a>
+    <a href="HistorialMovil.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #108dff">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><rect width="20" height="5" x="2" y="3" rx="1"></rect><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path><path d="M10 12h4"></path></svg>
+      <span style="font-size: 11px; line-height: 14px; font-weight: 600; color: #2f384f">Historial</span>
+    </a>
+    <a href="EntregasMovil.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #4a5a6b">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"></path><path d="M15 18H9"></path><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"></path><circle cx="17" cy="18" r="2"></circle><circle cx="7" cy="18" r="2"></circle></svg>
+      <span style="font-size: 11px; line-height: 14px">Entregas</span>
+    </a>
+    <a href="ComisionesMovil.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #4a5a6b">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><line x1="12" x2="12" y1="2" y2="22"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+      <span style="font-size: 11px; line-height: 14px">Comisiones</span>
+    </a>
+    <a href="MasMovil.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #4a5a6b">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+      <span style="font-size: 11px; line-height: 14px">Más</span>
+    </a>
+  </nav>
+</div></div></div>
+</body>
+</html>

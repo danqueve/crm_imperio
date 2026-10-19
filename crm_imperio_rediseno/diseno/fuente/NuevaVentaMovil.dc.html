@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Nueva venta en celular · CRM Imperio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#f6f8fb}
+a{color:#0e7fe6}a:hover{color:#108dff}
+.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.tab{font-variant-numeric:tabular-nums}
+input,select,textarea,button{font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#108dff !important;box-shadow:0 0 0 3px rgba(16,141,255,.18)}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; overflow: hidden; background: #f6f8fb; color: #2f384f; font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; letter-spacing: -0.01em; font-size: 14px; line-height: 20px; display: flex; flex-direction: column">
+
+  <!-- Barra de navegación + progreso -->
+  <header style="background: #ffffff; border-bottom: 1px solid #dee2e6; padding: 0 4px 14px; flex-shrink: 0">
+    <div style="height: 52px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center">
+      <a href="Movil.dc.html" style="justify-self: start; display: inline-flex; align-items: center; min-height: 44px; padding: 0 12px; font-size: 15px; font-weight: 600; text-decoration: none">Cancelar</a>
+      <span style="font-size: 15px; line-height: 20px; font-weight: 600">Nueva venta</span>
+      <span class="tab" style="justify-self: end; padding: 0 12px; font-size: 13px; color: #4a5a6b">{{step}} de 4</span>
+    </div>
+    <div style="padding: 0 12px; display: flex; flex-direction: column; gap: 10px">
+      <div aria-hidden="true" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px">
+        <span style="height: 4px; border-radius: 2px; background: {{seg1}}"></span>
+        <span style="height: 4px; border-radius: 2px; background: {{seg2}}"></span>
+        <span style="height: 4px; border-radius: 2px; background: {{seg3}}"></span>
+        <span style="height: 4px; border-radius: 2px; background: {{seg4}}"></span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <h1 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -0.04em">{{stepTitle}}</h1>
+        <p style="margin: 0; font-size: 13px; line-height: 18px; color: #4a5a6b">{{stepSub}}</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido del paso -->
+  <div style="flex: 1; overflow-y: auto; padding: 18px 16px 24px; display: flex; flex-direction: column; gap: 16px">
+
+    <!-- Paso 1 · Cliente -->
+    <sc-if value="{{s1}}" hint-placeholder-val="{{false}}">
+      <div role="group" aria-label="Tipo de venta" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; padding: 2px; background: #f0f4f7; border: 1px solid #dee2e6; border-radius: 4px">
+        <button type="button" onClick="{{pickCredito}}" style="height: 40px; border: 0; border-radius: 4px; background: {{credBg}}; box-shadow: {{credShadow}}; font-size: 14px; font-weight: 600; color: #2f384f">Crédito</button>
+        <button type="button" onClick="{{pickContado}}" style="height: 40px; border: 0; border-radius: 4px; background: {{contBg}}; box-shadow: {{contShadow}}; font-size: 14px; font-weight: 600; color: #2f384f">Contado</button>
+      </div>
+      <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">DNI{{reqMark}}</span><input type="text" inputmode="numeric" placeholder="Sin puntos ni espacios" style="height: 48px; padding: 0 14px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+      <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Apellido y nombre *</span><input type="text" placeholder="Como figura en el DNI" style="height: 48px; padding: 0 14px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+      <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">WhatsApp *</span><input type="tel" inputmode="numeric" placeholder="381…" style="height: 48px; padding: 0 14px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+      <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Teléfono alternativo{{reqMark}}</span><input type="tel" inputmode="numeric" placeholder="Para llamar" style="height: 48px; padding: 0 14px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+    </sc-if>
+
+    <!-- Paso 2 · Domicilio -->
+    <sc-if value="{{s2}}" hint-placeholder-val="{{false}}">
+      <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Domicilio{{reqMark}}</span><input type="text" placeholder="Calle y número" style="height: 48px; padding: 0 14px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+      <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Barrio{{reqMark}}</span><input type="text" placeholder="Barrio" style="height: 48px; padding: 0 14px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+      <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Localidad{{reqMark}}</span>
+        <select style="height: 48px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 16px; color: #2f384f; box-sizing: border-box">
+          <option>Seleccionar localidad</option><option>San Miguel de Tucumán</option><option>Yerba Buena</option><option>Tafí Viejo</option><option>Banda del Río Salí</option><option>Concepción</option><option>Famaillá</option><option>Tafí del Valle</option><option>Leales</option>
+        </select>
+      </label>
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <span style="font-size: 13px; font-weight: 600">Ubicación en Google Maps *</span>
+        <button type="button" style="height: 48px; border: 1px solid #108dff; border-radius: 8px; background: rgba(16, 141, 255, .06); font-size: 15px; font-weight: 600; color: #2f384f; display: inline-flex; align-items: center; justify-content: center; gap: 8px">
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="color: #108dff"><circle cx="12" cy="12" r="10"></circle><line x1="22" x2="18" y1="12" y2="12"></line><line x1="6" x2="2" y1="12" y2="12"></line><line x1="12" x2="12" y1="6" y2="2"></line><line x1="12" x2="12" y1="22" y2="18"></line></svg>
+          Usar mi ubicación actual
+        </button>
+        <input type="url" aria-label="Enlace de Google Maps" placeholder="O pegá el enlace (https://maps…)" style="height: 48px; padding: 0 14px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 16px; color: #2f384f; box-sizing: border-box">
+        <span style="font-size: 12px; line-height: 16px; color: #4a5a6b">Si estás en la casa del cliente, la ubicación actual es la más precisa.</span>
+      </div>
+    </sc-if>
+
+    <!-- Paso 3 · Venta -->
+    <sc-if value="{{s3}}" hint-placeholder-val="{{true}}">
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <button type="button" onClick="{{pickNormal}}" style="padding: 12px; border: {{normBorder}}; border-radius: 8px; background: {{normBg}}; text-align: left; display: flex; flex-direction: column; gap: 2px; color: #2f384f">
+          <span style="font-size: 15px; font-weight: 600">Normal</span><span style="font-size: 12px; line-height: 16px; color: #4a5a6b">Con cobrador</span>
+        </button>
+        <button type="button" onClick="{{pickRapi}}" style="padding: 12px; border: {{rapiBorder}}; border-radius: 8px; background: {{rapiBg}}; text-align: left; display: flex; flex-direction: column; gap: 2px; color: #2f384f">
+          <span style="font-size: 15px; font-weight: 600">RapiCompra</span><span style="font-size: 12px; line-height: 16px; color: #4a5a6b">Comisión 6%</span>
+        </button>
+      </div>
+      <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Artículo *</span><input type="text" value="Heladera No Frost 360 L" style="height: 48px; padding: 0 14px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+
+      <sc-if value="{{isCredito}}" hint-placeholder-val="{{true}}">
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+          <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Cuotas *</span><input class="tab" type="number" inputmode="numeric" value="{{cuotas}}" onChange="{{onCuotas}}" style="height: 48px; padding: 0 14px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 16px; color: #2f384f; box-sizing: border-box; width: 100%"></label>
+          <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Monto cuota *</span><input class="tab" type="number" inputmode="numeric" value="{{monto}}" onChange="{{onMonto}}" style="height: 48px; padding: 0 14px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 16px; color: #2f384f; box-sizing: border-box; width: 100%"></label>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span style="font-size: 13px; font-weight: 600">Frecuencia</span>
+          <div role="group" aria-label="Frecuencia" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; padding: 2px; background: #f0f4f7; border: 1px solid #dee2e6; border-radius: 4px">
+            <sc-for list="{{freqs}}" as="f" hint-placeholder-count="3">
+              <button type="button" onClick="{{f.pick}}" style="height: 38px; border: 0; border-radius: 4px; background: {{f.bg}}; box-shadow: {{f.shadow}}; font-size: 13px; font-weight: 600; color: #2f384f">{{f.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <span style="font-size: 13px; font-weight: 600">Día de cobro *</span>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <sc-for list="{{dias}}" as="d" hint-placeholder-count="4">
+              <button type="button" onClick="{{d.pick}}" disabled="{{d.disabled}}" style="height: 40px; padding: 0 14px; border: {{d.border}}; border-radius: 4px; background: {{d.bg}}; font-size: 14px; font-weight: 600; color: {{d.color}}">{{d.label}}</button>
+            </sc-for>
+          </div>
+          <span style="font-size: 12px; line-height: 16px; color: #4a5a6b">Sábado solo para Tafí del Valle y Leales.</span>
+        </div>
+        <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Adelanto ($)</span><input class="tab" type="number" inputmode="numeric" value="{{adelanto}}" onChange="{{onAdelanto}}" style="height: 48px; padding: 0 14px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+      </sc-if>
+      <sc-if value="{{isContado}}" hint-placeholder-val="{{false}}">
+        <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Precio de contado ($) *</span><input class="tab" type="number" inputmode="numeric" value="{{monto}}" onChange="{{onMonto}}" style="height: 48px; padding: 0 14px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+      </sc-if>
+
+      <div style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; box-shadow: 0 2px 8px rgba(9, 30, 66, .06); padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+        <span style="display: flex; flex-direction: column"><span style="font-size: 12px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #4a5a6b">Total final</span><span class="tab" style="font-size: 13px; line-height: 18px; color: #4a5a6b">{{planFmt}}</span></span>
+        <span class="tab" style="font-size: 24px; line-height: 30px; font-weight: 700; letter-spacing: -0.04em">{{totalFmt}}</span>
+      </div>
+    </sc-if>
+
+    <!-- Paso 4 · Fotos -->
+    <sc-if value="{{s4}}" hint-placeholder-val="{{false}}">
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <button type="button" style="height: 88px; border: 0; border-radius: 8px; background: #108dff; color: #ffffff; font-size: 15px; font-weight: 600; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px">
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 24px; height: 24px"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>
+          Sacar foto
+        </button>
+        <button type="button" style="height: 88px; border: 1px solid #dee2e6; border-radius: 8px; background: #ffffff; color: #2f384f; font-size: 15px; font-weight: 600; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px">
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 24px; height: 24px; color: #108dff"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>
+          Elegir de la galería
+        </button>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+        <figure style="margin: 0; background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden">
+          <div style="height: 76px; background: #f0f4f7; display: flex; align-items: center; justify-content: center; color: #8c98a4; font-size: 11px">[foto]</div>
+          <figcaption style="padding: 6px 8px; font-size: 12px; font-weight: 600">DNI frente</figcaption>
+        </figure>
+        <figure style="margin: 0; background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden">
+          <div style="height: 76px; background: #f0f4f7; display: flex; align-items: center; justify-content: center; color: #8c98a4; font-size: 11px">[foto]</div>
+          <figcaption style="padding: 6px 8px; font-size: 12px; font-weight: 600">DNI dorso</figcaption>
+        </figure>
+        <div style="border: 1px dashed #8c98a4; border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 8px; text-align: center; font-size: 12px; line-height: 16px; color: #4a5a6b">
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="color: #8c98a4"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+          Recibo de sueldo
+        </div>
+      </div>
+      <h2 style="margin: 6px 0 0; padding: 0 4px; font-size: 12px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #4a5a6b">Trabajo · opcional</h2>
+      <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Lugar de trabajo</span><input type="text" placeholder="Empresa o comercio" style="height: 48px; padding: 0 14px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+      <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Ocupación · tipo de empleo</span><input type="text" placeholder="Cajera · rel. dependencia" style="height: 48px; padding: 0 14px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+      <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Observaciones</span><textarea rows="3" placeholder="Horarios de entrega, aclaraciones…" style="padding: 12px 14px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 16px; line-height: 22px; color: #2f384f; resize: vertical; box-sizing: border-box"></textarea></label>
+    </sc-if>
+  </div>
+
+  <!-- Barra de acciones -->
+  <div style="flex-shrink: 0; padding: 12px 16px 28px; background: #ffffff; border-top: 1px solid #dee2e6; display: grid; grid-template-columns: 1fr 2fr; gap: 10px">
+    <button type="button" onClick="{{back}}" disabled="{{isFirst}}" style="height: 52px; border: 1px solid #dee2e6; border-radius: 8px; background: #ffffff; font-size: 15px; font-weight: 600; color: {{backColor}}">Atrás</button>
+    <sc-if value="{{notLast}}" hint-placeholder-val="{{true}}">
+      <button type="button" onClick="{{next}}" style="height: 52px; border: 0; border-radius: 8px; background: #108dff; font-size: 15px; font-weight: 600; color: #ffffff; display: inline-flex; align-items: center; justify-content: center; gap: 6px">
+        Siguiente
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"></path></svg>
+      </button>
+    </sc-if>
+    <sc-if value="{{isLast}}" hint-placeholder-val="{{false}}">
+      <a href="Movil.dc.html" style="height: 52px; border-radius: 8px; background: #108dff; font-size: 15px; font-weight: 600; color: #ffffff; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+        Guardar venta
+      </a>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"pasoInicial":{"editor":"enum","options":["1 · Cliente","2 · Domicilio","3 · Venta","4 · Fotos"],"default":"3 · Venta"},"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tipo: 'credito', metodo: 'normal', cuotas: 12, monto: 93400, adelanto: 119200, frec: 'Semanal', dia: 'Lunes' };
+  }
+  renderVals() {
+    const s = this.state || {};
+    const start = parseInt(String(this.props.pasoInicial ?? '3 · Venta'), 10) || 3;
+    const step = s.step ?? start;
+    const credito = s.tipo !== 'contado';
+    const rapi = s.metodo === 'rapicompra';
+    const cuotas = Number(s.cuotas) || 0, monto = Number(s.monto) || 0, adelanto = Number(s.adelanto) || 0;
+    const total = credito ? cuotas * monto + adelanto : monto;
+    const fmt = (n) => '$' + Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    const titles = {
+      1: ['Cliente', 'Datos de contacto de quien compra.'],
+      2: ['Domicilio', 'Dónde vive y cómo llegar.'],
+      3: ['Venta', 'Artículo y plan de pago.'],
+      4: ['Fotos y cierre', 'DNI, recibo y datos opcionales.']
+    };
+    const on = '#108dff', off = '#dee2e6';
+    const seg = (n) => (n <= step ? on : off);
+    const segOn = { bg: '#ffffff', shadow: '0 2px 8px rgba(9, 30, 66, .06)' };
+    const segOff = { bg: 'transparent', shadow: 'none' };
+    const cardOn = { border: '1px solid #108dff', bg: 'rgba(16, 141, 255, .06)' };
+    const cardOff = { border: '1px solid #dee2e6', bg: '#ffffff' };
+    const freqs = ['Semanal', 'Quincenal', 'Mensual'].map((f) => {
+      const a = s.frec === f ? segOn : segOff;
+      return { label: f, bg: a.bg, shadow: a.shadow, pick: () => this.setState({ frec: f }) };
+    });
+    const dias = ['Lunes', 'Martes', 'Miércoles', 'Sábado'].map((d) => {
+      const disabled = d === 'Sábado';
+      const sel = s.dia === d;
+      return {
+        label: d, disabled,
+        border: sel ? '1px solid #108dff' : '1px solid #dee2e6',
+        bg: sel ? 'rgba(16, 141, 255, .10)' : (disabled ? '#f0f4f7' : '#ffffff'),
+        color: disabled ? '#8c98a4' : '#2f384f',
+        pick: () => { if (!disabled) this.setState({ dia: d }); }
+      };
+    });
+    const c = credito ? segOn : segOff, k = credito ? segOff : segOn;
+    const n = rapi ? cardOff : cardOn, r = rapi ? cardOn : cardOff;
+    return {
+      step, stepTitle: titles[step][0], stepSub: titles[step][1],
+      seg1: seg(1), seg2: seg(2), seg3: seg(3), seg4: seg(4),
+      s1: step === 1, s2: step === 2, s3: step === 3, s4: step === 4,
+      isFirst: step === 1, isLast: step === 4, notLast: step !== 4,
+      backColor: step === 1 ? '#8c98a4' : '#2f384f',
+      back: () => this.setState({ step: Math.max(1, step - 1) }),
+      next: () => this.setState({ step: Math.min(4, step + 1) }),
+      isCredito: credito, isContado: !credito,
+      credBg: c.bg, credShadow: c.shadow, contBg: k.bg, contShadow: k.shadow,
+      normBorder: n.border, normBg: n.bg, rapiBorder: r.border, rapiBg: r.bg,
+      pickCredito: () => this.setState({ tipo: 'credito' }),
+      pickContado: () => this.setState({ tipo: 'contado' }),
+      pickNormal: () => this.setState({ metodo: 'normal' }),
+      pickRapi: () => this.setState({ metodo: 'rapicompra' }),
+      onCuotas: (e) => this.setState({ cuotas: e.target.value }),
+      onMonto: (e) => this.setState({ monto: e.target.value }),
+      onAdelanto: (e) => this.setState({ adelanto: e.target.value }),
+      cuotas: s.cuotas, monto: s.monto, adelanto: s.adelanto,
+      freqs, dias,
+      reqMark: credito ? ' *' : '',
+      totalFmt: fmt(total),
+      planFmt: credito ? (cuotas + ' × ' + fmt(monto) + ' · ' + String(s.frec).toLowerCase()) : 'Contado' + (rapi ? ' · RapiCompra' : '')
+    };
+  }
+}
+</script>
+</body>
+</html>

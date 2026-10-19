@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nueva venta · CRM Imperio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#f6f8fb}
+a{color:#0e7fe6}a:hover{color:#108dff}
+.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.tab{font-variant-numeric:tabular-nums}
+input,select,textarea{font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#108dff !important;box-shadow:0 0 0 3px rgba(16,141,255,.18)}
+</style>
+</head>
+<body>
+<div style="min-height: 1780px; background: #f6f8fb; color: #2f384f; font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; letter-spacing: -0.01em; font-size: 14px; line-height: 20px; display: flex; flex-direction: column">
+
+<header style="min-height: 70px; background: #ffffff; border-bottom: 1px solid #dee2e6; box-shadow: 0 2px 8px rgba(9, 30, 66, .06); display: flex; flex-wrap: wrap; align-items: center; gap: 16px; padding: 12px 24px; box-sizing: border-box">
+  <a href="Main.html" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: #2f384f; flex-shrink: 0">
+    <img src="../assets/logo.jpg" alt="Imperio Comercial" style="width: 40px; height: 40px; border-radius: 4px; object-fit: cover; border: 1px solid #dee2e6">
+    <span style="display: flex; flex-direction: column">
+      <span style="font-size: 15px; line-height: 20px; font-weight: 700">CRM Imperio</span>
+      <span style="font-size: 12px; line-height: 16px; color: #4a5a6b">Ventas a crédito</span>
+    </span>
+  </a>
+  <div style="display: flex; align-items: center; gap: 10px; margin-left: auto">
+    <span style="width: 36px; height: 36px; border-radius: 50%; background: #522c8f; color: #ffffff; font-size: 13px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">AQ</span>
+    <span style="display: flex; flex-direction: column">
+      <span style="font-size: 13px; line-height: 18px; font-weight: 600">Alejandro Quevedo</span>
+      <span style="font-size: 12px; line-height: 16px; color: #4a5a6b">Administrador</span>
+    </span>
+  </div>
+</header>
+
+<main style="flex: 1; padding: 20px 24px 48px; box-sizing: border-box">
+  <div style="max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px">
+
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <a href="Main.html" style="align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14px; font-weight: 600; text-decoration: none">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+        Panel
+      </a>
+      <h1 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -0.04em">Nueva venta</h1>
+      <p style="margin: 0; font-size: 13px; line-height: 18px; color: #4a5a6b">Los campos con * son obligatorios. En contado solo pedimos nombre, WhatsApp, ubicación y artículo.</p>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start">
+
+      <!-- Formulario -->
+      <form style="flex: 999 1 600px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+
+        <!-- 1. Tipo -->
+        <section style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; box-shadow: 0 2px 8px rgba(9, 30, 66, .06); padding: 20px 24px; display: flex; flex-direction: column; gap: 18px">
+          <h2 style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 15px; line-height: 20px; font-weight: 600">
+            <span class="tab" style="width: 24px; height: 24px; border-radius: 4px; background: #f0f4f7; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">1</span>
+            Tipo de venta
+          </h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px">
+            <label style="display: flex; gap: 12px; padding: 14px 16px; border-radius: 8px; cursor: pointer; border: 1px solid #108dff; background: rgba(16, 141, 255, .06)">
+              <input type="radio" name="sale_type" checked="" style="margin: 3px 0 0; accent-color: #108dff; width: 18px; height: 18px">
+              <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Crédito</span><span style="font-size: 13px; line-height: 18px; color: #4a5a6b">En cuotas, pasa por verificación</span></span>
+            </label>
+            <label style="display: flex; gap: 12px; padding: 14px 16px; border-radius: 8px; cursor: pointer; border: 1px solid #dee2e6; background: #ffffff">
+              <input type="radio" name="sale_type" style="margin: 3px 0 0; accent-color: #108dff; width: 18px; height: 18px">
+              <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Contado</span><span style="font-size: 13px; line-height: 18px; color: #4a5a6b">Pago total, carga abreviada</span></span>
+            </label>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <span style="font-size: 13px; font-weight: 600">Método de pago</span>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px">
+              <label style="display: flex; gap: 12px; padding: 14px 16px; border-radius: 8px; cursor: pointer; border: 1px solid #108dff; background: rgba(16, 141, 255, .06)">
+                <input type="radio" name="payment_method" checked="" style="margin: 3px 0 0; accent-color: #108dff; width: 18px; height: 18px">
+                <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">Normal</span><span style="font-size: 13px; line-height: 18px; color: #4a5a6b">Cobro con cobrador</span></span>
+              </label>
+              <label style="display: flex; gap: 12px; padding: 14px 16px; border-radius: 8px; cursor: pointer; border: 1px solid #dee2e6; background: #ffffff">
+                <input type="radio" name="payment_method" style="margin: 3px 0 0; accent-color: #108dff; width: 18px; height: 18px">
+                <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px; font-weight: 600">RapiCompra</span><span style="font-size: 13px; line-height: 18px; color: #4a5a6b">Comisión del 6%</span></span>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. Cliente -->
+        <section style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; box-shadow: 0 2px 8px rgba(9, 30, 66, .06); padding: 20px 24px; display: flex; flex-direction: column; gap: 18px">
+          <h2 style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 15px; line-height: 20px; font-weight: 600">
+            <span class="tab" style="width: 24px; height: 24px; border-radius: 4px; background: #f0f4f7; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">2</span>
+            Datos del cliente
+          </h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px">
+            <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">DNI *</span><input type="text" inputmode="numeric" placeholder="Sin puntos ni espacios" style="height: 44px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+            <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Apellido y nombre *</span><input type="text" placeholder="Como figura en el DNI" style="height: 44px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+            <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">WhatsApp *</span><input type="tel" inputmode="numeric" placeholder="381…" style="height: 44px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+            <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Teléfono alternativo *</span><input type="tel" inputmode="numeric" placeholder="Para llamar" style="height: 44px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+            <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Domicilio *</span><input type="text" placeholder="Calle y número" style="height: 44px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+            <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Barrio *</span><input type="text" placeholder="Barrio" style="height: 44px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+            <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Localidad *</span>
+              <select style="height: 44px; padding: 0 10px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box">
+                <option>Seleccionar localidad</option><option>San Miguel de Tucumán</option><option>Yerba Buena</option><option>Tafí Viejo</option><option>Banda del Río Salí</option><option>Concepción</option><option>Famaillá</option><option>Tafí del Valle</option><option>Leales</option>
+              </select>
+            </label>
+            <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Ubicación en Google Maps *</span>
+              <span style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; box-sizing: border-box">
+                <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="color: #108dff"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                <input type="url" placeholder="Pegá el enlace (https://maps…)" style="flex: 1; min-width: 0; border: 0; background: transparent; font-size: 16px; color: #2f384f; box-shadow: none">
+              </span>
+            </label>
+          </div>
+        </section>
+
+        <!-- 3. Laborales -->
+        
+        <section style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; box-shadow: 0 2px 8px rgba(9, 30, 66, .06); padding: 20px 24px; display: flex; flex-direction: column; gap: 18px">
+          <h2 style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 15px; line-height: 20px; font-weight: 600">
+            <span class="tab" style="width: 24px; height: 24px; border-radius: 4px; background: #f0f4f7; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">3</span>
+            Datos laborales
+            <span style="font-size: 12px; font-weight: 400; color: #4a5a6b">Opcional</span>
+          </h2>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px">
+            <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Tipo de empleo</span><input type="text" placeholder="Rel. dependencia, monotributo…" style="height: 44px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+            <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Ocupación</span><input type="text" placeholder="Empleado de comercio" style="height: 44px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+            <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Lugar de trabajo</span><input type="text" placeholder="Empresa o comercio" style="height: 44px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+            <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Domicilio laboral</span><input type="text" placeholder="Dirección del trabajo" style="height: 44px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+          </div>
+        </section>
+        
+
+        <!-- 4. Venta -->
+        <section style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; box-shadow: 0 2px 8px rgba(9, 30, 66, .06); padding: 20px 24px; display: flex; flex-direction: column; gap: 18px">
+          <h2 style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 15px; line-height: 20px; font-weight: 600">
+            <span class="tab" style="width: 24px; height: 24px; border-radius: 4px; background: #f0f4f7; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">4</span>
+            Detalle de la venta
+          </h2>
+          <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Artículo *</span><input type="text" value="Heladera No Frost 360 L" style="height: 44px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+          
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px">
+              <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Cuotas *</span><input class="tab" type="number" min="1" value="12" style="height: 44px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+              <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Monto de cuota ($) *</span><input class="tab" type="number" min="0" value="93400" style="height: 44px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+              <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Adelanto ($)</span><input class="tab" type="number" min="0" value="119200" style="height: 44px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box"></label>
+              <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Frecuencia</span>
+                <select style="height: 44px; padding: 0 10px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box"><option>Semanal</option><option>Quincenal</option><option>Mensual</option></select>
+              </label>
+              <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Día de cobro *</span>
+                <select style="height: 44px; padding: 0 10px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; color: #2f384f; box-sizing: border-box"><option>Lunes</option><option>Martes</option><option>Miércoles</option><option>Sábado</option></select>
+              </label>
+            </div>
+            <p style="margin: 0; font-size: 13px; line-height: 18px; color: #4a5a6b">El sábado solo se habilita para Tafí del Valle y Leales.</p>
+          
+          
+        </section>
+
+        <!-- 5. Documentación -->
+        <section style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; box-shadow: 0 2px 8px rgba(9, 30, 66, .06); padding: 20px 24px; display: flex; flex-direction: column; gap: 18px">
+          <h2 style="margin: 0; display: flex; align-items: center; gap: 10px; font-size: 15px; line-height: 20px; font-weight: 600">
+            <span class="tab" style="width: 24px; height: 24px; border-radius: 4px; background: #f0f4f7; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center">5</span>
+            Documentación y observaciones
+          </h2>
+          <label style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 28px 16px; border: 1px dashed #8c98a4; border-radius: 8px; background: #f6f8fb; cursor: pointer; text-align: center">
+            <span style="width: 44px; height: 44px; border-radius: 4px; background: rgba(16, 141, 255, .12); color: #0e7fe6; display: inline-flex; align-items: center; justify-content: center"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" x2="12" y1="3" y2="15"></line></svg></span>
+            <span style="font-size: 15px; font-weight: 600">Arrastrá las fotos o hacé clic para elegirlas</span>
+            <span style="font-size: 13px; line-height: 18px; color: #4a5a6b">DNI frente y dorso, recibo de sueldo · JPG, PNG o PDF, hasta 5 MB cada uno</span>
+            <input type="file" multiple="" accept="image/*,.pdf" style="position: absolute; width: 1px; height: 1px; opacity: 0">
+          </label>
+          <label style="display: flex; flex-direction: column; gap: 6px"><span style="font-size: 13px; font-weight: 600">Observaciones</span>
+            <textarea rows="4" placeholder="Horarios de entrega, aclaraciones del crédito, etc." style="padding: 10px 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #f0f4f7; font-size: 16px; line-height: 22px; color: #2f384f; resize: vertical; box-sizing: border-box"></textarea>
+          </label>
+        </section>
+      </form>
+
+      <!-- Resumen -->
+      <aside style="flex: 1 1 320px; min-width: 0; display: flex; flex-direction: column; gap: 16px">
+        <section style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; box-shadow: 0 2px 8px rgba(9, 30, 66, .06); overflow: hidden">
+          <div style="padding: 18px 20px; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 12px; line-height: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #4a5a6b">Resumen · crédito</span>
+            <span class="tab" style="font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -0.04em">$1.240.000</span>
+            <span style="font-size: 13px; line-height: 18px; color: #4a5a6b">Valor total final</span>
+          </div>
+          
+            <div style="display: flex; justify-content: space-between; gap: 12px; min-height: 44px; align-items: center; padding: 0 20px; border-top: 1px solid #dee2e6"><span style="color: #4a5a6b">Plan</span><span class="tab" style="font-weight: 600">12 × $93.400</span></div>
+            <div style="display: flex; justify-content: space-between; gap: 12px; min-height: 44px; align-items: center; padding: 0 20px; border-top: 1px solid #dee2e6"><span style="color: #4a5a6b">Adelanto</span><span class="tab">$119.200</span></div>
+          
+          
+          <div style="padding: 16px 20px; border-top: 1px solid #dee2e6; display: flex; flex-direction: column; gap: 10px">
+            <a href="Main.html" style="height: 48px; border-radius: 8px; background: #108dff; color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px">
+              <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>
+              Guardar venta
+            </a>
+            <a href="Main.html" style="height: 44px; border-radius: 8px; border: 1px solid #dee2e6; color: #2f384f; text-decoration: none; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center">Cancelar</a>
+          </div>
+        </section>
+
+        <section style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px">
+          <h2 style="margin: 0; font-size: 15px; line-height: 20px; font-weight: 600">Antes de guardar</h2>
+          <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 13px; line-height: 18px">
+            <li style="display: flex; gap: 10px"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px; color: #287f71; margin-top: 1px"><path d="M20 6 9 17l-5-5"></path></svg>Tipo y método de pago elegidos</li>
+            <li style="display: flex; gap: 10px"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px; color: #e77636; margin-top: 1px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16.5 12"></polyline></svg>Faltan datos obligatorios del cliente</li>
+            <li style="display: flex; gap: 10px"><svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px; color: #e77636; margin-top: 1px"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16.5 12"></polyline></svg>Sin fotos del DNI todavía</li>
+          </ul>
+        </section>
+      </aside>
+    </div>
+  </div>
+</main>
+</div>
+</body>
+</html>

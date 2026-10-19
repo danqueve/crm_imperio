@@ -1,0 +1,494 @@
+{
+ "name": "Agenda DAQ",
+ "version": 1,
+ "meta": {
+  "source": "github",
+  "repo": "danqueve/agenda_daq",
+  "ref": "main@d3fa328",
+  "package": ".",
+  "paths": {
+   "tokens": [
+    "assets/css/tokens.css"
+   ],
+   "fonts": [
+    "assets/css/base.css"
+   ],
+   "assets": [
+    "assets/icons/"
+   ],
+   "docs": [
+    "docs/DESIGN.md",
+    "CLAUDE.md"
+   ],
+   "components": [
+    "assets/css/components.css",
+    "assets/css/base.css",
+    "ui.php",
+    "index.php"
+   ]
+  },
+  "synced": "2026-10-07"
+ },
+ "color": {
+  "themes": [
+   {
+    "id": "light",
+    "name": "Claro"
+   },
+   {
+    "id": "dark",
+    "name": "Oscuro"
+   }
+  ],
+  "tokens": [
+   {
+    "name": "bg-grouped",
+    "value": {
+     "light": "#f6f8fb",
+     "dark": "#2a2b34"
+    },
+    "usage": "Fondo de pantalla (body) y fondo de los sheets."
+   },
+   {
+    "name": "bg-card",
+    "value": {
+     "light": "#ffffff",
+     "dark": "#1f2028"
+    },
+    "usage": "Grupos, celdas, cabecera de workspace, barra lateral y HUD."
+   },
+   {
+    "name": "bg-card-2",
+    "value": {
+     "light": "#f0f4f7",
+     "dark": "#343a40"
+    },
+    "usage": "Campos, chips, pills, segmented, celda presionada (:active) y hover de botones secundarios."
+   },
+   {
+    "name": "label",
+    "value": {
+     "light": "#2f384f",
+     "dark": "#eceef1"
+    },
+    "usage": "Texto principal sobre bg-grouped, bg-card y bg-card-2 (≥10:1 en ambos temas)."
+   },
+   {
+    "name": "label-2",
+    "value": {
+     "light": "#4a5a6b",
+     "dark": "#ced4da"
+    },
+    "usage": "Texto secundario: subtítulos de celda, encabezados de grupo, valores de formulario, placeholders. Sobre bg-card y bg-card-2 (≥6:1)."
+   },
+   {
+    "name": "label-3",
+    "value": {
+     "light": "#8c98a4",
+     "dark": "#8c98a4"
+    },
+    "usage": "Chevrons, grabber del sheet, ícono del estado vacío. Solo marcas no esenciales: 2.9:1 sobre bg-card en claro (no apto para texto en claro)."
+   },
+   {
+    "name": "separator",
+    "value": {
+     "light": "#dee2e6",
+     "dark": "#343a40"
+    },
+    "usage": "Líneas entre celdas, bordes de grupos, campos, chips y barras."
+   },
+   {
+    "name": "tint",
+    "value": {
+     "light": "#108dff"
+    },
+    "usage": "Color de la app: botones principales, links, anillo del día, pestaña activa, foco. Como texto sobre bg-card da 3.35:1 (solo apto ≥19px negrita o íconos); revisar."
+   },
+   {
+    "name": "tint-hover",
+    "value": {
+     "light": "#0e7fe6"
+    },
+    "usage": "Hover de btn-principal y workspace-create."
+   },
+   {
+    "name": "tint-contraste",
+    "value": {
+     "light": "#ffffff",
+     "dark": "#ffffff"
+    },
+    "usage": "Texto sobre tint (btn-principal, pill seleccionada, día seleccionado). Con tint da 3.35:1: falla AA para 14px; se mantiene como en el código."
+   },
+   {
+    "name": "red",
+    "value": {
+     "light": "#e7366b"
+    },
+    "usage": "Vencidos, eliminar, error-inline, badge de la tab bar, btn-principal--danger. 4.09:1 sobre blanco."
+   },
+   {
+    "name": "red-hover",
+    "value": {
+     "light": "#d03160"
+    },
+    "usage": "Hover de btn-principal--danger."
+   },
+   {
+    "name": "orange",
+    "value": {
+     "light": "#e77636"
+    },
+    "usage": "Para hoy, posponer (quick-action--orange), ícono de Notificaciones y Etiquetas en Ajustes. Con blanco 2.98:1: solo íconos."
+   },
+   {
+    "name": "orange-hover",
+    "value": {
+     "light": "#d06a31"
+    },
+    "usage": "Hover sobre acciones naranjas."
+   },
+   {
+    "name": "green",
+    "value": {
+     "light": "#287f71"
+    },
+    "usage": "Concretó, app instalada, ícono del HUD."
+   },
+   {
+    "name": "green-hover",
+    "value": {
+     "light": "#247266"
+    },
+    "usage": "Hover sobre acciones verdes."
+   },
+   {
+    "name": "gray",
+    "value": {
+     "light": "#8c98a4"
+    },
+    "usage": "Pestañas inactivas, banner de estado, cerrados / sin respuesta, cajita de ícono de sesiones."
+   },
+   {
+    "name": "indigo",
+    "value": {
+     "light": "#522c8f"
+    },
+    "usage": "Próximos días, puntos de la tira semanal, ícono de Cambiar contraseña."
+   },
+   {
+    "name": "indigo-hover",
+    "value": {
+     "light": "#45256f"
+    },
+    "usage": "Hover sobre acciones índigo."
+   },
+   {
+    "name": "avatar-1",
+    "value": {
+     "light": "#108dff"
+    },
+    "usage": "Fondo de avatar de iniciales (color derivado del hash del nombre), texto blanco. Con blanco <3.5:1."
+   },
+   {
+    "name": "avatar-2",
+    "value": {
+     "light": "#522c8f"
+    },
+    "usage": "Fondo de avatar de iniciales (color derivado del hash del nombre), texto blanco."
+   },
+   {
+    "name": "avatar-3",
+    "value": {
+     "light": "#963b68"
+    },
+    "usage": "Fondo de avatar de iniciales (color derivado del hash del nombre), texto blanco."
+   },
+   {
+    "name": "avatar-4",
+    "value": {
+     "light": "#db398a"
+    },
+    "usage": "Fondo de avatar de iniciales (color derivado del hash del nombre), texto blanco."
+   },
+   {
+    "name": "avatar-5",
+    "value": {
+     "light": "#e7366b"
+    },
+    "usage": "Fondo de avatar de iniciales (color derivado del hash del nombre), texto blanco."
+   },
+   {
+    "name": "avatar-6",
+    "value": {
+     "light": "#e77636"
+    },
+    "usage": "Fondo de avatar de iniciales (color derivado del hash del nombre), texto blanco. Con blanco <3.5:1."
+   },
+   {
+    "name": "avatar-7",
+    "value": {
+     "light": "#287f71"
+    },
+    "usage": "Fondo de avatar de iniciales (color derivado del hash del nombre), texto blanco."
+   },
+   {
+    "name": "avatar-8",
+    "value": {
+     "light": "#27ebb0"
+    },
+    "usage": "Fondo de avatar de iniciales (color derivado del hash del nombre), texto blanco. Con blanco da 1.54:1: iniciales casi ilegibles; revisar."
+   }
+  ]
+ },
+ "type": {
+  "fonts": [],
+  "families": {
+   "sistema": "\"Public Sans\", -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif"
+  },
+  "groups": [
+   {
+    "name": "Escala",
+    "family": "sistema",
+    "styles": [
+     {
+      "name": "large-title",
+      "fontSize": "28px",
+      "lineHeight": "34px",
+      "fontWeight": 700,
+      "sample": "Hoy",
+      "usage": "Título de cada pantalla (navbar__large-title)."
+     },
+     {
+      "name": "title2",
+      "fontSize": "20px",
+      "lineHeight": "26px",
+      "fontWeight": 600,
+      "sample": "Mariana Gómez",
+      "usage": "Nombre en la ficha de contacto y títulos de alert-sheet."
+     },
+     {
+      "name": "headline",
+      "fontSize": "15px",
+      "lineHeight": "20px",
+      "fontWeight": 600,
+      "sample": "Registrar recontacto",
+      "usage": "Nombre en celdas (cell__title), título de sheet y barra chica."
+     },
+     {
+      "name": "body-text",
+      "fontSize": "14px",
+      "lineHeight": "20px",
+      "fontWeight": 400,
+      "sample": "No tenés recontactos para hoy",
+      "usage": "Texto general y botones. Inputs van a 16px para evitar el zoom de iOS."
+     },
+     {
+      "name": "subhead",
+      "fontSize": "13px",
+      "lineHeight": "18px",
+      "fontWeight": 400,
+      "sample": "Crédito personal · necesita refinanciar",
+      "usage": "Subtítulos de celda, pills, segmented; color label-2."
+     },
+     {
+      "name": "footnote",
+      "fontSize": "12px",
+      "lineHeight": "16px",
+      "fontWeight": 600,
+      "sample": "PARA HOY",
+      "usage": "Encabezados de grupo (en mayúsculas, +0.04em), chips y metadatos; color label-2."
+     },
+     {
+      "name": "caption",
+      "fontSize": "11px",
+      "lineHeight": "14px",
+      "fontWeight": 400,
+      "sample": "14:30",
+      "usage": "Horas, badges y etiquetas de la tab bar; con tabular-nums."
+     }
+    ]
+   }
+  ]
+ },
+ "spacing": {
+  "tokens": [
+   {
+    "name": "margen-lateral",
+    "value": "24px",
+    "usage": "Padding horizontal de navbar, celdas y cuerpo de sheet (en móvil el workspace lo baja a 16px/14px)."
+   },
+   {
+    "name": "celda-alto-min",
+    "value": "44px",
+    "usage": "Alto mínimo de celda: área táctil."
+   },
+   {
+    "name": "sidebar-width",
+    "value": "260px",
+    "usage": "Ancho de la barra lateral a partir de 900px."
+   },
+   {
+    "name": "topbar-height",
+    "value": "70px",
+    "usage": "Alto de la cabecera de workspace fija."
+   }
+  ]
+ },
+ "radius": {
+  "tokens": [
+   {
+    "name": "radio-chico",
+    "value": "4px",
+    "usage": "Botones del workspace, segmented, pills, chips, campos, marca."
+   },
+   {
+    "name": "radio-grupo",
+    "value": "8px",
+    "usage": "Grupos, anillo del día, tira semanal, botones principales, nota."
+   },
+   {
+    "name": "radio-sheet",
+    "value": "8px",
+    "usage": "Esquinas del sheet (superiores en móvil, las cuatro en escritorio)."
+   }
+  ]
+ },
+ "shadow": {
+  "tokens": [
+   {
+    "name": "sombra-sm",
+    "value": {
+     "light": "0 2px 8px rgba(9, 30, 66, .06)",
+     "dark": "0 2px 8px rgba(0, 0, 0, .28)"
+    },
+    "usage": "Grupos, cabecera, segmented seleccionado, anillo y tira semanal."
+   },
+   {
+    "name": "sombra-md",
+    "value": {
+     "light": "0 8px 16px rgba(9, 30, 66, .14)",
+     "dark": "0 8px 16px rgba(0, 0, 0, .36)"
+    },
+    "usage": "Botón flotante (fab)."
+   },
+   {
+    "name": "sombra-lg",
+    "value": {
+     "light": "0 16px 48px rgba(9, 30, 66, .20)",
+     "dark": "0 16px 48px rgba(0, 0, 0, .45)"
+    },
+    "usage": "Sheets y panel de ficha anclado."
+   }
+  ]
+ },
+ "escala": {
+  "note": "Las mismas medidas de la escala tipográfica como variables sueltas: components.css las lee como var(--fs-*), var(--lh-*), var(--fw-*).",
+  "tokens": [
+   {
+    "name": "fs-large-title",
+    "value": "28px",
+    "usage": "Tamaño de large-title."
+   },
+   {
+    "name": "lh-large-title",
+    "value": "34px",
+    "usage": "Interlineado de large-title."
+   },
+   {
+    "name": "fw-large-title",
+    "value": "700",
+    "usage": "Peso de large-title."
+   },
+   {
+    "name": "fs-title2",
+    "value": "20px",
+    "usage": "Tamaño de title2."
+   },
+   {
+    "name": "lh-title2",
+    "value": "26px",
+    "usage": "Interlineado de title2."
+   },
+   {
+    "name": "fw-title2",
+    "value": "600",
+    "usage": "Peso de title2."
+   },
+   {
+    "name": "fs-headline",
+    "value": "15px",
+    "usage": "Tamaño de headline."
+   },
+   {
+    "name": "lh-headline",
+    "value": "20px",
+    "usage": "Interlineado de headline."
+   },
+   {
+    "name": "fw-headline",
+    "value": "600",
+    "usage": "Peso de headline."
+   },
+   {
+    "name": "fs-body",
+    "value": "14px",
+    "usage": "Tamaño de body-text."
+   },
+   {
+    "name": "lh-body",
+    "value": "20px",
+    "usage": "Interlineado de body-text."
+   },
+   {
+    "name": "fw-body",
+    "value": "400",
+    "usage": "Peso de body-text."
+   },
+   {
+    "name": "fs-subhead",
+    "value": "13px",
+    "usage": "Tamaño de subhead."
+   },
+   {
+    "name": "lh-subhead",
+    "value": "18px",
+    "usage": "Interlineado de subhead."
+   },
+   {
+    "name": "fw-subhead",
+    "value": "400",
+    "usage": "Peso de subhead."
+   },
+   {
+    "name": "fs-footnote",
+    "value": "12px",
+    "usage": "Tamaño de footnote."
+   },
+   {
+    "name": "lh-footnote",
+    "value": "16px",
+    "usage": "Interlineado de footnote."
+   },
+   {
+    "name": "fw-footnote",
+    "value": "600",
+    "usage": "Peso de footnote."
+   },
+   {
+    "name": "fs-caption",
+    "value": "11px",
+    "usage": "Tamaño de caption."
+   },
+   {
+    "name": "lh-caption",
+    "value": "14px",
+    "usage": "Interlineado de caption."
+   },
+   {
+    "name": "fw-caption",
+    "value": "400",
+    "usage": "Peso de caption."
+   }
+  ]
+ }
+}

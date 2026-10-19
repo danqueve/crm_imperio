@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Usuarios · CRM Imperio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap">
+<style>
+body{margin:0;background:#f6f8fb}
+a{color:#0e7fe6}a:hover{color:#108dff}
+.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.tab{font-variant-numeric:tabular-nums}
+button,input{font-family:inherit}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: #f6f8fb; color: #2f384f; font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; letter-spacing: -0.01em; font-size: 14px; line-height: 20px; display: flex; flex-direction: column">
+
+  <header style="background: #ffffff; border-bottom: 1px solid #dee2e6; padding: 4px 16px 12px; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: center; justify-content: space-between">
+      <a href="MasMovil.dc.html" style="display: inline-flex; align-items: center; gap: 2px; min-height: 44px; margin-left: -8px; font-size: 15px; font-weight: 600; text-decoration: none">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><path d="m15 18-6-6 6-6"></path></svg>
+        Más
+      </a>
+      <button type="button" style="display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border: 0; border-radius: 8px; background: #108dff; color: #ffffff; font-size: 14px; font-weight: 600">
+        <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 16px; height: 16px"><path d="M5 12h14"></path><path d="M12 5v14"></path></svg>
+        Nuevo
+      </button>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <h1 style="margin: 0; font-size: 28px; line-height: 34px; font-weight: 700; letter-spacing: -0.04em">Usuarios</h1>
+      <span style="font-size: 13px; line-height: 18px; color: #4a5a6b">Alta de personal y permisos</span>
+    </div>
+    <label style="display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; background: #f0f4f7; border: 1px solid #dee2e6; border-radius: 4px; color: #4a5a6b">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+      <input type="search" aria-label="Buscar usuario" placeholder="Nombre o DNI" style="flex: 1; min-width: 0; border: 0; background: transparent; font-size: 16px; color: #2f384f; outline: none">
+    </label>
+    <div style="display: flex; gap: 8px; overflow-x: auto; margin: 0 -16px; padding: 0 16px">
+      <button type="button" aria-pressed="true" style="flex-shrink: 0; height: 34px; padding: 0 12px; border: 1px solid #108dff; border-radius: 4px; background: rgba(16, 141, 255, .10); font-size: 13px; font-weight: 600; color: #2f384f">Todos · 18</button>
+      <button type="button" style="flex-shrink: 0; height: 34px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 13px; color: #2f384f">Vendedores · 9</button>
+      <button type="button" style="flex-shrink: 0; height: 34px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 13px; color: #2f384f">Verificadores · 3</button>
+      <button type="button" style="flex-shrink: 0; height: 34px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 13px; color: #2f384f">Entregadores · 2</button>
+      <button type="button" style="flex-shrink: 0; height: 34px; padding: 0 12px; border: 1px solid #dee2e6; border-radius: 4px; background: #ffffff; font-size: 13px; color: #2f384f">Supervisión · 4</button>
+    </div>
+  </header>
+
+  <div style="flex: 1; overflow: hidden; padding: 14px 16px 100px; display: flex; flex-direction: column; gap: 10px">
+    <div style="background: #ffffff; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden">
+      <sc-for list="{{users}}" as="u" hint-placeholder-count="6">
+        <a href="#" style="display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 14px; box-sizing: border-box; border-top: {{u.border}}; text-decoration: none; color: #2f384f">
+          <span style="width: 40px; height: 40px; border-radius: 50%; background: {{u.avatar}}; color: #ffffff; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0">{{u.ini}}</span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+            <span style="display: flex; align-items: center; gap: 8px">
+              <span style="font-size: 15px; line-height: 20px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{u.name}}</span>
+              <span style="flex-shrink: 0; height: 20px; padding: 0 6px; border-radius: 4px; background: #f0f4f7; font-size: 11px; font-weight: 600; color: #4a5a6b; display: inline-flex; align-items: center">{{u.role}}</span>
+            </span>
+            <span class="tab" style="display: flex; align-items: center; gap: 6px; font-size: 12px; line-height: 16px; color: #4a5a6b">
+              <span style="width: 8px; height: 8px; border-radius: 50%; background: {{u.dot}}"></span>
+              <span style="color: #2f384f; font-weight: 600">{{u.status}}</span> · DNI {{u.dni}}
+            </span>
+          </span>
+          <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="color: #8c98a4"><path d="m9 18 6-6-6-6"></path></svg>
+        </a>
+      </sc-for>
+    </div>
+    <p style="margin: 0; padding: 0 4px; font-size: 12px; line-height: 16px; color: #4a5a6b">Al dar de alta un usuario, la clave inicial es su número de DNI.</p>
+  </div>
+
+  <nav aria-label="Secciones" style="position: absolute; left: 0; right: 0; bottom: 0; height: 84px; padding-bottom: 20px; box-sizing: border-box; background: #ffffff; border-top: 1px solid #dee2e6; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr))">
+    <a href="Movil.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #4a5a6b">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      <span style="font-size: 11px; line-height: 14px">Panel</span>
+    </a>
+    <a href="HistorialMovil.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #4a5a6b">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><rect width="20" height="5" x="2" y="3" rx="1"></rect><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"></path><path d="M10 12h4"></path></svg>
+      <span style="font-size: 11px; line-height: 14px">Historial</span>
+    </a>
+    <a href="EntregasMovil.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #4a5a6b">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"></path><path d="M15 18H9"></path><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"></path><circle cx="17" cy="18" r="2"></circle><circle cx="7" cy="18" r="2"></circle></svg>
+      <span style="font-size: 11px; line-height: 14px">Entregas</span>
+    </a>
+    <a href="ComisionesMovil.dc.html" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #4a5a6b">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><line x1="12" x2="12" y1="2" y2="22"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+      <span style="font-size: 11px; line-height: 14px">Comisiones</span>
+    </a>
+    <a href="MasMovil.dc.html" aria-current="page" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-decoration: none; color: #108dff">
+      <svg class="i" viewBox="0 0 24 24" aria-hidden="true" style="width: 22px; height: 22px"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+      <span style="font-size: 11px; line-height: 14px; font-weight: 600; color: #2f384f">Más</span>
+    </a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const ST = { act: ['Activo', '#287f71'], ina: ['Inactivo', '#8c98a4'], blo: ['Bloqueado', '#e7366b'] };
+    const users = [
+      { ini: 'AQ', avatar: '#522c8f', name: 'Alejandro Quevedo (vos)', role: 'Admin', st: 'act', dni: '28.456.120' },
+      { ini: 'CM', avatar: '#108dff', name: 'Carla Medina', role: 'Vendedora · 5%', st: 'act', dni: '33.120.456' },
+      { ini: 'PI', avatar: '#287f71', name: 'Pablo Ibáñez', role: 'Verificador', st: 'act', dni: '31.774.902' },
+      { ini: 'DR', avatar: '#963b68', name: 'Diego Ruiz', role: 'Entregador', st: 'act', dni: '35.208.331' },
+      { ini: 'JS', avatar: '#db398a', name: 'Javier Sosa', role: 'Vendedor · 5%', st: 'blo', dni: '36.590.117' },
+      { ini: 'EV', avatar: '#e7366b', name: 'Emilia Vera', role: 'Vendedora · 5%', st: 'ina', dni: '38.012.445' }
+    ].map((u, i) => ({ ...u, status: ST[u.st][0], dot: ST[u.st][1], border: i === 0 ? '0' : '1px solid #dee2e6' }));
+    return { users };
+  }
+}
+</script>
+</body>
+</html>

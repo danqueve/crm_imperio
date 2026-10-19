@@ -155,20 +155,13 @@ if (!function_exists('getPaginationParams')) {
 // --- Status Badge ---
 
 if (!function_exists('status_badge')) {
+    /**
+     * Misma firma de siempre; desde el rediseño 2026 delega en ui_status()
+     * (includes/ui_helpers.php) para que todo el sistema use un solo lugar
+     * que define el punto de color + palabra de cada estado.
+     */
     function status_badge(string $status): string {
-        $map = [
-            'revision'  => ['classes' => 'chip-revision',  'label' => 'En Revisión', 'dot' => 'kpi-dot-revision animate-pulse'],
-            'aprobado'  => ['classes' => 'chip-aprobado',  'label' => 'Aprobado',    'dot' => 'kpi-dot-aprobado'],
-            'entregado' => ['classes' => 'chip-entregado', 'label' => 'Entregado',   'dot' => 'kpi-dot-entregado'],
-            'rechazado' => ['classes' => 'chip-rechazado', 'label' => 'Rechazado',   'dot' => 'kpi-dot-rechazado'],
-        ];
-        $cfg = $map[$status] ?? ['classes' => 'bg-gray-100 text-gray-500 border-gray-200', 'label' => ucfirst($status), 'dot' => 'bg-gray-400'];
-        return sprintf(
-            '<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide border %s"><span class="w-1.5 h-1.5 rounded-full shrink-0 %s"></span>%s</span>',
-            $cfg['classes'],
-            $cfg['dot'],
-            htmlspecialchars($cfg['label'])
-        );
+        return ui_status($status);
     }
 }
 
@@ -224,3 +217,6 @@ if (!function_exists('contact_result_label')) {
         return CONTACT_RESULT_TYPES[$result] ?? 'Sin especificar';
     }
 }
+
+// --- Rediseño 2026: helpers de presentación (íconos, avatares, montos, estados, menú por rol) ---
+require_once __DIR__ . '/ui_helpers.php';
