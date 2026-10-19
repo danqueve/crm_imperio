@@ -72,86 +72,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login · CRM Imperio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#2f384f">
+    <title>Ingreso · CRM Imperio</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
-<body style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;">
+<body class="login-page">
+    <main class="login-shell">
+        <section class="login-brand" aria-label="CRM Imperio">
+            <div class="login-brand__head">
+                <img class="login-brand__logo" src="img/logo.jpg" alt="Imperio Comercial">
+                <span>
+                    <span class="login-brand__name">CRM Imperio</span>
+                    <span class="login-brand__company">Imperio Comercial</span>
+                </span>
+            </div>
 
-    <div style="width:100%;max-width:400px;">
+            <div>
+                <h1 class="login-brand__claim">De la carga a la entrega, cada venta en un solo lugar.</h1>
+                <ol class="login-brand__steps">
+                    <li class="login-brand__step"><span class="icon-box"><?= ui_icon('circle-plus') ?></span><span><strong>Cargá la venta</strong><span>Cliente, plan de pago y documentación.</span></span></li>
+                    <li class="login-brand__step"><span class="icon-box"><?= ui_icon('shield-check') ?></span><span><strong>Verificá y aprobá</strong><span>Contacto con el cliente y decisión de crédito.</span></span></li>
+                    <li class="login-brand__step"><span class="icon-box"><?= ui_icon('truck') ?></span><span><strong>Entregá</strong><span>Seguimiento hasta que el producto llega al cliente.</span></span></li>
+                </ol>
+            </div>
 
-        <!-- Tarjeta login -->
-        <div style="background:var(--card);border-radius:20px;border:1.6px solid var(--line);box-shadow:0 8px 40px rgba(43,43,58,.1);overflow:hidden;">
+            <p class="login-brand__location">Tucumán · Santiago del Estero · Catamarca</p>
+        </section>
 
-            <!-- Franja de acento superior -->
-            <div style="height:6px;background:linear-gradient(90deg,var(--accent),#818cf8);"></div>
-
-            <div style="padding:36px 32px 28px;text-align:center;">
-
-                <!-- Logo -->
-                <div style="width:76px;height:76px;margin:0 auto 18px;border-radius:18px;border:1.8px solid var(--line);background:#fff;display:grid;place-items:center;overflow:hidden;box-shadow:0 2px 12px rgba(43,43,58,.08);">
-                    <img src="img/logo.jpg" alt="Imperio" style="width:100%;height:100%;object-fit:contain;padding:6px;">
+        <section class="login-form-pane" aria-label="Ingreso al sistema">
+            <form method="POST" action="index.php" class="login-card">
+                <?= csrf_field() ?>
+                <span class="login-grabber" aria-hidden="true"></span>
+                <div>
+                    <h2 class="login-card__title">Ingresá</h2>
+                    <p class="login-card__intro">Usá el usuario que te dio el administrador.</p>
                 </div>
 
-                <h1 style="font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--ink);margin:0 0 6px;">CRM Imperio</h1>
-                <p style="font-size:13px;color:var(--ink-3);margin:0 0 26px;">Ingrese sus credenciales para acceder</p>
-
-                <!-- Error -->
                 <?php if ($error): ?>
-                <div style="background:var(--rec-bg);border:1.5px solid rgba(159,18,57,.2);color:var(--rec-ink);font-size:13px;padding:10px 14px;border-radius:11px;margin-bottom:18px;display:flex;align-items:center;gap:8px;text-align:left;">
-                    <i data-lucide="alert-circle" style="width:16px;height:16px;flex-shrink:0;"></i>
-                    <?= htmlspecialchars($error) ?>
+                <div class="notice notice--error" role="alert">
+                    <?= ui_icon('alert-circle') ?><span><?= htmlspecialchars($error) ?></span>
                 </div>
                 <?php endif; ?>
 
-                <!-- Formulario -->
-                <form method="POST" action="index.php" style="text-align:left;display:flex;flex-direction:column;gap:14px;">
-                    <?= csrf_field() ?>
-
-                    <div>
-                        <label style="display:block;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;margin-left:2px;">Usuario · DNI</label>
-                        <div style="position:relative;">
-                            <input type="text" name="username" required
-                                   placeholder="Ej: 12345678"
-                                   class="input-light"
-                                   style="width:100%;padding:11px 12px 11px 38px;font-size:14px;">
-                            <i data-lucide="user" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--ink-3);pointer-events:none;"></i>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label style="display:block;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px;margin-left:2px;">Contraseña</label>
-                        <div style="position:relative;">
-                            <input type="password" name="password" required
-                                   placeholder="••••••••"
-                                   class="input-light"
-                                   style="width:100%;padding:11px 12px 11px 38px;font-size:14px;">
-                            <i data-lucide="lock" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--ink-3);pointer-events:none;"></i>
-                        </div>
-                    </div>
-
-                    <button type="submit"
-                            style="width:100%;padding:12px;border-radius:12px;background:var(--accent);color:#fff;font-weight:700;font-size:14px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px;transition:opacity .15s;"
-                            onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
-                        <i data-lucide="log-in" style="width:16px;height:16px;"></i>
-                        Ingresar al sistema
-                    </button>
-                </form>
-
-                <!-- Pie -->
-                <div style="margin-top:24px;padding-top:16px;border-top:1px dashed var(--line);font-size:11px;color:var(--ink-3);">
-                    &copy; <?= date('Y') ?> CRM Imperio · acceso seguro
+                <div class="field">
+                    <label class="field__label" for="username">Usuario</label>
+                    <input id="username" type="text" name="username" required autocomplete="username" placeholder="nombre.apellido" class="input">
                 </div>
-            </div>
-        </div>
 
-    </div>
+                <div class="field">
+                    <label class="field__label" for="password">Contraseña</label>
+                    <div class="login-password">
+                        <input id="password" type="password" name="password" required autocomplete="current-password" placeholder="••••••••" class="input">
+                        <button id="passwordToggle" type="button" class="login-password__toggle" aria-label="Mostrar contraseña" aria-pressed="false"><?= ui_icon('eye') ?></button>
+                    </div>
+                </div>
 
-    <script>lucide.createIcons();</script>
+                <button type="submit" class="btn btn--primary btn--lg btn--block">Ingresar <?= ui_icon('arrow-right') ?></button>
+                <p class="login-footer">&copy; <?= date('Y') ?> CRM Imperio · acceso seguro</p>
+            </form>
+        </section>
+    </main>
+
+    <script>
+        const passwordInput = document.getElementById('password');
+        const passwordToggle = document.getElementById('passwordToggle');
+        passwordToggle.addEventListener('click', function () {
+            const willShow = passwordInput.type === 'password';
+            passwordInput.type = willShow ? 'text' : 'password';
+            passwordToggle.setAttribute('aria-pressed', willShow ? 'true' : 'false');
+            passwordToggle.setAttribute('aria-label', willShow ? 'Ocultar contraseña' : 'Mostrar contraseña');
+            passwordToggle.innerHTML = '<i data-lucide="' + (willShow ? 'eye-off' : 'eye') + '" class="icon" aria-hidden="true"></i>';
+            if (window.lucide) lucide.createIcons();
+        });
+        if (window.lucide) lucide.createIcons();
+    </script>
 </body>
 </html>
