@@ -69,103 +69,68 @@ $filtrosParams = ['id' => $seller_id, 'search' => $search];
 include 'includes/header.php';
 ?>
 
-<main class="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 fade-in">
-    
-    <!-- Título y Regresar -->
-    <div class="flex items-center gap-4 mb-8">
-        <a href="lista_vendedores.php" class="p-2 rounded-full transition" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-3);" onmouseover="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--ink-3)'">
-            <i data-lucide="chevron-left"></i>
-        </a>
-        <div>
-            <h1 class="text-2xl font-bold tracking-tight" style="color:var(--ink);">Ventas de <?= htmlspecialchars($seller['name']) ?></h1>
-            <p class="text-sm text-slate-500">Historial completo de ventas cargadas (25 por página).</p>
+<main class="app-main">
+<div class="app-container">
+    <div class="page-head">
+        <div class="page-head__text">
+            <a href="lista_vendedores.php" class="navbar-back"><?= ui_icon('chevron-left') ?> Vendedores</a>
+            <h1 class="large-title">Ventas de <?= htmlspecialchars($seller['name']) ?></h1>
+            <p class="subhead">Historial completo de ventas cargadas · 25 por página.</p>
         </div>
     </div>
 
-    <!-- Barra de Filtros (Solo Buscador) -->
-    <div class="p-5 rounded-2xl mb-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-        <form class="flex flex-col xl:flex-row gap-4 items-end">
-            <input type="hidden" name="id" value="<?= $seller_id ?>">
-            <div class="w-full xl:flex-1">
-                <label class="block text-[10px] font-bold text-slate-500 uppercase mb-1.5 ml-1 tracking-widest">Buscar Cliente (Nombre o DNI)</label>
-                <div class="relative">
-                    <input type="text" name="search" value="<?= htmlspecialchars($search) ?>" class="w-full input-light px-4 py-2.5 pl-10 text-sm" placeholder="Buscar cliente por nombre o dni...">
-                    <div class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"><i data-lucide="search" class="w-4 h-4"></i></div>
-                </div>
-            </div>
-            <button type="submit" class="w-full xl:w-auto bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold shadow-lg transition flex items-center justify-center gap-2 text-sm">
-                <i data-lucide="filter" class="w-4 h-4"></i> Buscar
-            </button>
-        </form>
-    </div>
+    <form method="GET" class="card card--pad" style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+        <input type="hidden" name="id" value="<?= $seller_id ?>">
+        <div class="field" style="flex:1;min-width:220px"><label class="field__label">Buscar cliente</label><input type="search" name="search" value="<?= htmlspecialchars($search) ?>" class="input" placeholder="Nombre o DNI"></div>
+        <button type="submit" class="btn btn--primary"><?= ui_icon('search') ?> Buscar</button>
+    </form>
 
-    <!-- Tabla Principal -->
-    <div class="rounded-2xl overflow-hidden flex flex-col min-h-[500px]" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-        <div class="overflow-x-auto flex-1">
-            <table class="w-full text-left text-sm">
-                <thead class="uppercase text-[10px] font-bold tracking-widest" style="background:#f8f7fc;color:var(--ink-3);border-bottom:1.5px solid var(--line);">
-                    <tr>
-                        <th class="p-5 pl-6">#</th>
-                        <th class="p-5">Fecha</th>
-                        <th class="p-5">Cliente</th>
-                        <th class="p-5">Artículo</th>
-                        <th class="p-5 text-center">Estado</th>
-                        <th class="p-5">Detalle Auditoría</th>
-                        <th class="p-5 text-right">Ficha</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800/50">
-                    <?php if (empty($sales)): ?>
-                        <tr><td colspan="7" class="p-12 text-center text-slate-500 italic flex flex-col items-center justify-center w-full col-span-7"><i data-lucide="search-x" class="w-10 h-10 mb-2 opacity-50"></i>No se encontraron resultados para la búsqueda.</td></tr>
-                    <?php else: ?>
-                        <?php $counter = $offset + 1; foreach ($sales as $s): ?>
-                        <tr class="transition" style="border-bottom:1px dashed var(--line);" onmouseover="this.style.background='rgba(99,102,241,.04)'" onmouseout="this.style.background=''">
-                            <td class="p-5 pl-6 font-bold text-slate-600"><?= $counter++ ?></td>
-                            <td class="p-5 text-slate-400 font-mono text-xs whitespace-nowrap"><?= date('d/m/Y', strtotime($s['created_at'])) ?></td>
-                            <td class="p-5">
-                                <div class="font-bold" style="color:var(--ink);"><?= htmlspecialchars($s['client_name']) ?></div>
-                                <div class="text-[10px] text-slate-500 font-mono"><?= htmlspecialchars($s['client_dni']) ?></div>
-                            </td>
-                            <td class="p-5">
-                                <div class="text-slate-300 text-xs font-medium"><?= htmlspecialchars($s['item']) ?></div>
-                                <div class="text-[10px] text-emerald-500 font-bold">$<?= number_format($s['total_amount'], 0, ',', '.') ?></div>
-                            </td>
-                            <td class="p-5 text-center">
-                                <?= status_badge($s['status']) ?>
-                            </td>
-                            <td class="p-5">
-                                <div class="text-[10px] text-slate-400">
-                                    <?php if ($s['status'] === 'entregado'): ?>
-                                        <span class="block font-bold text-blue-400/80 mb-0.5 uppercase tracking-tighter">Entregado por:</span> 
-                                        <span class="flex items-center gap-1"><i data-lucide="user-check" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($s['delivered_by_name'] ?? 'S/D') ?></span>
-                                        <span class="text-slate-600 block mt-0.5 font-mono"><?= !empty($s['delivered_at']) ? date('d/m/Y', strtotime($s['delivered_at'])) : '-' ?></span>
-                                    <?php elseif ($s['status'] === 'rechazado'): ?>
-                                        <span class="block font-bold text-red-400/80 mb-0.5 uppercase tracking-tighter">Rechazado por:</span> 
-                                        <span class="flex items-center gap-1 mb-1"><i data-lucide="shield-alert" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($s['rejected_by_name'] ?? 'Admin') ?></span>
-                                        <span class="inline-block font-bold mb-1 px-1.5 py-0.5 rounded" style="background:var(--rec-bg);color:var(--rec-ink);"><?= htmlspecialchars(rejection_type_label($s['rejected_type'] ?? null)) ?></span>
-                                        <div class="italic pl-2 line-clamp-1" style="color:var(--ink-3);border-left:2px solid var(--rev-bg);">"<?= htmlspecialchars($s['rejected_reason'] ?? 'Sin motivo') ?>"</div>
-                                    <?php elseif ($s['status'] === 'aprobado'): ?>
-                                        <span class="text-emerald-500/60 italic">Venta aprobada, pendiente de entrega.</span>
-                                    <?php else: ?>
-                                        <span class="text-yellow-500/60 italic">En lista de espera para revisión.</span>
-                                    <?php endif; ?>
-                                </div>
-                            </td>
-                            <td class="p-5 text-right">
-                                <a href="ver_ficha.php?id=<?= $s['id'] ?>" class="inline-flex items-center justify-center w-11 h-11 rounded-lg transition" style="background:var(--accent-soft);color:var(--accent-ink);border:1.5px solid rgba(99,102,241,.2);" title="Ver Ficha" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'">
-                                    <i data-lucide="eye" class="w-4 h-4"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
+    <section class="only-mobile" style="display:flex;flex-direction:column;gap:8px">
+        <h2 class="group__title">Ventas encontradas</h2>
+        <?php if (empty($sales)): ?>
+        <div class="card"><div class="empty"><?= ui_icon('search-x') ?><p class="empty__title">No se encontraron ventas para la búsqueda</p></div></div>
+        <?php else: ?><div class="group__body">
+            <?php foreach ($sales as $s): ?>
+            <a href="ver_ficha.php?id=<?= $s['id'] ?>" class="cell">
+                <span class="cell__body"><span class="cell__title"><?= htmlspecialchars($s['client_name']) ?></span><span class="tab cell__sub"><?= htmlspecialchars($s['item']) ?> · <?= ui_money($s['total_amount']) ?></span><span class="tab cell__meta"><?= date('d/m/Y', strtotime($s['created_at'])) ?> · <?= htmlspecialchars($s['client_dni']) ?></span></span>
+                <span class="cell__aside"><?= status_badge($s['status']) ?><span class="cell__chevron"><?= ui_icon('chevron-right') ?></span></span>
+            </a>
+            <?php endforeach; ?>
+        </div><?php endif; ?>
+    </section>
 
-        <!-- Paginación -->
+    <section class="card only-desktop" style="overflow:hidden">
+        <div class="table-wrap"><table class="data-table">
+            <thead><tr><th>#</th><th>Fecha</th><th>Cliente</th><th>Artículo</th><th>Estado</th><th>Detalle de auditoría</th><th></th></tr></thead>
+            <tbody>
+            <?php if (empty($sales)): ?>
+                <tr><td colspan="7"><div class="empty"><?= ui_icon('search-x') ?><p class="empty__title">No se encontraron ventas para la búsqueda</p></div></td></tr>
+            <?php else: $counter = $offset + 1; foreach ($sales as $s): ?>
+                <tr>
+                    <td class="tab caption" style="font-weight:700"><?= $counter++ ?></td>
+                    <td class="tab caption"><?= date('d/m/Y', strtotime($s['created_at'])) ?></td>
+                    <td><span class="cell__title" style="font-size:var(--fs-headline)"><?= htmlspecialchars($s['client_name']) ?></span><span class="tab caption" style="display:block"><?= htmlspecialchars($s['client_dni']) ?></span></td>
+                    <td><span><?= htmlspecialchars($s['item']) ?></span><span class="tab caption" style="display:block;color:var(--tint-text);font-weight:700"><?= ui_money($s['total_amount']) ?></span></td>
+                    <td><?= status_badge($s['status']) ?></td>
+                    <td style="max-width:280px"><div class="caption">
+                        <?php if ($s['status'] === 'entregado'): ?>
+                            <span style="display:block;font-weight:700;color:var(--green)">Entregó <?= htmlspecialchars($s['delivered_by_name'] ?? 'S/D') ?></span><span class="tab"><?= !empty($s['delivered_at']) ? date('d/m/Y', strtotime($s['delivered_at'])) : '-' ?></span>
+                        <?php elseif ($s['status'] === 'rechazado'): ?>
+                            <span style="display:block;font-weight:700;color:var(--red)">Rechazó <?= htmlspecialchars($s['rejected_by_name'] ?? 'Admin') ?></span><span class="tag" style="margin:3px 0"><?= htmlspecialchars(rejection_type_label($s['rejected_type'] ?? null)) ?></span><span style="display:block;font-style:italic">“<?= htmlspecialchars($s['rejected_reason'] ?? 'Sin motivo') ?>”</span>
+                        <?php elseif ($s['status'] === 'aprobado'): ?>
+                            <span>Venta aprobada, pendiente de entrega.</span>
+                        <?php else: ?><span>En espera de revisión.</span><?php endif; ?>
+                    </div></td>
+                    <td style="text-align:right"><a href="ver_ficha.php?id=<?= $s['id'] ?>" class="btn btn--icon btn--sm" title="Ver ficha"><?= ui_icon('eye') ?></a></td>
+                </tr>
+            <?php endforeach; endif; ?>
+            </tbody>
+        </table></div>
         <?= renderPagination($total_registros, $registros_por_pagina, $pagina_actual, $filtrosParams); ?>
-    </div>
+    </section>
+
+    <div class="only-mobile"><?= renderPagination($total_registros, $registros_por_pagina, $pagina_actual, $filtrosParams); ?></div>
+</div>
 </main>
 
 <?php include 'includes/footer.php'; ?>

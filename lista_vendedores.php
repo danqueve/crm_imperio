@@ -30,6 +30,8 @@ $sql = "SELECT u.id, u.name, u.username, u.role, u.phone,
                SUM(CASE WHEN s.created_at BETWEEN ? AND ?
                              AND s.status IN ('aprobado', 'entregado') THEN 1 ELSE 0 END) as approved_sales_period,
                SUM(CASE WHEN s.created_at BETWEEN ? AND ?
+                             AND s.status = 'entregado' THEN 1 ELSE 0 END) as delivered_sales_period,
+               SUM(CASE WHEN s.created_at BETWEEN ? AND ?
                              AND s.status = 'rechazado' THEN 1 ELSE 0 END) as rejected_sales_period,
                MAX(s.created_at) as last_sale_date
         FROM users u
@@ -38,9 +40,15 @@ $sql = "SELECT u.id, u.name, u.username, u.role, u.phone,
         ORDER BY total_sales_period DESC, total_sales_all DESC";
 
 $stmt = $pdo->prepare($sql);
-$stmt->execute([$startSql, $endSql, $startSql, $endSql, $startSql, $endSql]);
+$stmt->execute([$startSql, $endSql, $startSql, $endSql, $startSql, $endSql, $startSql, $endSql]);
 $sellers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $totalPeriodoTodos = array_sum(array_column($sellers, 'total_sales_period'));
+
+// Atajos de período para la navegación táctil. Mantienen los mismos parámetros GET.
+$weekStart = date('Y-m-d', strtotime('monday this week'));
+$weekEnd   = date('Y-m-d', strtotime('sunday this week'));
+$monthStart = date('Y-m-01');
+$monthEnd   = date('Y-m-t');
 
 // --- Desglose semanal (aprobadas y entregadas diferenciadas, una sola consulta para todos los vendedores) ---
 $sqlWeekly = "SELECT s.user_id,
@@ -100,180 +108,137 @@ include 'includes/header.php';
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
-<main class="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 fade-in">
-    
-    <!-- Título y Regresar -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div class="flex items-center gap-4">
-            <a href="dashboard.php" class="p-2 rounded-full transition" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-3);" onmouseover="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--ink-3)'">
-                <i data-lucide="chevron-left"></i>
-            </a>
-            <div>
-                <h1 class="text-2xl font-bold tracking-tight" style="color:var(--ink);">Listado de Vendedores</h1>
-                <p class="text-sm text-slate-500">Usuarios que han registrado ventas en el sistema.</p>
-            </div>
+<main class="app-main">
+<div class="app-container">
+    <div class="page-head">
+        <div class="page-head__text">
+            <a href="mas.php" class="navbar-back only-mobile"><?= ui_icon('chevron-left') ?> Más</a>
+            <a href="dashboard.php" class="navbar-back only-desktop"><?= ui_icon('chevron-left') ?> Panel</a>
+            <h1 class="large-title">Vendedores</h1>
+            <p class="subhead tab"><?= $totalPeriodoTodos ?> ventas en el período · todos los vendedores</p>
         </div>
-        <button onclick="exportarPDFSemanal()" class="flex items-center justify-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition shrink-0" style="background:var(--rec-bg);color:var(--rec-ink);border:1.5px solid rgba(159,18,57,.2);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-            <i data-lucide="file-down" class="w-4 h-4"></i> PDF Desglose Semanal
-        </button>
+        <div class="page-head__actions only-desktop">
+            <button type="button" onclick="exportarPDFSemanal()" class="btn"><?= ui_icon('file-down') ?> PDF desglose semanal</button>
+        </div>
     </div>
 
-    <!-- Filtro de Período -->
-    <div class="rounded-2xl p-4 mb-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-        <form method="GET" class="flex flex-col sm:flex-row gap-3 items-end">
-            <div class="flex items-center gap-2 shrink-0 mb-1 sm:mb-0">
-                <i data-lucide="calendar-range" class="w-4 h-4" style="color:var(--accent);"></i>
-                <span class="text-[10px] font-bold uppercase tracking-widest" style="color:var(--ink-3);">Período de análisis</span>
-            </div>
-            <div class="flex gap-3 flex-1 flex-wrap">
-                <div class="flex-1 min-w-[140px]">
-                    <label class="block text-[10px] font-bold uppercase mb-1 ml-1 tracking-widest" style="color:var(--ink-3);">Desde</label>
-                    <input type="date" name="start" value="<?= $start ?>" class="w-full input-light px-3 py-2 text-sm" style="color:var(--ink);">
-                </div>
-                <div class="flex-1 min-w-[140px]">
-                    <label class="block text-[10px] font-bold uppercase mb-1 ml-1 tracking-widest" style="color:var(--ink-3);">Hasta</label>
-                    <input type="date" name="end" value="<?= $end ?>" class="w-full input-light px-3 py-2 text-sm" style="color:var(--ink);">
-                </div>
-            </div>
-            <div class="flex gap-2 shrink-0">
-                <button type="submit" class="text-white px-5 py-2 rounded-xl font-bold text-sm transition flex items-center gap-2" style="background:var(--accent);">
-                    <i data-lucide="filter" class="w-4 h-4"></i> Aplicar
-                </button>
-                <a href="lista_vendedores.php" class="px-4 py-2 rounded-xl font-bold text-sm transition flex items-center gap-1" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-2);" title="Resetear al mes anterior">
-                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-                </a>
-            </div>
+    <div class="segmented only-mobile" style="grid-template-columns:repeat(3,minmax(0,1fr))" role="group" aria-label="Período">
+        <a href="?<?= http_build_query(['start' => $weekStart, 'end' => $weekEnd]) ?>" class="segmented__item <?= $start === $weekStart && $end === $weekEnd ? 'is-active' : '' ?>">Semana</a>
+        <a href="?<?= http_build_query(['start' => $monthStart, 'end' => $monthEnd]) ?>" class="segmented__item <?= $start === $monthStart && $end === $monthEnd ? 'is-active' : '' ?>">Mes</a>
+        <button type="button" class="segmented__item" onclick="togglePeriodFilter()">Elegir fechas</button>
+    </div>
+
+    <form id="periodFilter" method="GET" class="card card--pad only-mobile" style="display:none;gap:8px;align-items:flex-end">
+        <div class="field" style="flex:1;min-width:0"><label class="field__label">Desde</label><input type="date" name="start" value="<?= $start ?>" class="input"></div>
+        <div class="field" style="flex:1;min-width:0"><label class="field__label">Hasta</label><input type="date" name="end" value="<?= $end ?>" class="input"></div>
+        <button type="submit" class="btn btn--icon" aria-label="Aplicar período"><?= ui_icon('filter') ?></button>
+    </form>
+
+    <section class="card card--pad only-desktop">
+        <form method="GET" style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px">
+            <div class="field" style="flex:1;min-width:160px"><label class="field__label">Desde</label><input type="date" name="start" value="<?= $start ?>" class="input"></div>
+            <div class="field" style="flex:1;min-width:160px"><label class="field__label">Hasta</label><input type="date" name="end" value="<?= $end ?>" class="input"></div>
+            <button type="submit" class="btn btn--primary"><?= ui_icon('filter') ?> Aplicar</button>
+            <a href="lista_vendedores.php" class="btn btn--icon" title="Restablecer período" aria-label="Restablecer período"><?= ui_icon('rotate-ccw') ?></a>
         </form>
-        <div class="mt-3 pt-3 flex flex-wrap gap-4 text-xs" style="border-top:1px dashed var(--line);color:var(--ink-3);">
-            <span class="flex items-center gap-1.5"><i data-lucide="calendar" class="w-3 h-3"></i> <?= date('d/m/Y', strtotime($start)) ?> — <?= date('d/m/Y', strtotime($end)) ?></span>
-            <span class="flex items-center gap-1.5"><i data-lucide="bar-chart-2" class="w-3 h-3"></i> <span class="font-bold" style="color:var(--ink);"><?= $totalPeriodoTodos ?></span> ventas en el período (todos los vendedores)</span>
-        </div>
+    </section>
+
+    <div class="caption" style="display:flex;flex-wrap:wrap;gap:14px;padding:0 4px">
+        <span class="status status--entregado"><span class="dot"></span>Entregadas</span>
+        <span class="status status--aprobado"><span class="dot"></span>Aprobadas</span>
+        <span class="status status--rechazado"><span class="dot"></span>Rechazadas</span>
+        <span class="tab only-desktop"><?= date('d/m/Y', strtotime($start)) ?> – <?= date('d/m/Y', strtotime($end)) ?></span>
     </div>
 
-    <!-- Tabla de Vendedores -->
-    <div class="rounded-2xl overflow-hidden flex flex-col min-h-[500px]" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-        <div class="overflow-x-auto flex-1">
-            <table class="w-full text-left text-sm">
-                <thead class="uppercase text-[10px] font-bold tracking-widest" style="background:#f8f7fc;color:var(--ink-3);border-bottom:1.5px solid var(--line);">
-                    <tr>
-                        <th class="p-5 pl-6">Vendedor</th>
-                        <th class="p-5 text-center">Rol</th>
-                        <th class="p-5 text-center">Ventas (Período)</th>
-                        <th class="p-5 text-center text-green-500">Aprobadas</th>
-                        <th class="p-5 text-center text-red-500">Rechazadas</th>
-                        <th class="p-5 text-center">Efectividad</th>
-                        <th class="p-5">Última Carga</th>
-                        <th class="p-5 text-right">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800/50">
-                    <?php if (empty($sellers)): ?>
-                        <tr><td colspan="8" class="p-12 text-center text-slate-500 italic flex flex-col items-center justify-center w-full col-span-8"><i data-lucide="users-2" class="w-10 h-10 mb-2 opacity-50"></i>No se encontraron vendedores con ventas registradas.</td></tr>
-                    <?php else: ?>
-                        <?php foreach ($sellers as $s): ?>
-                        <tr class="transition" style="border-bottom:1px dashed var(--line);" onmouseover="this.style.background='rgba(99,102,241,.04)'" onmouseout="this.style.background=''">
-                            <td class="p-5 pl-6">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold border border-blue-500/20">
-                                        <?= strtoupper(substr($s['name'], 0, 1)) ?>
-                                    </div>
-                                    <div>
-                                        <div class="font-bold" style="color:var(--ink);"><?= htmlspecialchars($s['name']) ?></div>
-                                        <div class="text-[10px] text-slate-500 font-mono uppercase tracking-tighter">@<?= htmlspecialchars($s['username']) ?></div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="p-5 text-center">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border" style="background:var(--paper);color:var(--ink-2);border-color:var(--line);">
-                                    <?= ucfirst($s['role']) ?>
-                                </span>
-                            </td>
-                            <td class="p-5 text-center font-bold" style="color:var(--ink);">
-                                <?= $s['total_sales_period'] ?>
-                                <div class="text-[10px] font-normal mt-0.5" style="color:var(--ink-3);">de <?= $s['total_sales_all'] ?> históricas</div>
-                            </td>
-                            <td class="p-5 text-center font-bold text-green-400">
-                                <?= $s['approved_sales_period'] ?>
-                            </td>
-                            <td class="p-5 text-center font-bold text-red-400">
-                                <?= $s['rejected_sales_period'] ?>
-                            </td>
-                            <td class="p-5 text-center">
-                                <?php
-                                $percentage = $s['total_sales_period'] > 0 ? round(($s['approved_sales_period'] / $s['total_sales_period']) * 100) : 0;
-                                $color = 'text-slate-400';
-                                if ($percentage >= 80) $color = 'text-green-500';
-                                elseif ($percentage >= 50) $color = 'text-yellow-500';
-                                elseif ($percentage > 0) $color = 'text-red-500';
-                                ?>
-                                <div class="<?= $color ?> font-bold text-sm"><?= $percentage ?>%</div>
-                                <div class="w-16 h-1 rounded-full mx-auto mt-1 overflow-hidden" style="background:var(--line);">
-                                    <div class="h-full <?= str_replace('text', 'bg', $color) ?>" style="width: <?= $percentage ?>%"></div>
-                                </div>
-                            </td>
-                            <td class="p-5 text-slate-400 font-mono text-xs">
-                                <?= date('d/m/Y H:i', strtotime($s['last_sale_date'])) ?>
-                            </td>
-                            <td class="p-5 text-right">
-                                <div class="flex justify-end gap-2">
-                                    <button type="button" onclick="openWeekModal(<?= $s['id'] ?>, '<?= addslashes(htmlspecialchars($s['name'])) ?>')" class="inline-flex items-center gap-2 px-3 py-2 rounded-lg transition font-bold text-xs" style="background:var(--accent-soft);color:var(--accent-ink);border:1.5px solid rgba(99,102,241,.2);" title="Ver desglose semanal" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'">
-                                        <i data-lucide="calendar-days" class="w-4 h-4"></i>
-                                    </button>
-                                    <a href="ventas_vendedor.php?id=<?= $s['id'] ?>" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition font-bold text-xs shadow-lg shadow-blue-900/20">
-                                        <i data-lucide="list" class="w-4 h-4"></i> Ver todas las ventas
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <section class="only-mobile" style="display:flex;flex-direction:column;gap:8px">
+        <?php if (empty($sellers)): ?>
+        <div class="card"><div class="empty"><?= ui_icon('users') ?><p class="empty__title">No hay vendedores con ventas en este período</p></div></div>
+        <?php else: ?><div class="group__body">
+            <?php foreach ($sellers as $index => $s):
+                $delivered = (int)$s['delivered_sales_period'];
+                $approved = max(0, (int)$s['approved_sales_period'] - $delivered);
+                $rejected = (int)$s['rejected_sales_period'];
+                $total = (int)$s['total_sales_period'];
+                $effectiveness = $total > 0 ? round(((int)$s['approved_sales_period'] / $total) * 100) : 0;
+            ?>
+            <a href="ventas_vendedor.php?id=<?= $s['id'] ?>" class="cell" style="align-items:flex-start;gap:10px;padding:12px 14px">
+                <span class="tab caption" style="width:18px;padding-top:10px;text-align:center;font-weight:700"><?= $index + 1 ?></span>
+                <?= ui_avatar($s['name']) ?>
+                <span class="cell__body" style="gap:6px">
+                    <span style="display:flex;justify-content:space-between;gap:8px"><span class="cell__title"><?= htmlspecialchars($s['name']) ?></span><span class="tab caption" style="font-weight:700;color:var(--label)"><?= $effectiveness ?>% efectividad</span></span>
+                    <span aria-hidden="true" style="display:flex;height:6px;border-radius:3px;overflow:hidden;background:var(--bg-card-2);gap:2px">
+                        <span style="width:<?= $total ? round($delivered / $total * 100, 2) : 0 ?>%;background:var(--green)"></span><span style="width:<?= $total ? round($approved / $total * 100, 2) : 0 ?>%;background:var(--tint)"></span><span style="width:<?= $total ? round($rejected / $total * 100, 2) : 0 ?>%;background:var(--red)"></span>
+                    </span>
+                    <span class="tab cell__sub"><?= $total ?> ventas · <?= $delivered ?> entr. · <?= $approved ?> aprob. · <?= $rejected ?> rech. · última <?= date('d/m H:i', strtotime($s['last_sale_date'])) ?></span>
+                </span>
+            </a>
+            <?php endforeach; ?>
+        </div><?php endif; ?>
+        <button type="button" onclick="exportarPDFSemanal()" class="btn btn--block"><?= ui_icon('file-text') ?> Descargar desglose semanal</button>
+    </section>
+
+    <section class="card only-desktop" style="overflow:hidden">
+        <div class="table-wrap"><table class="data-table">
+            <thead><tr><th>Vendedor</th><th>Rol</th><th class="num">Ventas</th><th class="num">Entregadas</th><th class="num">Aprobadas</th><th class="num">Rechazadas</th><th class="num">Efectividad</th><th>Última carga</th><th></th></tr></thead>
+            <tbody>
+            <?php if (empty($sellers)): ?>
+                <tr><td colspan="9"><div class="empty"><?= ui_icon('users') ?><p class="empty__title">No hay vendedores con ventas en este período</p></div></td></tr>
+            <?php else: foreach ($sellers as $s):
+                $delivered = (int)$s['delivered_sales_period'];
+                $approved = max(0, (int)$s['approved_sales_period'] - $delivered);
+                $rejected = (int)$s['rejected_sales_period'];
+                $total = (int)$s['total_sales_period'];
+                $effectiveness = $total > 0 ? round(((int)$s['approved_sales_period'] / $total) * 100) : 0;
+            ?>
+                <tr>
+                    <td><div style="display:flex;align-items:center;gap:10px"><?= ui_avatar($s['name']) ?><span><span class="cell__title"><?= htmlspecialchars($s['name']) ?></span><span class="tab caption" style="display:block">@<?= htmlspecialchars($s['username']) ?></span></span></div></td>
+                    <td><span class="tag"><?= ucfirst($s['role']) ?></span></td>
+                    <td class="num tab"><strong><?= $total ?></strong><span class="caption" style="display:block">de <?= (int)$s['total_sales_all'] ?></span></td>
+                    <td class="num tab" style="color:var(--green);font-weight:700"><?= $delivered ?></td><td class="num tab" style="color:var(--tint-text);font-weight:700"><?= $approved ?></td><td class="num tab" style="color:var(--red);font-weight:700"><?= $rejected ?></td>
+                    <td class="num"><span class="tab" style="font-weight:700"><?= $effectiveness ?>%</span><div class="progress" style="width:72px;margin:4px 0 0 auto"><span class="progress__bar" style="width:<?= $effectiveness ?>%"></span></div></td>
+                    <td class="tab caption"><?= date('d/m/Y H:i', strtotime($s['last_sale_date'])) ?></td>
+                    <td><div style="display:flex;justify-content:flex-end;gap:8px"><button type="button" onclick="openWeekModal(<?= $s['id'] ?>, <?= htmlspecialchars(json_encode($s['name']), ENT_QUOTES, 'UTF-8') ?>)" class="btn btn--icon btn--sm" title="Ver desglose semanal"><?= ui_icon('calendar-days') ?></button><a href="ventas_vendedor.php?id=<?= $s['id'] ?>" class="btn btn--sm"><?= ui_icon('list') ?> Ver ventas</a></div></td>
+                </tr>
+            <?php endforeach; endif; ?>
+            </tbody>
+        </table></div>
+    </section>
+</div>
 </main>
 
-<!-- Modal: Desglose Semanal -->
-<div id="weekModal" class="fixed inset-0 backdrop-blur-xl hidden z-50 overflow-y-auto" style="background:rgba(43,43,58,.55);">
-    <div class="flex min-h-full items-start sm:items-center justify-center p-2 sm:p-4">
-    <div class="rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-lg p-4 sm:p-8 my-2 sm:my-6 transform transition-all" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-        <div class="flex justify-between items-center mb-6 pb-4" style="border-bottom:1.5px solid var(--line);">
-            <h3 class="text-lg font-bold flex items-center gap-3" style="color:var(--ink);">
-                <i data-lucide="calendar-days" class="w-5 h-5" style="color:var(--accent);"></i>
-                Desglose Semanal · <span id="weekModalSellerName"></span>
-            </h3>
-            <button onclick="closeWeekModal()" class="transition w-10 h-10 flex items-center justify-center rounded-full shrink-0" style="color:var(--ink-2);background:var(--paper);border:1.5px solid var(--line);"><i data-lucide="x" class="w-5 h-5"></i></button>
+<!-- Modal: desglose semanal -->
+<div id="weekModal" class="sheet-backdrop" style="display:none" role="dialog" aria-modal="true" aria-labelledby="weekModalTitle">
+    <div class="sheet" style="max-width:600px">
+        <span class="sheet__grabber"></span>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px">
+            <div><h2 id="weekModalTitle" class="headline" style="margin:0">Desglose semanal</h2><p id="weekModalSellerName" class="subhead"></p></div>
+            <button type="button" onclick="closeWeekModal()" class="btn btn--icon" aria-label="Cerrar"><?= ui_icon('x') ?></button>
         </div>
-        <p class="text-[10px] uppercase font-bold tracking-widest mb-3" style="color:var(--ink-3);">Solo ventas aprobadas + entregadas</p>
-        <table class="w-full text-left text-sm">
-            <thead class="uppercase text-[10px] font-bold tracking-widest" style="color:var(--ink-3);border-bottom:1.5px solid var(--line);">
-                <tr>
-                    <th class="p-3">Semana</th>
-                    <th class="p-3 text-center text-green-500">Aprobadas</th>
-                    <th class="p-3 text-center text-blue-500">Entregadas</th>
-                    <th class="p-3 text-center">Total</th>
-                </tr>
-            </thead>
-            <tbody id="weekModalBody"></tbody>
-        </table>
-    </div></div>
+        <p class="caption">Solo ventas aprobadas y entregadas.</p>
+        <div class="table-wrap"><table class="data-table"><thead><tr><th>Semana</th><th class="num">Aprobadas</th><th class="num">Entregadas</th><th class="num">Total</th></tr></thead><tbody id="weekModalBody"></tbody></table></div>
+    </div>
 </div>
 
 <script>
     const weeklyData = <?= json_encode($weeklyByUser) ?>;
+
+    function togglePeriodFilter() {
+        const filter = document.getElementById('periodFilter');
+        filter.style.display = filter.style.display === 'flex' ? 'none' : 'flex';
+    }
 
     function openWeekModal(userId, userName) {
         document.getElementById('weekModalSellerName').textContent = userName;
         const weeks = weeklyData[userId] || [];
         const tbody = document.getElementById('weekModalBody');
         tbody.innerHTML = weeks.length
-            ? weeks.map(w => `<tr style="border-bottom:1px dashed var(--line);"><td class="p-3 font-mono text-xs" style="color:var(--ink-2);">${w.label}</td><td class="p-3 text-center font-bold text-green-500">${w.aprobadas}</td><td class="p-3 text-center font-bold text-blue-500">${w.entregadas}</td><td class="p-3 text-center font-bold" style="color:var(--ink);">${w.total}</td></tr>`).join('')
-            : '<tr><td colspan="4" class="p-6 text-center italic" style="color:var(--ink-3);">Sin ventas aprobadas/entregadas en este período.</td></tr>';
-        document.getElementById('weekModal').classList.remove('hidden');
+            ? weeks.map(w => `<tr><td class="tab caption">${w.label}</td><td class="num tab" style="color:var(--tint-text);font-weight:700">${w.aprobadas}</td><td class="num tab" style="color:var(--green);font-weight:700">${w.entregadas}</td><td class="num tab" style="font-weight:700">${w.total}</td></tr>`).join('')
+            : '<tr><td colspan="4"><div class="empty"><p class="empty__title">Sin ventas aprobadas o entregadas en este período</p></div></td></tr>';
+        document.getElementById('weekModal').style.display = 'flex';
     }
 
     function closeWeekModal() {
-        document.getElementById('weekModal').classList.add('hidden');
+        document.getElementById('weekModal').style.display = 'none';
     }
 
     // --- Exportación PDF: tabla dinámica horizontal (una fila por vendedor, una columna por semana) ---
