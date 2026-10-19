@@ -193,7 +193,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sale_id = $pdo->lastInsertId();
 
         // 6. PROCESAR ARCHIVOS ADJUNTOS (Múltiples)
-        if (isset($_FILES['sale_files']) && !empty($_FILES['sale_files']['name'][0])) {
+        // El formulario tiene varios inputs sale_files[] (cámara, galería y PC): los que van vacíos llegan
+        // con nombre '' (y se saltean en el loop), así que no alcanza con mirar solo el primero.
+        $hayArchivos = isset($_FILES['sale_files']['name']) && is_array($_FILES['sale_files']['name'])
+            && count(array_filter($_FILES['sale_files']['name'], 'strlen')) > 0;
+        if ($hayArchivos) {
             $upload_dir = dirname(__DIR__, 2) . '/uploads/';
 
             // Crear carpeta si no existe
