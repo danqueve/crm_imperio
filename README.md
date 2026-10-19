@@ -51,37 +51,31 @@ revision → aprobado → entregado
 
 ```
 crm/
-├── index.php                 # Login con rate limiting
-├── dashboard.php             # Panel principal por rol
-├── cargar_venta.php          # Formulario nueva venta
-├── save_sale.php             # Procesador de carga de venta
-├── ver_ficha.php             # Detalle completo de una venta (+ modal edición managers)
-├── editar_venta.php          # Edición de venta para vendedor (solo estado revision)
-├── update_sale_full.php      # Procesador de edición completa (managers)
-├── update_sale_plan.php      # Procesador de edición de plan de pago (managers)
-├── update_status.php         # Cambiar estado de venta (POST)
-├── rechazar_venta.php        # Rechazar venta con motivo
-├── delete_sale_file.php      # Eliminar archivo adjunto de venta
-├── historial_ventas.php      # Historial con búsqueda y exportación PDF
-├── export_csv.php            # Exportación CSV del historial (admin)
-├── entregas.php              # Panel de entregas pendientes
-├── comisiones.php            # Reporte de comisiones (admin/supervisor)
-├── lista_vendedores.php      # Lista de vendedores (admin)
-├── ventas_vendedor.php       # Ventas de un vendedor específico (admin)
-├── perfil_vendedor.php       # Perfil + cambio de contraseña
-├── register_user.php         # Alta de usuarios (admin)
-├── admin_audit.php           # Log de auditoría (admin)
-├── logout.php                # Cerrar sesión
-├── config.php                # Credenciales DB (NO subir al repo)
-├── config.example.php        # Plantilla de configuración
+├── app/
+│   ├── pages/                # Pantallas y vistas del CRM
+│   ├── actions/              # Procesadores POST, exportaciones y sesión
+│   └── tools/                # Herramientas internas de diagnóstico
+├── assets/
+│   └── css/                  # Hojas de estilo de la aplicación
+├── docs/
+│   └── plans/                # Planes técnicos y documentación de cambios
 ├── includes/
 │   ├── db.php                # Conexión PDO + sesión + timeout
 │   ├── functions.php         # CSRF, paginación, log_audit()
 │   ├── header.php            # Navbar con control de roles
 │   └── footer.php            # Pie de página + lucide.createIcons()
+├── index.php, dashboard.php… # Puentes públicos a app/pages (URLs compatibles)
+├── save_sale.php, logout.php…# Puentes públicos a app/actions (URLs compatibles)
+├── style.css                 # Puente a assets/css/style.css
+├── config.php                # Credenciales DB (NO subir al repo)
+├── config.example.php        # Plantilla de configuración
 ├── uploads/                  # Archivos adjuntos de ventas (ignorado en git)
 └── img/                      # Logo e imágenes estáticas
 ```
+
+Las URLs históricas se mantienen mediante archivos puente en la raíz, por lo
+que los enlaces externos, formularios y marcadores existentes continúan
+funcionando mientras la implementación queda organizada por responsabilidad.
 
 ---
 

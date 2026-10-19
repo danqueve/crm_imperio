@@ -1,6 +1,2 @@
 <?php
-session_start();
-session_destroy();
-header("Location: index.php");
-exit;
-?>
+require __DIR__ . '/app/actions/logout.php';
