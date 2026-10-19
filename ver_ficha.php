@@ -64,23 +64,24 @@ $stmtFiles->execute([$id]);
 $files = $stmtFiles->fetchAll(PDO::FETCH_ASSOC);
 
 include 'includes/header.php';
+
+// --- Derivados de presentación (no tocan datos ni permisos) ---
+$tipoLabel = (($order['sale_type'] ?? 'credito') === 'contado')
+    ? 'Contado'
+    : ('Crédito ' . mb_strtolower($order['payment_frequency'] ?? 'Semanal'));
+$wa_link = normalize_ar_whatsapp($order['client_whatsapp'] ?? '');
 ?>
 
-<main class="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 lg:p-8 fade-in">
+<main class="app-main">
+<div class="app-container" style="max-width:1180px">
 
     <!-- Mensajes Flash -->
     <?php if (isset($_GET['msg']) && $_GET['msg'] == 'updated'): ?>
-    <div class="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-xl flex items-center gap-3 shadow-lg animate-pulse">
-        <i data-lucide="check-circle" class="w-5 h-5"></i> <span>Ficha actualizada correctamente.</span>
-    </div>
+    <div class="notice notice--ok"><?= ui_icon('check-circle') ?> <span>Ficha actualizada correctamente.</span></div>
     <?php elseif (isset($_GET['msg']) && $_GET['msg'] == 'file_deleted'): ?>
-    <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl flex items-center gap-3 shadow-lg">
-        <i data-lucide="trash-2" class="w-5 h-5"></i> <span>Archivo eliminado correctamente.</span>
-    </div>
+    <div class="notice notice--ok"><?= ui_icon('trash-2') ?> <span>Archivo eliminado correctamente.</span></div>
     <?php elseif (isset($_GET['msg']) && $_GET['msg'] == 'error_delete'): ?>
-    <div class="mb-6 p-4 bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 rounded-xl flex items-center gap-3 shadow-lg">
-        <i data-lucide="alert-triangle" class="w-5 h-5"></i> <span>No se pudo eliminar el archivo.</span>
-    </div>
+    <div class="notice notice--error"><?= ui_icon('alert-triangle') ?> <span>No se pudo eliminar el archivo.</span></div>
     <?php elseif (isset($_GET['msg']) && $_GET['msg'] == 'error'):
         $field_messages = [
             'telefono'         => 'El número de llamada (teléfono alternativo) es obligatorio.',
@@ -95,192 +96,338 @@ include 'includes/header.php';
         $fields = array_filter(explode(',', $_GET['fields'] ?? ''));
         $specific_msgs = array_filter(array_map(fn($f) => $field_messages[$f] ?? null, $fields));
     ?>
-    <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl flex items-center gap-3 shadow-lg">
-        <i data-lucide="alert-octagon" class="w-5 h-5"></i> <span><?= !empty($specific_msgs) ? implode(' ', $specific_msgs) : 'Ocurrió un error al guardar los cambios. Intente nuevamente.' ?></span>
+    <div class="notice notice--error">
+        <?= ui_icon('alert-octagon') ?> <span><?= !empty($specific_msgs) ? implode(' ', $specific_msgs) : 'Ocurrió un error al guardar los cambios. Intente nuevamente.' ?></span>
     </div>
     <?php endif; ?>
 
-    <!-- Cabecera -->
-    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-        <div class="flex items-center gap-4">
-            <a href="javascript:history.back()" class="p-2 rounded-full transition" style="background:var(--card);border:1.5px solid var(--line);color:var(--ink-2);">
-                <i data-lucide="arrow-left"></i>
-            </a>
-            <div>
-                <h1 class="text-2xl font-bold tracking-tight flex items-center gap-2" style="color:var(--ink);">
-                    Ficha de Venta #<?= $order['id'] ?>
-                    <?php if (($order['sale_type'] ?? 'credito') === 'contado'): ?>
-                    <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style="background:var(--apr-bg);color:var(--apr-ink);">Contado</span>
-                    <?php endif; ?>
-                    <?php if (($order['payment_method'] ?? 'normal') === 'rapicompra'): ?>
-                    <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style="background:var(--accent-soft);color:var(--accent-ink);">RapiCompra</span>
-                    <?php endif; ?>
-                </h1>
-                <p class="text-sm font-medium" style="color:var(--ink-2);">Cargado por <span class="text-blue-500 font-bold"><?= htmlspecialchars($order['seller_name'] ?? 'Desconocido') ?></span></p>
-            </div>
-        </div>
-
+    <!-- Volver + meta -->
+    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px">
+        <a href="javascript:history.back()" class="navbar-back"><?= ui_icon('chevron-left') ?> Volver</a>
+        <span class="tab caption">
+            Venta #<?= $order['id'] ?> · cargada por <?= htmlspecialchars($order['seller_name'] ?? 'Desconocido') ?> · <?= date('d/m/Y H:i', strtotime($order['created_at'])) ?>
+        </span>
         <?php if ($can_manage): ?>
-        <button onclick="openEditModal()" class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg shadow-blue-900/20">
-            <i data-lucide="edit-3" class="w-4 h-4"></i> EDITAR FICHA
-        </button>
+        <button type="button" onclick="openEditModal()" class="btn btn--icon btn--sm only-mobile" aria-label="Editar ficha"><?= ui_icon('pencil') ?></button>
         <?php elseif ($role === 'vendedor' && $order['user_id'] == $_SESSION['user_id'] && $order['status'] === 'revision'): ?>
-        <a href="editar_venta.php?id=<?= $order['id'] ?>" class="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold transition shadow-lg shadow-blue-900/20">
-            <i data-lucide="edit-3" class="w-4 h-4"></i> EDITAR MI VENTA
-        </a>
+        <a href="editar_venta.php?id=<?= $order['id'] ?>" class="btn btn--icon btn--sm only-mobile" aria-label="Editar mi venta"><?= ui_icon('pencil') ?></a>
         <?php endif; ?>
     </div>
 
-    <div class="rounded-3xl overflow-hidden mb-12" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-        <!-- Pipeline Visual de Estado -->
+    <!-- Cabecera de la ficha -->
+    <section class="card card--pad" style="display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px">
+            <div style="display:flex;align-items:center;gap:16px;min-width:0">
+                <?= ui_avatar($order['client_name'], 'lg') ?>
+                <div style="display:flex;flex-direction:column;gap:4px">
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+                        <h1 class="title2"><?= htmlspecialchars($order['client_name'] ?? '-') ?></h1>
+                        <?= status_badge($order['status']) ?>
+                        <?php if (($order['payment_method'] ?? 'normal') === 'rapicompra'): ?>
+                        <span class="tag tag--indigo">RapiCompra</span>
+                        <?php endif; ?>
+                    </div>
+                    <span class="tab subhead">DNI <?= htmlspecialchars($order['client_dni'] ?? '-') ?> · <?= htmlspecialchars($order['client_locality'] ?? '-') ?> · <?= htmlspecialchars($tipoLabel) ?></span>
+                </div>
+            </div>
+            <div class="only-desktop" style="display:flex;flex-wrap:wrap;gap:8px">
+                <?php if ($can_manage && $order['status'] === 'revision'): ?>
+                <a href="#contactoForm" class="btn"><?= ui_icon('phone', 'icon--orange') ?> Registrar contacto</a>
+                <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="btn"><?= ui_icon('x-circle', 'icon--red') ?> Rechazar</a>
+                <form method="POST" action="update_status.php">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="id" value="<?= $order['id'] ?>">
+                    <input type="hidden" name="status" value="aprobado">
+                    <button type="submit" class="btn btn--primary"><?= ui_icon('check') ?> Aprobar crédito</button>
+                </form>
+                <?php endif; ?>
+                <?php if ($can_manage): ?>
+                <button type="button" onclick="openEditModal()" class="btn"><?= ui_icon('pencil') ?> Editar ficha</button>
+                <?php elseif ($role === 'vendedor' && $order['user_id'] == $_SESSION['user_id'] && $order['status'] === 'revision'): ?>
+                <a href="editar_venta.php?id=<?= $order['id'] ?>" class="btn btn--primary"><?= ui_icon('pencil') ?> Editar mi venta</a>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Acciones rápidas (celular) -->
+        <?php if ($order['status'] === 'revision' || $wa_link || !empty($order['client_map_link'])): ?>
+        <div class="only-mobile" style="display:grid;grid-template-columns:repeat(3, minmax(0,1fr));gap:10px">
+            <?php if ($wa_link): ?>
+            <a href="https://wa.me/<?= $wa_link ?>" target="_blank" class="card" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;text-decoration:none;color:var(--label);font-size:13px;font-weight:600">
+                <span class="icon-box icon-box--green"><?= ui_icon('message-circle') ?></span> WhatsApp
+            </a>
+            <?php endif; ?>
+            <?php if ($can_manage && $order['status'] === 'revision'): ?>
+            <a href="#contactoForm" class="card" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;text-decoration:none;color:var(--label);font-size:13px;font-weight:600">
+                <span class="icon-box icon-box--orange"><?= ui_icon('phone') ?></span> Registrar
+            </a>
+            <?php endif; ?>
+            <?php if (!empty($order['client_map_link'])): ?>
+            <a href="<?= htmlspecialchars($order['client_map_link']) ?>" target="_blank" class="card" style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 4px;text-decoration:none;color:var(--label);font-size:13px;font-weight:600">
+                <span class="icon-box icon-box--tint"><?= ui_icon('map-pin') ?></span> Mapa
+            </a>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+
+        <!-- Ciclo de vida -->
         <?php
         $pipelineSteps = [
-            ['key' => 'revision',  'label' => 'En Revisión', 'icon' => 'clock'],
-            ['key' => 'aprobado',  'label' => 'Aprobado',    'icon' => 'check-circle'],
-            ['key' => 'entregado', 'label' => 'Entregado',   'icon' => 'truck'],
+            ['key' => 'revision',  'label' => 'Verificación',    'icon' => 'clock',       'detail_done' => 'Cargada'],
+            ['key' => 'aprobado',  'label' => 'Aprobada',        'icon' => 'check',       'detail_done' => null],
+            ['key' => 'entregado', 'label' => 'Entregada',       'icon' => 'truck',       'detail_done' => null],
         ];
         $currentStatus  = $order['status'];
         $currentStepIdx = array_search($currentStatus, array_column($pipelineSteps, 'key'));
         $isRejected     = ($currentStatus === 'rechazado');
         ?>
-        <div class="px-6 py-5" style="background:var(--paper);border-bottom:1.5px solid var(--line);">
-            <?php if ($isRejected): ?>
-            <div class="flex items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="flex h-9 w-9 items-center justify-center rounded-full shrink-0" style="background:var(--rec-bg);border:1px solid var(--rec-ink);">
-                        <i data-lucide="x" class="w-4 h-4" style="color:var(--rec-ink);"></i>
-                    </div>
-                    <div>
-                        <p class="text-[10px] uppercase font-bold tracking-widest" style="color:var(--rec-ink);">Operación Rechazada</p>
-                        <p class="text-xs mt-0.5" style="color:var(--ink-2);">Esta venta no fue aprobada</p>
-                    </div>
-                </div>
-                <span class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold uppercase border shrink-0" style="background:var(--rec-bg);color:var(--rec-ink);border-color:var(--rec-ink);">
-                    <span class="w-1.5 h-1.5 rounded-full" style="background:var(--rec-ink);"></span> Rechazado
+        <ol class="lifecycle" aria-label="Estado de la venta" style="padding-top:16px;border-top:1px solid var(--separator)">
+            <li class="lifecycle__step is-done">
+                <span class="lifecycle__dot"><?= ui_icon('check') ?></span>
+                <span class="lifecycle__name">Cargada</span>
+                <span class="lifecycle__detail caption"><?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></span>
+            </li>
+            <?php foreach ($pipelineSteps as $i => $step):
+                $isDone     = !$isRejected && $currentStepIdx !== false && $i < $currentStepIdx;
+                $isCurrent  = !$isRejected && $currentStepIdx !== false && $i === $currentStepIdx;
+                $isRejStep  = $isRejected && $i === 0; // el rechazo ocurre siempre durante la verificación
+            ?>
+            <li class="lifecycle__step <?= $isDone ? 'is-done' : ($isCurrent ? 'is-current' : ($isRejStep ? 'is-rejected' : '')) ?>">
+                <span class="lifecycle__dot"><?= $isDone ? ui_icon('check') : ($isRejStep ? ui_icon('x') : '') ?></span>
+                <span class="lifecycle__name"><?= $isRejStep ? 'Rechazada' : htmlspecialchars($step['label']) ?></span>
+                <span class="lifecycle__detail caption">
+                    <?php if ($isRejStep): ?>
+                        <?= htmlspecialchars(rejection_type_label($order['rejected_type'] ?? null)) ?>
+                    <?php elseif ($step['key'] === 'revision' && !empty($order['assigned_verifier_name'])): ?>
+                        <?= htmlspecialchars($order['assigned_verifier_name']) ?><?= count($contact_log) > 0 ? ' · ' . count($contact_log) . ' intentos' : '' ?>
+                    <?php elseif ($step['key'] === 'aprobado' && !empty($order['approved_at'])): ?>
+                        <?= date('d/m/Y H:i', strtotime($order['approved_at'])) ?>
+                    <?php elseif ($step['key'] === 'entregado' && !empty($order['delivered_at'])): ?>
+                        <?= date('d/m/Y H:i', strtotime($order['delivered_at'])) ?>
+                    <?php elseif (!$isDone && !$isCurrent): ?>
+                        Pendiente
+                    <?php endif; ?>
                 </span>
-            </div>
-            <?php else: ?>
-            <div class="flex items-center max-w-sm mx-auto sm:max-w-md">
-                <?php foreach ($pipelineSteps as $i => $step):
-                    $isCompleted = $currentStepIdx !== false && $i < $currentStepIdx;
-                    $isCurrent   = $currentStepIdx !== false && $i === $currentStepIdx;
-                ?>
-                <?php if ($i > 0): ?>
-                    <div class="flex-1 h-0.5 mx-2 rounded-full transition-all duration-500" style="background:<?= $isCompleted ? '#10b981' : 'var(--line)' ?>;"></div>
-                <?php endif; ?>
-                <div class="flex flex-col items-center gap-1.5 shrink-0">
-                    <div class="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300
-                        <?php if ($isCompleted): ?>shadow-lg<?php elseif ($isCurrent): ?>ring-4 shadow-lg<?php endif; ?>"
-                        style="<?php if ($isCompleted): ?>background:#10b981;color:#fff;box-shadow:0 4px 12px rgba(16,185,129,.3);
-                               <?php elseif ($isCurrent): ?>background:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(99,102,241,.3);ring-color:rgba(99,102,241,.2);
-                               <?php else: ?>background:var(--paper);color:var(--ink-3);border:1.5px solid var(--line);<?php endif; ?>">
-                        <?php if ($isCompleted): ?>
-                            <i data-lucide="check" class="w-4 h-4"></i>
-                        <?php else: ?>
-                            <i data-lucide="<?= $step['icon'] ?>" class="w-4 h-4"></i>
+            </li>
+            <?php endforeach; ?>
+        </ol>
+    </section>
+
+    <!-- BLOQUE DE VERIFICACIÓN ASIGNADA -->
+    <?php if ($can_manage && $order['status'] === 'revision'): ?>
+    <div class="card card--pad" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px">
+        <div style="display:flex;align-items:start;gap:12px">
+            <span class="icon-box icon-box--tint"><?= ui_icon('user-check') ?></span>
+            <div>
+                <h4 class="eyebrow" style="margin:0 0 2px">Verificación</h4>
+                <p class="subhead" style="margin:0">
+                    <?php if (!empty($order['assigned_verifier_name'])): ?>
+                        Asignada a <strong style="color:var(--label)"><?= htmlspecialchars($order['assigned_verifier_name']) ?></strong>
+                        <?php if (!empty($order['assigned_at'])): ?>
+                        <span class="tab caption">· <?= date('d/m/Y H:i', strtotime($order['assigned_at'])) ?></span>
                         <?php endif; ?>
-                    </div>
-                    <span class="text-[9px] uppercase font-bold tracking-wider whitespace-nowrap"
-                        style="color:<?php if ($isCompleted): ?>#10b981<?php elseif ($isCurrent): ?>var(--accent)<?php else: ?>var(--ink-3)<?php endif; ?>;">
-                        <?= $step['label'] ?>
-                    </span>
-                </div>
-                <?php endforeach; ?>
+                    <?php else: ?>
+                        Sin verificador asignado
+                    <?php endif; ?>
+                </p>
             </div>
+        </div>
+
+        <?php if ($can_assign): ?>
+        <form method="POST" action="asignar_verificador.php" style="display:flex;align-items:center;gap:8px">
+            <?= csrf_field() ?>
+            <input type="hidden" name="sale_id" value="<?= $order['id'] ?>">
+            <select name="verifier_id" class="select" style="height:40px;min-width:160px">
+                <option value="">Sin asignar</option>
+                <?php foreach ($verifiers as $v): ?>
+                <option value="<?= $v['id'] ?>" <?= (int)($order['assigned_verifier_id'] ?? 0) === (int)$v['id'] ? 'selected' : '' ?>><?= htmlspecialchars($v['name']) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <button type="submit" class="btn btn--primary btn--sm">Asignar</button>
+        </form>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
+
+    <!-- BLOQUE DE AUDITORÍA: APROBACIÓN -->
+    <?php if (in_array($order['status'], ['aprobado', 'entregado']) && !empty($order['approved_at'])): ?>
+    <div class="card card--pad" style="display:flex;align-items:start;gap:12px">
+        <span class="icon-box icon-box--green"><?= ui_icon('shield-check') ?></span>
+        <div>
+            <h4 class="eyebrow" style="margin:0 0 2px">Crédito aprobado</h4>
+            <p class="subhead" style="margin:0">Verificado por <strong style="color:var(--label)"><?= htmlspecialchars($order['approved_by_name'] ?? 'Sistema') ?></strong></p>
+            <p class="caption" style="margin:2px 0 0"><?= date('d/m/Y H:i', strtotime($order['approved_at'])) ?> hs.</p>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <!-- BLOQUE DE AUDITORÍA: RECHAZO -->
+    <?php if ($order['status'] === 'rechazado'): ?>
+    <div class="card card--pad" style="display:flex;align-items:start;gap:12px">
+        <span class="icon-box icon-box--red"><?= ui_icon('alert-triangle') ?></span>
+        <div style="flex:1;min-width:0">
+            <h4 class="eyebrow" style="margin:0 0 2px">Operación rechazada</h4>
+            <?php $rt = $order['rejected_type'] ?? null; ?>
+            <p style="margin:0 0 4px;font-weight:700;display:flex;flex-wrap:wrap;align-items:center;gap:6px">
+                <?= htmlspecialchars(rejection_type_label($rt)) ?>
+                <?php if (rejection_type_blocks($rt)): ?>
+                <span class="tag" style="background:var(--red-soft);color:var(--red-hover)">Queda en lista negra</span>
+                <?php else: ?>
+                <span class="tag" style="background:var(--tint-soft);color:var(--tint-text)">Se puede volver a cargar</span>
+                <?php endif; ?>
+            </p>
+            <p class="subhead" style="margin:0;font-style:italic">"<?= htmlspecialchars($order['rejected_reason'] ?? 'Sin motivo especificado') ?>"</p>
+
+            <?php if ($can_assign): // admin y supervisor pueden reclasificar ?>
+            <form method="POST" action="reclasificar_rechazo.php" style="margin-top:10px;display:flex;flex-wrap:wrap;align-items:center;gap:8px">
+                <?= csrf_field() ?>
+                <input type="hidden" name="sale_id" value="<?= (int)$order['id'] ?>">
+                <label class="caption" style="font-weight:700">Reclasificar:</label>
+                <select name="reject_type" class="select" style="height:36px;width:auto">
+                    <?php foreach (REJECTION_TYPES_SELECTABLE as $t): ?>
+                    <option value="<?= $t ?>" <?= $rt === $t ? 'selected' : '' ?>><?= htmlspecialchars(rejection_type_label($t)) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <button type="submit" class="btn btn--danger btn--sm">Guardar</button>
+            </form>
+            <?php endif; ?>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <div class="row" style="align-items:flex-start">
+        <!-- Columna principal -->
+        <div class="col-main" style="display:flex;flex-direction:column;gap:20px">
+
+            <section class="group">
+                <h2 class="group__title">Datos del cliente</h2>
+                <div class="group__body">
+                    <div class="kv">
+                        <span class="kv__label">WhatsApp</span>
+                        <span style="display:flex;align-items:center;gap:10px">
+                            <span class="tab" style="font-weight:600"><?= htmlspecialchars($order['client_whatsapp'] ?? '-') ?></span>
+                            <?php if ($wa_link): ?>
+                            <a href="https://wa.me/<?= $wa_link ?>" target="_blank" aria-label="Abrir chat de WhatsApp" class="icon-box icon-box--green"><?= ui_icon('message-circle') ?></a>
+                            <?php else: ?>
+                            <span class="icon-box icon-box--gray" title="No se pudo generar un enlace de WhatsApp válido"><?= ui_icon('message-circle-off') ?></span>
+                            <?php endif; ?>
+                        </span>
+                    </div>
+                    <div class="kv">
+                        <span class="kv__label">Teléfono alternativo</span>
+                        <span class="tab"><?= htmlspecialchars($order['client_phone'] ?? '-') ?></span>
+                    </div>
+                    <div class="kv">
+                        <span class="kv__label">Domicilio</span>
+                        <span><?= htmlspecialchars($order['client_address'] ?? '-') ?></span>
+                    </div>
+                    <div class="kv">
+                        <span class="kv__label">Barrio · localidad</span>
+                        <span><?= htmlspecialchars($order['client_neighborhood'] ?? 'Sin especificar') ?> · <?= htmlspecialchars($order['client_locality'] ?? '-') ?></span>
+                    </div>
+                    <?php if (!empty($order['client_map_link'])): ?>
+                    <a href="<?= htmlspecialchars($order['client_map_link']) ?>" target="_blank" class="cell">
+                        <?= ui_icon('map-pin', 'icon--tint') ?>
+                        <span class="cell__body"><span class="cell__title" style="font-weight:600">Ver ubicación en Google Maps</span></span>
+                        <span class="cell__chevron"><?= ui_icon('chevron-right') ?></span>
+                    </a>
+                    <?php endif; ?>
+                </div>
+            </section>
+
+            <section class="group">
+                <h2 class="group__title">Datos laborales</h2>
+                <div class="group__body">
+                    <div class="kv">
+                        <span class="kv__label">Empresa</span>
+                        <span><?= htmlspecialchars($order['job_name'] ?? '-') ?></span>
+                    </div>
+                    <div class="kv">
+                        <span class="kv__label">Ocupación · tipo de empleo</span>
+                        <span><?= htmlspecialchars($order['job_occupation'] ?? '-') ?> · <?= htmlspecialchars($order['job_type'] ?? '-') ?></span>
+                    </div>
+                    <div class="kv">
+                        <span class="kv__label">Domicilio laboral</span>
+                        <span><?= htmlspecialchars($order['job_address'] ?? '-') ?></span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- DOCUMENTACIÓN ADJUNTA -->
+            <?php if (!empty($files)): ?>
+            <section style="display:flex;flex-direction:column;gap:8px">
+                <h2 class="group__title" style="padding:0 4px">Documentación · <?= count($files) ?></h2>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));gap:12px">
+                    <?php foreach ($files as $file): $isPdf = strpos(strtolower($file['file_path'] ?? ''), '.pdf') !== false; ?>
+                    <a href="uploads/<?= htmlspecialchars($file['file_path'] ?? '') ?>" target="_blank" class="card" style="overflow:hidden;text-decoration:none;color:var(--label)">
+                        <?php if ($isPdf): ?>
+                        <div style="height:90px;background:var(--bg-card-2);display:flex;align-items:center;justify-content:center;color:var(--label-2)"><?= ui_icon('file-text') ?></div>
+                        <?php else: ?>
+                        <img src="uploads/<?= htmlspecialchars($file['file_path'] ?? '') ?>" alt="" style="height:90px;width:100%;object-fit:cover;background:var(--bg-card-2)"
+                             onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                        <div style="display:none;height:90px;background:var(--bg-card-2);align-items:center;justify-content:center;color:var(--label-2)"><?= ui_icon('image') ?></div>
+                        <?php endif; ?>
+                        <div class="caption" style="padding:8px 10px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><?= htmlspecialchars($file['file_path'] ?? '') ?></div>
+                    </a>
+                    <?php endforeach; ?>
+                </div>
+            </section>
             <?php endif; ?>
         </div>
 
-        <div class="p-8 space-y-10">
+        <!-- Columna lateral -->
+        <aside class="col-side" style="display:flex;flex-direction:column;gap:20px">
 
-            <!-- BLOQUE DE VERIFICACIÓN ASIGNADA -->
-            <?php if ($can_manage && $order['status'] === 'revision'): ?>
-            <div class="p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4" style="background:var(--accent-soft);border:1px solid rgba(99,102,241,.3);">
-                <div class="flex items-start gap-4">
-                    <div class="p-2 rounded-xl shrink-0" style="background:rgba(99,102,241,.12);color:var(--accent-ink);">
-                        <i data-lucide="user-check" class="w-6 h-6"></i>
-                    </div>
-                    <div>
-                        <h4 class="uppercase text-[10px] font-bold tracking-widest mb-1" style="color:var(--accent-ink);">Verificación</h4>
-                        <p class="text-sm font-medium" style="color:var(--ink);">
-                            <?php if (!empty($order['assigned_verifier_name'])): ?>
-                                Asignada a <span style="color:var(--accent-ink);font-weight:700;"><?= htmlspecialchars($order['assigned_verifier_name']) ?></span>
-                                <?php if (!empty($order['assigned_at'])): ?>
-                                <span class="font-mono text-xs" style="color:var(--ink-3);">· <?= date('d/m/Y H:i', strtotime($order['assigned_at'])) ?></span>
-                                <?php endif; ?>
-                            <?php else: ?>
-                                <span class="italic" style="color:var(--ink-3);">Sin verificador asignado</span>
-                            <?php endif; ?>
-                        </p>
-                    </div>
+            <section class="group__body">
+                <div style="padding:16px 20px 14px;display:flex;flex-direction:column;gap:2px">
+                    <span class="eyebrow">Plan de pago</span>
+                    <span class="tab title2"><?= ui_money($order['total_amount'] ?? 0) ?></span>
+                    <span class="subhead"><?= htmlspecialchars($order['item'] ?? '-') ?></span>
                 </div>
+                <div class="kv"><span class="kv__label">Adelanto</span><span class="tab"><?= ui_money($order['down_payment'] ?? 0) ?></span></div>
+                <div class="kv"><span class="kv__label">Cuotas</span><span class="tab" style="font-weight:600"><?= (int)($order['installments_count'] ?? 0) ?> × <?= ui_money($order['installment_amount'] ?? 0) ?></span></div>
+                <div class="kv"><span class="kv__label">Frecuencia · día de cobro</span><span><?= htmlspecialchars($order['payment_frequency'] ?? 'Semanal') ?> · <?= htmlspecialchars($order['payment_day'] ?? '-') ?></span></div>
+                <div class="kv"><span class="kv__label">Método</span><span><?= ($order['payment_method'] ?? 'normal') === 'rapicompra' ? 'RapiCompra' : 'Normal' ?></span></div>
+            </section>
 
-                <?php if ($can_assign): ?>
-                <form method="POST" action="asignar_verificador.php" class="flex items-center gap-2">
-                    <?= csrf_field() ?>
-                    <input type="hidden" name="sale_id" value="<?= $order['id'] ?>">
-                    <select name="verifier_id" class="input-light text-xs min-h-[44px] py-2 px-3 rounded-lg cursor-pointer min-w-[160px]">
-                        <option value="">Sin asignar</option>
-                        <?php foreach ($verifiers as $v): ?>
-                        <option value="<?= $v['id'] ?>" <?= (int)($order['assigned_verifier_id'] ?? 0) === (int)$v['id'] ? 'selected' : '' ?>><?= htmlspecialchars($v['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <button type="submit" class="min-h-[44px] px-4 rounded-lg font-bold text-xs transition shrink-0" style="background:var(--accent);color:#fff;">
-                        Asignar
-                    </button>
-                </form>
-                <?php endif; ?>
-            </div>
-            <?php endif; ?>
-
-            <!-- HISTORIAL DE CONTACTO (intentos de contacto durante la verificación) -->
+            <!-- HISTORIAL DE CONTACTO -->
             <?php if (!empty($contact_log) || ($can_manage && $order['status'] === 'revision')): ?>
-            <div class="p-5 rounded-2xl" style="background:var(--paper);border:1.5px solid var(--line);">
-                <h4 class="uppercase text-[10px] font-bold tracking-widest mb-3 flex items-center gap-1.5" style="color:var(--ink-3);">
-                    <i data-lucide="history" class="w-3.5 h-3.5"></i> Historial de Contacto
-                </h4>
+            <section class="card card--pad">
+                <h2 class="headline" style="margin:0 0 12px">Historial de contacto</h2>
 
                 <?php if (!empty($contact_log)): ?>
-                <div class="space-y-3 mb-4">
+                <ol style="margin:0 0 14px;padding:0;list-style:none;display:flex;flex-direction:column;gap:12px">
                     <?php foreach ($contact_log as $c): $cdata = json_decode($c['details'] ?? '{}', true) ?: []; ?>
-                    <div class="flex items-start gap-3 pb-3" style="border-bottom:1px dashed var(--line);">
-                        <div class="p-1.5 rounded-lg shrink-0" style="background:var(--accent-soft);color:var(--accent-ink);">
-                            <i data-lucide="phone" class="w-3.5 h-3.5"></i>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-sm font-bold" style="color:var(--ink);"><?= htmlspecialchars(contact_result_label($cdata['result'] ?? null)) ?></p>
+                    <li style="display:flex;gap:10px">
+                        <span class="icon-box icon-box--orange"><?= ui_icon('phone') ?></span>
+                        <div>
+                            <p style="margin:0;font-weight:600"><?= htmlspecialchars(contact_result_label($cdata['result'] ?? null)) ?></p>
                             <?php if (!empty($cdata['note'])): ?>
-                            <p class="text-sm italic mt-0.5" style="color:var(--ink-2);">"<?= htmlspecialchars($cdata['note']) ?>"</p>
+                            <p class="subhead" style="margin:2px 0 0;font-style:italic">"<?= htmlspecialchars($cdata['note']) ?>"</p>
                             <?php endif; ?>
-                            <p class="text-xs mt-1" style="color:var(--ink-3);">
-                                <?= htmlspecialchars($c['user_name']) ?> · <?= date('d/m/Y H:i', strtotime($c['created_at'])) ?> hs.
-                            </p>
+                            <p class="tab caption" style="margin:2px 0 0"><?= htmlspecialchars($c['user_name']) ?> · <?= date('d/m/Y H:i', strtotime($c['created_at'])) ?> hs.</p>
                         </div>
-                    </div>
+                    </li>
                     <?php endforeach; ?>
-                </div>
+                </ol>
                 <?php endif; ?>
 
                 <?php if ($can_manage && $order['status'] === 'revision'): ?>
-                <form method="POST" action="registrar_contacto.php" class="space-y-2" id="contactoForm">
+                <form method="POST" action="registrar_contacto.php" id="contactoForm" style="display:flex;flex-direction:column;gap:8px;padding-top:<?= empty($contact_log) ? '0' : '14px' ?>;<?= empty($contact_log) ? '' : 'border-top:1px solid var(--separator)' ?>">
                     <?= csrf_field() ?>
                     <input type="hidden" name="sale_id" value="<?= (int)$order['id'] ?>">
-                    <div class="flex flex-wrap gap-2">
-                        <select name="contact_result" id="contact_result" class="input-light text-xs min-h-[44px] py-2 px-3 rounded-lg cursor-pointer min-w-[220px]">
-                            <?php foreach (CONTACT_RESULT_TYPES as $key => $label): ?>
-                            <option value="<?= $key ?>"><?= htmlspecialchars($label) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <button type="submit" class="min-h-[44px] px-4 rounded-lg font-bold text-xs transition shrink-0" style="background:var(--accent);color:#fff;">
-                            Registrar contacto
-                        </button>
-                    </div>
-                    <textarea name="note" id="contact_note" rows="2" placeholder="Nota (opcional)" class="w-full input-light px-3 py-2 text-sm resize-none"></textarea>
+                    <select name="contact_result" id="contact_result" class="select">
+                        <?php foreach (CONTACT_RESULT_TYPES as $key => $label): ?>
+                        <option value="<?= $key ?>"><?= htmlspecialchars($label) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                    <textarea name="note" id="contact_note" rows="2" placeholder="Nota (opcional)" class="textarea"></textarea>
+                    <button type="submit" class="btn btn--primary btn--block">Registrar contacto</button>
                 </form>
                 <script>
                     (function () {
                         const select = document.getElementById('contact_result');
                         const note   = document.getElementById('contact_note');
-                        const hint   = document.createElement('span');
                         function updateHint() {
                             const requiere = select.value === 'otro';
                             note.required = requiere;
@@ -291,380 +438,163 @@ include 'includes/header.php';
                     })();
                 </script>
                 <?php endif; ?>
-            </div>
+            </section>
             <?php endif; ?>
-
-            <!-- BLOQUE DE AUDITORÍA: APROBACIÓN (Restaurado) -->
-            <?php if (in_array($order['status'], ['aprobado', 'entregado']) && !empty($order['approved_at'])): ?>
-            <div class="p-5 rounded-2xl flex items-start gap-4" style="background:var(--apr-bg);border:1px solid var(--apr-ink);">
-                <div class="p-2 rounded-xl shrink-0" style="background:rgba(11,107,70,.12);color:var(--apr-ink);">
-                    <i data-lucide="shield-check" class="w-6 h-6"></i>
-                </div>
-                <div>
-                    <h4 class="uppercase text-[10px] font-bold tracking-widest mb-1" style="color:var(--apr-ink);">Crédito Aprobado</h4>
-                    <p class="text-sm font-medium" style="color:var(--ink);">
-                        Verificado por <span style="color:var(--apr-ink);font-weight:700;"><?= htmlspecialchars($order['approved_by_name'] ?? 'Sistema') ?></span>
-                    </p>
-                    <p class="text-xs mt-1" style="color:var(--ink-2);">
-                        Fecha y Hora: <?= date('d/m/Y - H:i', strtotime($order['approved_at'])) ?> hs.
-                    </p>
-                </div>
-            </div>
-            <?php endif; ?>
-
-            <!-- BLOQUE DE AUDITORÍA: RECHAZO -->
-            <?php if ($order['status'] === 'rechazado'): ?>
-            <div class="p-5 rounded-2xl flex items-start gap-4" style="background:var(--rec-bg);border:1px solid var(--rec-ink);">
-                <div class="p-2 rounded-xl shrink-0" style="background:rgba(159,18,57,.12);color:var(--rec-ink);">
-                    <i data-lucide="alert-triangle" class="w-6 h-6"></i>
-                </div>
-                <div class="flex-1">
-                    <h4 class="uppercase text-[10px] font-bold tracking-widest mb-1" style="color:var(--rec-ink);">Operación Rechazada</h4>
-                    <?php $rt = $order['rejected_type'] ?? null; ?>
-                    <p class="text-sm font-bold mb-1" style="color:var(--ink);">
-                        <?= htmlspecialchars(rejection_type_label($rt)) ?>
-                        <?php if (rejection_type_blocks($rt)): ?>
-                        <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ml-1" style="background:rgba(159,18,57,.15);color:var(--rec-ink);">Queda en lista negra</span>
-                        <?php else: ?>
-                        <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ml-1" style="background:var(--apr-bg);color:var(--apr-ink);">Se puede volver a cargar</span>
-                        <?php endif; ?>
-                    </p>
-                    <p class="text-sm italic" style="color:var(--ink);">"<?= htmlspecialchars($order['rejected_reason'] ?? 'Sin motivo especificado') ?>"</p>
-
-                    <?php if ($can_assign): // admin y supervisor pueden reclasificar ?>
-                    <form method="POST" action="reclasificar_rechazo.php" class="mt-3 flex flex-wrap items-center gap-2">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="sale_id" value="<?= (int)$order['id'] ?>">
-                        <label class="text-[10px] uppercase font-bold" style="color:var(--rec-ink);">Reclasificar:</label>
-                        <select name="reject_type" class="input-light rounded-lg px-3 py-1.5 text-xs cursor-pointer">
-                            <?php foreach (REJECTION_TYPES_SELECTABLE as $t): ?>
-                            <option value="<?= $t ?>" <?= $rt === $t ? 'selected' : '' ?>><?= htmlspecialchars(rejection_type_label($t)) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                        <button type="submit" class="text-xs font-bold px-3 py-1.5 rounded-lg text-white transition" style="background:var(--rec-ink);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">Guardar</button>
-                    </form>
-                    <?php endif; ?>
-                </div>
-            </div>
-            <?php endif; ?>
-
-            <!-- SECCIÓN: DATOS DEL CLIENTE -->
-            <div class="grid lg:grid-cols-2 gap-12 mt-6">
-                <div class="space-y-6">
-                    <div class="flex items-center gap-2 pb-2" style="color:var(--accent);border-bottom:1.5px solid var(--line);">
-                        <i data-lucide="user" class="w-4 h-4"></i>
-                        <h3 class="font-bold uppercase text-xs tracking-wider">Datos del Cliente</h3>
-                    </div>
-                    <div class="grid grid-cols-1 gap-5 text-sm">
-                        <div>
-                            <p class="text-[10px] uppercase font-bold mb-1" style="color:var(--ink-3);">Nombre y Apellido</p>
-                            <p class="text-lg font-bold" style="color:var(--ink);"><?= htmlspecialchars($order['client_name'] ?? '-') ?></p>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <p class="text-[10px] uppercase font-bold mb-1" style="color:var(--ink-3);">DNI</p>
-                                <p class="font-mono" style="color:var(--ink-2);"><?= htmlspecialchars($order['client_dni'] ?? '-') ?></p>
-                            </div>
-                            <div>
-                                <p class="text-[10px] uppercase font-bold mb-1" style="color:var(--ink-3);">WhatsApp</p>
-                                <?php $wa_link = normalize_ar_whatsapp($order['client_whatsapp'] ?? ''); ?>
-                                <?php if ($wa_link): ?>
-                                <a href="https://wa.me/<?= $wa_link ?>" target="_blank" class="text-emerald-600 font-bold flex items-center gap-1 hover:text-emerald-500 transition">
-                                    <i data-lucide="message-circle" class="w-3 h-3"></i> <?= htmlspecialchars($order['client_whatsapp'] ?? '-') ?>
-                                </a>
-                                <?php else: ?>
-                                <span class="font-bold flex items-center gap-1" style="color:var(--ink-3);" title="No se pudo generar un enlace de WhatsApp válido para este número">
-                                    <i data-lucide="message-circle-off" class="w-3 h-3"></i> <?= htmlspecialchars($order['client_whatsapp'] ?? '-') ?>
-                                </span>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <p class="text-[10px] uppercase font-bold mb-1" style="color:var(--ink-3);">Nro Llamada</p>
-                                <p style="color:var(--ink-2);"><?= htmlspecialchars($order['client_phone'] ?? '-') ?></p>
-                            </div>
-                            <div>
-                                <p class="text-[10px] uppercase font-bold mb-1" style="color:var(--ink-3);">Localidad</p>
-                                <p style="color:var(--ink-2);"><?= htmlspecialchars($order['client_locality'] ?? '-') ?></p>
-                            </div>
-                        </div>
-                        <div>
-                            <p class="text-[10px] uppercase font-bold mb-1" style="color:var(--ink-3);">Domicilio / Barrio</p>
-                            <p style="color:var(--ink);"><?= htmlspecialchars($order['client_address'] ?? '-') ?></p>
-                            <p class="text-xs mt-0.5" style="color:var(--ink-2);">Barrio: <?= htmlspecialchars($order['client_neighborhood'] ?? 'No especificado') ?></p>
-                        </div>
-
-                        <?php if(!empty($order['client_map_link'])): ?>
-                        <div class="pt-2">
-                            <a href="<?= htmlspecialchars($order['client_map_link']) ?>" target="_blank" class="w-full sm:w-auto inline-flex items-center justify-center gap-3 text-blue-500 px-5 py-3 rounded-2xl text-xs font-bold hover:bg-blue-600 hover:text-white transition border shadow-lg" style="background:var(--accent-soft);border-color:rgba(99,102,241,.3);">
-                                <i data-lucide="map-pin" class="w-5 h-5"></i> ABRIR UBICACIÓN GOOGLE MAPS
-                            </a>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
-
-                <!-- SECCIÓN: DATOS LABORALES -->
-                <div class="space-y-6">
-                    <div class="flex items-center gap-2 pb-2" style="color:var(--accent-ink);border-bottom:1.5px solid var(--line);">
-                        <i data-lucide="briefcase" class="w-4 h-4"></i>
-                        <h3 class="font-bold uppercase text-xs tracking-wider">Información Laboral</h3>
-                    </div>
-                    <div class="grid grid-cols-2 gap-5 text-sm">
-                        <div>
-                            <p class="text-[10px] uppercase font-bold mb-1" style="color:var(--ink-3);">Tipo de Empleo</p>
-                            <p style="color:var(--ink);"><?= htmlspecialchars($order['job_type'] ?? '-') ?></p>
-                        </div>
-                        <div>
-                            <p class="text-[10px] uppercase font-bold mb-1" style="color:var(--ink-3);">Ocupación</p>
-                            <p style="color:var(--ink-2);"><?= htmlspecialchars($order['job_occupation'] ?? '-') ?></p>
-                        </div>
-                        <div class="col-span-2">
-                            <p class="text-[10px] uppercase font-bold mb-1" style="color:var(--ink-3);">Nombre de la Empresa</p>
-                            <p class="font-medium text-base" style="color:var(--ink);"><?= htmlspecialchars($order['job_name'] ?? '-') ?></p>
-                        </div>
-                        <div class="col-span-2">
-                            <p class="text-[10px] uppercase font-bold mb-1" style="color:var(--ink-3);">Domicilio Laboral</p>
-                            <p style="color:var(--ink-2);"><?= htmlspecialchars($order['job_address'] ?? '-') ?></p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SECCIÓN: DETALLE ECONÓMICO -->
-            <div class="p-8 rounded-3xl shadow-inner" style="background:var(--paper);border:1.5px solid var(--line);">
-                <div class="flex items-center gap-2 mb-8 pb-4" style="color:#0b6b46;border-bottom:1.5px solid var(--line);">
-                    <i data-lucide="dollar-sign" class="w-5 h-5"></i>
-                    <h3 class="font-bold uppercase text-xs tracking-widest">Plan de Pago y Producto</h3>
-                </div>
-
-                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8">
-                    <div class="col-span-2 md:col-span-4 lg:col-span-2">
-                        <p class="text-[10px] uppercase font-bold mb-2 tracking-widest" style="color:var(--ink-3);">Artículo</p>
-                        <p class="text-lg font-bold" style="color:var(--ink);"><?= htmlspecialchars($order['item'] ?? '-') ?></p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] uppercase font-bold mb-2 tracking-widest" style="color:var(--ink-3);">Frecuencia</p>
-                        <span class="text-blue-600 font-bold uppercase text-[10px] px-2 py-1 rounded-lg" style="background:var(--ent-bg);border:1px solid var(--ent-ink);">
-                            <?= htmlspecialchars($order['payment_frequency'] ?? 'Semanal') ?>
-                        </span>
-                    </div>
-                    <div>
-                        <p class="text-[10px] uppercase font-bold mb-2 tracking-widest" style="color:var(--ink-3);">Día Cobro</p>
-                        <p class="font-bold uppercase text-xs" style="color:#0b6b46;"><?= htmlspecialchars($order['payment_day'] ?? '-') ?></p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] uppercase font-bold mb-2 tracking-widest" style="color:var(--ink-3);">Cuotas</p>
-                        <p class="font-medium" style="color:var(--ink);"><?= $order['installments_count'] ?? 0 ?> pagos</p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] uppercase font-bold mb-2 tracking-widest" style="color:var(--ink-3);">Monto Cuota</p>
-                        <p class="font-bold" style="color:var(--ink);">$<?= number_format($order['installment_amount'] ?? 0, 0, ',', '.') ?></p>
-                    </div>
-                </div>
-
-                <div class="mt-8 pt-6 flex flex-col md:flex-row justify-between items-end gap-4" style="border-top:1.5px solid var(--line);">
-                    <div>
-                        <p class="text-[10px] uppercase font-bold mb-1" style="color:var(--ink-3);">Adelanto / Entrega</p>
-                        <p class="font-bold text-xl" style="color:var(--ink-2);">$<?= number_format($order['down_payment'] ?? 0, 0, ',', '.') ?></p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-[10px] uppercase font-bold tracking-widest mb-1" style="color:var(--apr-ink);">Valor Total Final</p>
-                        <p class="font-black text-4xl" style="color:var(--apr-ink);">$<?= number_format($order['total_amount'] ?? 0, 0, ',', '.') ?></p>
-                    </div>
-                </div>
-            </div>
 
             <!-- OBSERVACIONES -->
             <?php if (!empty($order['observations'])): ?>
-            <div class="p-6 rounded-2xl" style="background:#fffbeb;border:1px solid #f59e0b;">
-                <div class="flex items-center gap-2 mb-3">
-                    <i data-lucide="message-square" class="w-4 h-4" style="color:#b45309;"></i>
-                    <strong class="uppercase text-[10px] font-bold tracking-widest" style="color:#b45309;">Notas de la Venta</strong>
-                </div>
-                <p class="text-sm italic whitespace-pre-wrap leading-relaxed" style="color:#78350f;"><?= htmlspecialchars($order['observations']) ?></p>
-            </div>
+            <section class="card card--pad">
+                <h2 class="headline" style="margin:0 0 8px">Observaciones del vendedor</h2>
+                <p class="subhead" style="margin:0;white-space:pre-wrap;line-height:1.5"><?= htmlspecialchars($order['observations']) ?></p>
+            </section>
             <?php endif; ?>
-
-            <!-- DOCUMENTACIÓN ADJUNTA -->
-            <?php if (!empty($files)): ?>
-            <div class="space-y-4">
-                <div class="flex items-center gap-2 pb-2" style="color:#7c3aed;border-bottom:1.5px solid var(--line);">
-                    <i data-lucide="files" class="w-4 h-4"></i>
-                    <h3 class="font-bold uppercase text-xs tracking-wider">Documentación Adjunta</h3>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    <?php foreach ($files as $file): ?>
-                    <a href="uploads/<?= htmlspecialchars($file['file_path'] ?? '') ?>" target="_blank" class="flex items-center gap-3 p-4 rounded-2xl transition group shadow-sm hover:shadow-md" style="background:var(--card);border:1.5px solid var(--line);">
-                        <div class="p-2.5 rounded-lg transition-colors group-hover:bg-purple-600 group-hover:text-white" style="background:var(--paper);border:1.5px solid var(--line);">
-                            <i data-lucide="<?= strpos(strtolower($file['file_path'] ?? ''), '.pdf') !== false ? 'file-text' : 'image' ?>" class="w-5 h-5"></i>
-                        </div>
-                        <span class="text-[10px] truncate flex-1" style="color:var(--ink-2);"><?= htmlspecialchars($file['file_path'] ?? '') ?></span>
-                        <i data-lucide="external-link" class="w-4 h-4 group-hover:text-purple-500" style="color:var(--line);"></i>
-                    </a>
-                    <?php endforeach; ?>
-                </div>
-            </div>
-            <?php endif; ?>
-        </div>
-
-        <!-- ACCIONES DE GESTIÓN (Auditores) -->
-        <?php if ($can_manage && $order['status'] === 'revision'): ?>
-        <div class="backdrop-blur p-8 flex flex-col sm:flex-row justify-end gap-4 items-center" style="background:var(--paper);border-top:1.5px solid var(--line);">
-            <div class="text-[10px] uppercase font-bold tracking-widest mr-auto hidden sm:block" style="color:var(--ink-3);">
-                <i data-lucide="shield-check" class="inline w-3.5 h-3.5 mr-1 text-blue-500"></i> Auditoría Pendiente
-            </div>
-            <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="w-full sm:w-auto px-10 py-4 font-bold rounded-2xl transition flex justify-center items-center gap-2" style="background:var(--rec-bg);color:var(--rec-ink);border:1.5px solid var(--rec-ink);">
-                <i data-lucide="x-circle" class="w-5 h-5"></i> Rechazar
-            </a>
-            <form method="POST" action="update_status.php" class="w-full sm:w-auto">
-                <?= csrf_field() ?>
-                <input type="hidden" name="id" value="<?= $order['id'] ?>">
-                <input type="hidden" name="status" value="aprobado">
-                <button type="submit" class="w-full px-10 py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-2xl shadow-xl shadow-emerald-900/30 transition transform hover:-translate-y-1 flex justify-center items-center gap-2">
-                    <i data-lucide="check-circle" class="w-5 h-5"></i> Aprobar Venta
-                </button>
-            </form>
-        </div>
-        <?php endif; ?>
+        </aside>
     </div>
+
+    <!-- ACCIONES DE GESTIÓN (celular, fija abajo) -->
+    <?php if ($can_manage && $order['status'] === 'revision'): ?>
+    <div class="action-bar only-mobile">
+        <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="btn btn--danger"><?= ui_icon('x-circle') ?> Rechazar</a>
+        <form method="POST" action="update_status.php">
+            <?= csrf_field() ?>
+            <input type="hidden" name="id" value="<?= $order['id'] ?>">
+            <input type="hidden" name="status" value="aprobado">
+            <button type="submit" class="btn btn--primary btn--block"><?= ui_icon('check') ?> Aprobar crédito</button>
+        </form>
+    </div>
+    <?php endif; ?>
+
+</div>
 </main>
 
-<!-- MODAL DE EDICIÓN TOTAL -->
+<!-- SHEET DE EDICIÓN TOTAL -->
 <?php if ($can_manage): ?>
-<div id="editModal" class="fixed inset-0 backdrop-blur-xl hidden z-50 overflow-y-auto" style="background:rgba(43,43,58,.55);">
-    <div class="flex min-h-full items-start sm:items-center justify-center p-2 sm:p-4">
-    <div class="rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-4xl p-4 sm:p-8 my-2 sm:my-6 transform transition-all" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-        <div class="flex justify-between items-center mb-8 pb-4" style="border-bottom:1.5px solid var(--line);">
-            <h3 class="text-xl font-bold flex items-center gap-3" style="color:var(--ink);">
-                <i data-lucide="settings-2" class="text-blue-500 w-6 h-6"></i> Edición Integral de la Ficha
-            </h3>
-            <button onclick="closeEditModal()" class="transition w-10 h-10 flex items-center justify-center rounded-full shrink-0" style="color:var(--ink-2);background:var(--paper);border:1.5px solid var(--line);"><i data-lucide="x" class="w-5 h-5"></i></button>
+<div id="editModal" class="sheet-backdrop" style="display:none">
+    <div class="sheet">
+        <span class="sheet__grabber"></span>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <h3 class="title2" style="display:flex;align-items:center;gap:8px"><?= ui_icon('settings-2', 'icon--tint') ?> Edición integral de la ficha</h3>
+            <button type="button" onclick="closeEditModal()" class="btn btn--icon btn--sm" aria-label="Cerrar"><?= ui_icon('x') ?></button>
         </div>
 
-        <form action="update_sale_full.php" method="POST" enctype="multipart/form-data" class="space-y-8">
+        <form action="update_sale_full.php" method="POST" enctype="multipart/form-data" style="display:flex;flex-direction:column;gap:20px">
             <?= csrf_field() ?>
             <input type="hidden" name="sale_id" value="<?= $order['id'] ?>">
 
-            <div class="grid md:grid-cols-2 gap-10">
+            <div class="form-grid">
                 <!-- Columna 1: Cliente -->
-                <div class="space-y-4">
-                    <h4 class="text-blue-500 text-xs font-bold uppercase tracking-widest border-l-4 border-blue-500 pl-3">Datos del Cliente</h4>
-
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="col-span-2">
-                            <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Nombre Completo</label>
-                            <input type="text" name="client_name" value="<?= htmlspecialchars($order['client_name'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition">
+                <div style="display:flex;flex-direction:column;gap:12px">
+                    <h4 class="eyebrow" style="color:var(--tint-text)">Datos del cliente</h4>
+                    <div class="field">
+                        <label class="field__label">Nombre completo</label>
+                        <input type="text" name="client_name" value="<?= htmlspecialchars($order['client_name'] ?? '') ?>" class="input">
+                    </div>
+                    <div class="row">
+                        <div class="field" style="flex:1 1 140px">
+                            <label class="field__label">DNI</label>
+                            <input type="text" name="client_dni" value="<?= htmlspecialchars($order['client_dni'] ?? '') ?>" class="input tab">
                         </div>
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">DNI</label>
-                            <input type="text" name="client_dni" value="<?= htmlspecialchars($order['client_dni'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition font-mono">
+                        <div class="field" style="flex:1 1 140px">
+                            <label class="field__label">WhatsApp</label>
+                            <input type="tel" name="client_whatsapp" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)" value="<?= htmlspecialchars($order['client_whatsapp'] ?? '') ?>" class="input tab">
                         </div>
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">WhatsApp</label>
-                            <input type="tel" name="client_whatsapp" inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)" value="<?= htmlspecialchars($order['client_whatsapp'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition font-mono">
+                    </div>
+                    <div class="field">
+                        <label class="field__label">Nro llamada</label>
+                        <input type="tel" name="client_phone" <?= ($order['sale_type'] ?? 'credito') === 'contado' ? '' : 'required' ?> inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)" value="<?= htmlspecialchars($order['client_phone'] ?? '') ?>" class="input tab">
+                    </div>
+                    <div class="field">
+                        <label class="field__label">Domicilio</label>
+                        <input type="text" name="client_address" value="<?= htmlspecialchars($order['client_address'] ?? '') ?>" class="input">
+                    </div>
+                    <div class="row">
+                        <div class="field" style="flex:1 1 140px">
+                            <label class="field__label">Barrio</label>
+                            <input type="text" name="client_neighborhood" value="<?= htmlspecialchars($order['client_neighborhood'] ?? '') ?>" class="input">
                         </div>
-                        <div class="col-span-2">
-                            <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Nro Llamada</label>
-                            <input type="tel" name="client_phone" <?= ($order['sale_type'] ?? 'credito') === 'contado' ? '' : 'required' ?> inputmode="numeric" oninput="this.value=this.value.replace(/\D/g,'').slice(0,15)" value="<?= htmlspecialchars($order['client_phone'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition font-mono">
-                        </div>
-                        <div class="col-span-2">
-                            <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Domicilio</label>
-                            <input type="text" name="client_address" value="<?= htmlspecialchars($order['client_address'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Barrio</label>
-                            <input type="text" name="client_neighborhood" value="<?= htmlspecialchars($order['client_neighborhood'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition">
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Localidad</label>
+                        <div class="field" style="flex:1 1 140px">
+                            <label class="field__label">Localidad</label>
                             <?php
                             $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Catamarca','Concepción','Cruz Alta','Famaillá','La Florida','Leales','Lules','Manantial','Monteros','Ranchillos','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Sgo','Villa Carmela','Yerba Buena'];
                             $localidadesLabels = ['Sgo' => 'Sgo del Estero'];
                             $cur_loc = $order['client_locality'] ?? '';
                             ?>
-                            <select name="client_locality" id="client_locality" class="input-light w-full rounded-xl px-4 py-2.5 transition">
+                            <select name="client_locality" id="client_locality" class="select">
                                 <option value="" disabled <?= $cur_loc === '' ? 'selected' : '' ?>>Seleccionar localidad...</option>
                                 <?php foreach ($localidades as $loc): ?>
                                 <option value="<?= htmlspecialchars($loc) ?>" <?= $cur_loc === $loc ? 'selected' : '' ?>><?= htmlspecialchars($localidadesLabels[$loc] ?? $loc) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-span-2">
-                            <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:#0b6b46;">Enlace Google Maps</label>
-                            <div class="relative">
-                                <input type="text" name="client_map_link" required value="<?= htmlspecialchars($order['client_map_link'] ?? '') ?>" placeholder="Pegue aquí el enlace de ubicación" class="input-light w-full rounded-xl px-4 py-2.5 transition">
-                                <div class="absolute right-3 top-1/2 -translate-y-1/2" style="color:#0b6b46;"><i data-lucide="map-pin" class="w-4 h-4"></i></div>
-                            </div>
-                        </div>
+                    </div>
+                    <div class="field">
+                        <label class="field__label" style="color:var(--green-hover)">Enlace Google Maps</label>
+                        <input type="text" name="client_map_link" required value="<?= htmlspecialchars($order['client_map_link'] ?? '') ?>" placeholder="Pegá aquí el enlace de ubicación" class="input">
                     </div>
                 </div>
 
                 <!-- Columna 2: Laboral y Venta -->
-                <div class="space-y-8">
-                    <!-- Laboral -->
-                    <div class="space-y-4">
-                        <h4 class="text-xs font-bold uppercase tracking-widest border-l-4 pl-3" style="color:var(--accent-ink);border-color:var(--accent-ink);">Datos Laborales</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Tipo Empleo</label>
-                                <input type="text" name="job_type" value="<?= htmlspecialchars($order['job_type'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition">
+                <div style="display:flex;flex-direction:column;gap:20px">
+                    <div style="display:flex;flex-direction:column;gap:12px">
+                        <h4 class="eyebrow" style="color:var(--tint-text)">Datos laborales</h4>
+                        <div class="row">
+                            <div class="field" style="flex:1 1 140px">
+                                <label class="field__label">Tipo empleo</label>
+                                <input type="text" name="job_type" value="<?= htmlspecialchars($order['job_type'] ?? '') ?>" class="input">
                             </div>
-                            <div>
-                                <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Ocupación</label>
-                                <input type="text" name="job_occupation" value="<?= htmlspecialchars($order['job_occupation'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition">
+                            <div class="field" style="flex:1 1 140px">
+                                <label class="field__label">Ocupación</label>
+                                <input type="text" name="job_occupation" value="<?= htmlspecialchars($order['job_occupation'] ?? '') ?>" class="input">
                             </div>
-                            <div class="col-span-2">
-                                <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Empresa</label>
-                                <input type="text" name="job_name" value="<?= htmlspecialchars($order['job_name'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition">
-                            </div>
-                            <div class="col-span-2">
-                                <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Dirección Laboral</label>
-                                <input type="text" name="job_address" value="<?= htmlspecialchars($order['job_address'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition">
-                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="field__label">Empresa</label>
+                            <input type="text" name="job_name" value="<?= htmlspecialchars($order['job_name'] ?? '') ?>" class="input">
+                        </div>
+                        <div class="field">
+                            <label class="field__label">Dirección laboral</label>
+                            <input type="text" name="job_address" value="<?= htmlspecialchars($order['job_address'] ?? '') ?>" class="input">
                         </div>
                     </div>
 
-                    <!-- Venta -->
-                    <div class="space-y-4">
-                        <h4 class="text-xs font-bold uppercase tracking-widest border-l-4 pl-3" style="color:#0b6b46;border-color:#0b6b46;">Plan de Pago</h4>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="col-span-2">
-                                <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Artículo</label>
-                                <input type="text" name="item" value="<?= htmlspecialchars($order['item'] ?? '') ?>" class="input-light w-full rounded-xl px-4 py-2.5 transition" required>
-                            </div>
-                            <?php if (($order['sale_type'] ?? 'credito') === 'contado'): ?>
-                            <div class="col-span-2">
-                                <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Método de Pago</label>
-                                <select name="payment_method" class="input-light w-full rounded-xl px-4 py-2.5 transition appearance-none cursor-pointer">
-                                    <option value="normal" <?= (($order['payment_method'] ?? 'normal') === 'normal') ? 'selected' : '' ?>>Normal</option>
-                                    <option value="rapicompra" <?= (($order['payment_method'] ?? 'normal') === 'rapicompra') ? 'selected' : '' ?>>RapiCompra (comisión 6%)</option>
-                                </select>
-                            </div>
-                            <?php endif; ?>
-                            <div>
-                                <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Frecuencia</label>
-                                <select name="payment_frequency" class="input-light w-full rounded-xl px-4 py-2.5 transition appearance-none cursor-pointer">
+                    <div style="display:flex;flex-direction:column;gap:12px">
+                        <h4 class="eyebrow" style="color:var(--green-hover)">Plan de pago</h4>
+                        <div class="field">
+                            <label class="field__label">Artículo</label>
+                            <input type="text" name="item" value="<?= htmlspecialchars($order['item'] ?? '') ?>" class="input" required>
+                        </div>
+                        <?php if (($order['sale_type'] ?? 'credito') === 'contado'): ?>
+                        <div class="field">
+                            <label class="field__label">Método de pago</label>
+                            <select name="payment_method" class="select">
+                                <option value="normal" <?= (($order['payment_method'] ?? 'normal') === 'normal') ? 'selected' : '' ?>>Normal</option>
+                                <option value="rapicompra" <?= (($order['payment_method'] ?? 'normal') === 'rapicompra') ? 'selected' : '' ?>>RapiCompra (comisión 6%)</option>
+                            </select>
+                        </div>
+                        <?php endif; ?>
+                        <div class="row">
+                            <div class="field" style="flex:1 1 140px">
+                                <label class="field__label">Frecuencia</label>
+                                <select name="payment_frequency" class="select">
                                     <option value="semanal" <?= (($order['payment_frequency'] ?? 'semanal') == 'semanal') ? 'selected' : '' ?>>Semanal</option>
                                     <option value="quincenal" <?= (($order['payment_frequency'] ?? '') == 'quincenal') ? 'selected' : '' ?>>Quincenal</option>
                                     <option value="mensual" <?= (($order['payment_frequency'] ?? '') == 'mensual') ? 'selected' : '' ?>>Mensual</option>
                                 </select>
                             </div>
-                            <div>
-                                <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Día Cobro</label>
-                                <select name="payment_day" id="payment_day" class="input-light w-full rounded-xl px-4 py-2.5 transition appearance-none cursor-pointer">
-                                    <?php 
+                            <div class="field" style="flex:1 1 140px">
+                                <label class="field__label">Día cobro</label>
+                                <select name="payment_day" id="payment_day" class="select">
+                                    <?php
                                     $dias_permitidos = ['Lunes', 'Martes', 'Miércoles', 'Sábado'];
                                     $current_day = $order['payment_day'] ?? '';
                                     $options_to_render = $dias_permitidos;
                                     if (!empty($current_day) && !in_array($current_day, $dias_permitidos)) {
                                         $options_to_render[] = $current_day;
                                     }
-                                    foreach ($options_to_render as $d): 
+                                    foreach ($options_to_render as $d):
                                         $is_historical = !in_array($d, $dias_permitidos);
                                     ?>
-                                        <option value="<?= htmlspecialchars($d) ?>" 
+                                        <option value="<?= htmlspecialchars($d) ?>"
                                                 <?= $current_day === $d ? 'selected' : '' ?>
                                                 <?= $is_historical ? 'class="historical-opt"' : '' ?>
                                                 id="<?= $d === 'Sábado' ? 'opt-sabado' : ($is_historical ? 'opt-historical' : '') ?>">
@@ -673,107 +603,92 @@ include 'includes/header.php';
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div>
-                                <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Cant. Cuotas</label>
-                                <input type="number" id="edit_cuotas" name="installments" value="<?= $order['installments_count'] ?? 0 ?>" class="input-light w-full rounded-xl px-4 py-2.5" oninput="recalculateTotal()" required>
+                        </div>
+                        <div class="row">
+                            <div class="field" style="flex:1 1 140px">
+                                <label class="field__label">Cant. cuotas</label>
+                                <input type="number" id="edit_cuotas" name="installments" value="<?= $order['installments_count'] ?? 0 ?>" class="input" oninput="recalculateTotal()" required>
                             </div>
-                            <div>
-                                <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Valor Cuota ($)</label>
-                                <input type="number" id="edit_monto" name="amount" value="<?= $order['installment_amount'] ?? 0 ?>" class="input-light w-full rounded-xl px-4 py-2.5" oninput="recalculateTotal()" required>
+                            <div class="field" style="flex:1 1 140px">
+                                <label class="field__label">Valor cuota ($)</label>
+                                <input type="number" id="edit_monto" name="amount" value="<?= $order['installment_amount'] ?? 0 ?>" class="input" oninput="recalculateTotal()" required>
                             </div>
-                            <div class="col-span-2">
-                                <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:var(--ink-3);">Adelanto ($)</label>
-                                <input type="number" name="down_payment" value="<?= htmlspecialchars($order['down_payment'] ?? 0) ?>" min="0" step="0.01" class="input-light w-full rounded-xl px-4 py-2.5 transition">
-                            </div>
+                        </div>
+                        <div class="field">
+                            <label class="field__label">Adelanto ($)</label>
+                            <input type="number" name="down_payment" value="<?= htmlspecialchars($order['down_payment'] ?? 0) ?>" min="0" step="0.01" class="input">
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Observaciones -->
-            <div class="space-y-2">
-                <label class="block text-[10px] font-bold uppercase mb-1 ml-1" style="color:#b45309;">Observaciones</label>
-                <textarea name="observations" rows="3" placeholder="Notas internas de la venta..." class="input-light w-full rounded-xl px-4 py-2.5 transition resize-none"><?= htmlspecialchars($order['observations'] ?? '') ?></textarea>
+            <div class="field">
+                <label class="field__label" style="color:var(--orange-hover)">Observaciones</label>
+                <textarea name="observations" rows="3" placeholder="Notas internas de la venta..." class="textarea"><?= htmlspecialchars($order['observations'] ?? '') ?></textarea>
             </div>
 
-            <div class="p-6 rounded-3xl flex justify-between items-center px-6 sm:px-12" style="background:var(--apr-bg);border:1px solid var(--apr-ink);">
-                <span class="text-xs uppercase font-bold tracking-widest" style="color:var(--apr-ink);">Nuevo Total Calculado</span>
-                <div id="edit_total" class="text-3xl font-black" style="color:var(--ink);">$<?= number_format($order['total_amount'] ?? 0, 0, ',', '.') ?></div>
+            <div class="card card--pad" style="display:flex;justify-content:space-between;align-items:center;background:var(--tint-soft);border-color:var(--tint)">
+                <span class="eyebrow" style="color:var(--tint-text)">Nuevo total calculado</span>
+                <div id="edit_total" class="tab title2">$<?= number_format($order['total_amount'] ?? 0, 0, ',', '.') ?></div>
             </div>
 
             <!-- DOCUMENTACIÓN ADJUNTA (EDICIÓN) -->
-            <div class="space-y-4">
-                <h4 class="text-xs font-bold uppercase tracking-widest border-l-4 border-purple-500 pl-3" style="color:#7c3aed;">Documentación Adjunta</h4>
+            <div style="display:flex;flex-direction:column;gap:12px">
+                <h4 class="eyebrow" style="color:var(--indigo)">Documentación adjunta</h4>
 
                 <?php
-                // Re-query con id para los botones de eliminar
                 $stmtFilesEdit = $pdo->prepare("SELECT sf.id, sf.file_path FROM sale_files sf WHERE sf.sale_id = ?");
                 $stmtFilesEdit->execute([$order['id']]);
                 $filesWithIds = $stmtFilesEdit->fetchAll(PDO::FETCH_ASSOC);
                 ?>
 
                 <?php if (!empty($filesWithIds)): ?>
-                <div>
-                    <p class="text-[10px] font-bold uppercase mb-2 ml-1" style="color:var(--ink-3);">Archivos actuales:</p>
-                    <div class="flex flex-wrap gap-2">
-                        <?php foreach ($filesWithIds as $ef):
-                            $isPdf = strpos(strtolower($ef['file_path']), '.pdf') !== false;
-                        ?>
-                        <div class="flex items-center gap-2 rounded-xl px-3 py-2 text-xs" id="file-chip-<?= $ef['id'] ?>" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-2);">
-                            <i data-lucide="<?= $isPdf ? 'file-text' : 'image' ?>" class="w-4 h-4 shrink-0" style="color:#7c3aed;"></i>
-                            <a href="uploads/<?= htmlspecialchars($ef['file_path']) ?>" target="_blank"
-                               class="truncate max-w-[140px] hover:text-purple-500 transition">
-                                <?= htmlspecialchars($ef['file_path']) ?>
-                            </a>
-                            <?php if (in_array($role, ['admin', 'supervisor']) || ($role === 'vendedor' && $order['status'] === 'revision')): ?>
-                            <button type="button"
-                                    class="p-1 transition rounded hover:text-red-500"
-                                    style="color:var(--ink-3);"
-                                    title="Eliminar"
-                                    onclick="deleteFile(<?= $ef['id'] ?>, <?= $order['id'] ?>)">
-                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                            </button>
-                            <?php endif; ?>
-                        </div>
-                        <?php endforeach; ?>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                    <?php foreach ($filesWithIds as $ef): $isPdf = strpos(strtolower($ef['file_path']), '.pdf') !== false; ?>
+                    <div class="tag" style="height:auto;padding:6px 8px;gap:6px" id="file-chip-<?= $ef['id'] ?>">
+                        <?= ui_icon($isPdf ? 'file-text' : 'image') ?>
+                        <a href="uploads/<?= htmlspecialchars($ef['file_path']) ?>" target="_blank" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+                            <?= htmlspecialchars($ef['file_path']) ?>
+                        </a>
+                        <?php if (in_array($role, ['admin', 'supervisor']) || ($role === 'vendedor' && $order['status'] === 'revision')): ?>
+                        <button type="button" onclick="deleteFile(<?= $ef['id'] ?>, <?= $order['id'] ?>)" aria-label="Eliminar" style="background:none;border:0;cursor:pointer;color:inherit;display:flex">
+                            <?= ui_icon('trash-2') ?>
+                        </button>
+                        <?php endif; ?>
                     </div>
+                    <?php endforeach; ?>
                 </div>
                 <?php endif; ?>
 
-                <!-- Zona de carga de nuevos archivos -->
-                <div class="rounded-2xl p-6 text-center group hover:border-purple-500/50 transition-colors cursor-pointer"
-                     style="background:var(--paper);border:2px dashed var(--line);"
-                     onclick="document.getElementById('edit_sale_files').click()">
-                    <input type="file" name="sale_files[]" id="edit_sale_files" multiple
-                           accept="image/*,.pdf" class="hidden" onchange="previewEditFiles(this)">
+                <div class="dropzone" onclick="document.getElementById('edit_sale_files').click()">
+                    <input type="file" name="sale_files[]" id="edit_sale_files" multiple accept="image/*,.pdf" class="sr-only" onchange="previewEditFiles(this)">
                     <div id="edit_file_list">
-                        <i data-lucide="upload-cloud" class="w-7 h-7 mx-auto mb-2 group-hover:text-purple-500 transition" style="color:var(--ink-3);"></i>
-                        <p class="text-xs font-medium" style="color:var(--ink-2);">Click para agregar más documentos</p>
-                        <p class="text-[10px] mt-1" style="color:var(--ink-3);">JPG, PNG, PDF — máx. 5MB cada uno</p>
+                        <?= ui_icon('upload-cloud') ?>
+                        <p class="subhead" style="margin:0">Click para agregar más documentos</p>
+                        <p class="caption" style="margin:0">JPG, PNG, PDF — máx. 5MB cada uno</p>
                     </div>
                 </div>
             </div>
 
-            <div class="flex gap-4 pt-4">
-                <button type="button" onclick="closeEditModal()" class="flex-1 py-4 rounded-2xl transition font-bold uppercase text-xs" style="background:var(--paper);color:var(--ink-2);border:1.5px solid var(--line);">Cancelar</button>
-                <button type="submit" class="flex-1 py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl transition font-bold uppercase text-xs shadow-xl shadow-blue-900/30">Guardar Cambios</button>
+            <div style="display:flex;gap:12px">
+                <button type="button" onclick="closeEditModal()" class="btn" style="flex:1">Cancelar</button>
+                <button type="submit" class="btn btn--primary" style="flex:1">Guardar cambios</button>
             </div>
         </form>
-    </div>
     </div>
 </div>
 
 <script>
     function openEditModal() {
         const modal = document.getElementById('editModal');
-        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
         lucide.createIcons();
     }
 
     function closeEditModal() {
         const modal = document.getElementById('editModal');
-        modal.classList.add('hidden');
+        modal.style.display = 'none';
         document.body.style.overflow = '';
     }
 
@@ -787,11 +702,9 @@ include 'includes/header.php';
     function previewEditFiles(input) {
         const container = document.getElementById('edit_file_list');
         if (!input.files || input.files.length === 0) return;
-        let html = '<div class="flex flex-wrap gap-1 justify-center mt-1">';
+        let html = '<div style="display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:4px">';
         Array.from(input.files).forEach(file => {
-            html += `<span class="text-[10px] px-2 py-1 rounded flex items-center gap-1" style="background:var(--paper);color:var(--ink-2);border:1.5px solid var(--line);">
-                <i data-lucide="file" class="w-3 h-3" style="color:#7c3aed;"></i>${file.name}
-            </span>`;
+            html += `<span class="tag">${file.name}</span>`;
         });
         html += '</div>';
         container.innerHTML = html;
@@ -810,7 +723,6 @@ include 'includes/header.php';
 
         fetch('delete_sale_file.php', { method: 'POST', body: fd })
             .then(response => {
-                // El endpoint redirige; tomamos la URL final para detectar errores
                 const chip = document.getElementById('file-chip-' + fileId);
                 if (response.url && response.url.includes('error_delete')) {
                     alert('No se pudo eliminar el archivo.');
@@ -821,19 +733,19 @@ include 'includes/header.php';
             .catch(() => alert('Error de conexión al intentar eliminar.'));
     }
 
-    // Control dinámico del día de cobro "Sábado" y resguardo histórico según la localidad en modal de edición
+    // Control dinámico del día de cobro "Sábado" y resguardo histórico según la localidad en el sheet de edición
     document.addEventListener('DOMContentLoaded', function() {
         const localitySelect = document.getElementById('client_locality');
         const paymentDaySelect = document.getElementById('payment_day');
         const optSabado = document.getElementById('opt-sabado');
         const optHistorical = document.getElementById('opt-historical');
-        
+
         function updatePaymentDays() {
             if (!localitySelect || !paymentDaySelect) return;
-            
+
             const locality = localitySelect.value;
             const isTafiOrLeales = (locality === 'Tafí del Valle' || locality === 'Leales');
-            
+
             if (optSabado) {
                 if (isTafiOrLeales) {
                     optSabado.disabled = false;
@@ -848,7 +760,7 @@ include 'includes/header.php';
                     }
                 }
             }
-            
+
             if (optHistorical) {
                 if (paymentDaySelect.value === optHistorical.value) {
                     optHistorical.disabled = false;
@@ -859,7 +771,7 @@ include 'includes/header.php';
                 }
             }
         }
-        
+
         if (localitySelect) {
             localitySelect.addEventListener('change', updatePaymentDays);
             updatePaymentDays();
