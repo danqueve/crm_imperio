@@ -211,12 +211,13 @@ include dirname(__DIR__, 2) . '/includes/header.php';
                             <option value="Miércoles" <?= $cur_day === 'Miércoles' ? 'selected' : '' ?>>Miércoles</option>
                             <option value="Sábado" id="opt-sabado" <?= $cur_day === 'Sábado' ? 'selected' : '' ?>>Sábado</option>
                         </select>
-                        <div class="chips only-mobile" id="dayChips" style="flex-wrap:wrap">
+                        <div class="chips only-mobile" id="dayChips" data-error-id="dayChipsError" style="flex-wrap:wrap">
                             <button type="button" class="chip" data-value="Lunes">Lunes</button>
                             <button type="button" class="chip" data-value="Martes">Martes</button>
                             <button type="button" class="chip" data-value="Miércoles">Miércoles</button>
                             <button type="button" class="chip" data-value="Sábado" id="chip-sabado">Sábado</button>
                         </div>
+                        <span class="field__error" id="dayChipsError" style="display:none">Elegí el día de cobro.</span>
                         <span class="caption only-mobile">Sábado solo para Tafí del Valle y Leales.</span>
                     </div>
                     <div class="field contado-hide">
@@ -476,6 +477,7 @@ include dirname(__DIR__, 2) . '/includes/header.php';
                 select.value = chip.dataset.value;
                 select.dispatchEvent(new Event('change'));
                 sync();
+                if (container.dataset.errorId) document.getElementById(container.dataset.errorId).style.display = 'none';
             });
         });
         select.addEventListener('change', sync);
@@ -594,7 +596,18 @@ include dirname(__DIR__, 2) . '/includes/header.php';
             let ok = true;
             steps.filter(s => Number(s.dataset.step) === n).forEach(section => {
                 section.querySelectorAll('input, select, textarea').forEach(el => {
-                    if (el.offsetParent === null) return; // no renderizado (p.ej. contado-hide)
+                    if (el.offsetParent === null) {
+                        // Un <select> oculto en celular que se elige con chips (día de cobro) se valida igual:
+                        // si no, el navegador bloquea "Guardar venta" sin poder mostrar ningún aviso.
+                        const field = el.closest('.field');
+                        const chips = field && field.offsetParent !== null ? field.querySelector('[data-error-id]') : null;
+                        if (chips && !el.checkValidity()) {
+                            document.getElementById(chips.dataset.errorId).style.display = '';
+                            chips.scrollIntoView({ block: 'center' });
+                            ok = false;
+                        }
+                        return;
+                    }
                     if (!el.reportValidity()) ok = false;
                 });
             });
