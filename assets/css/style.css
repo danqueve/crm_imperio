@@ -372,8 +372,8 @@ a.cell:active, button.cell:active { background: var(--bg-card-2); }
 }
 .choice input { margin: 3px 0 0; width: 18px; height: 18px; accent-color: var(--tint); }
 .choice:has(input:checked) { border-color: var(--tint); background: rgba(16, 141, 255, .06); }
-.choice__title { font-size: var(--fs-headline); font-weight: 600; }
-.choice__sub { font-size: var(--fs-subhead); line-height: var(--lh-subhead); color: var(--label-2); }
+.choice__title { display: block; font-size: var(--fs-headline); font-weight: 600; }
+.choice__sub { display: block; font-size: var(--fs-subhead); line-height: var(--lh-subhead); color: var(--label-2); }
 
 /* Zona para subir archivos */
 .dropzone {
@@ -458,7 +458,8 @@ a.cell:active, button.cell:active { background: var(--bg-card-2); }
    <svg class="ring" viewBox="0 0 128 128"> dos <circle r="52">; el segundo con
    stroke-dasharray="326.7" y stroke-dashoffset="326.7 * (1 - pct)" */
 .ring-wrap { position: relative; flex-shrink: 0; }
-.ring { transform: rotate(-90deg); display: block; }
+/* box-shadow: Tailwind CDN también define una utilidad .ring (sombra azul) que choca con esta clase */
+.ring { transform: rotate(-90deg); display: block; box-shadow: none !important; }
 .ring__track { fill: none; stroke: var(--bg-card-2); }
 .ring__value { fill: none; stroke: var(--tint); stroke-linecap: round; transition: stroke-dashoffset var(--duracion) var(--curva); }
 .ring__label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
