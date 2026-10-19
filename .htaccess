@@ -1,0 +1,14 @@
+Options -Indexes
+
+RewriteEngine On
+
+# Las credenciales se cargan exclusivamente desde PHP.
+RewriteRule ^config(?:/|$) - [F,L]
+
+# Conserva las URLs públicas existentes sin mantener archivos puente en la raíz.
+RewriteRule ^$ app/pages/index.php [END]
+RewriteRule ^((?:index|admin_audit|cargar_venta|comisiones|dashboard|editar_venta|entregas|historial_ventas|lista_vendedores|mas|perfil_vendedor|rechazar_venta|register_user|ventas_vendedor|ver_ficha)\.php)$ app/pages/$1 [END]
+RewriteRule ^((?:asignar_verificador|delete_sale_file|export_csv|logout|reclasificar_rechazo|registrar_contacto|save_sale|set_goal|update_sale_full|update_sale_plan|update_status)\.php)$ app/actions/$1 [END]
+RewriteRule ^test\.php$ app/tools/test.php [END]
+RewriteRule ^style\.css$ assets/css/style.css [END]
+RewriteRule ^(instructivo_(?:vendedor|verificador)\.html)$ docs/guides/$1 [END]

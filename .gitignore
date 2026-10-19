@@ -1,4 +1,4 @@
-config.php
+/config/database.php
 uploads/
 *.log
 

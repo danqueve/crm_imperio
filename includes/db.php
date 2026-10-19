@@ -5,7 +5,7 @@
  */
 
 // Cargar credenciales desde archivo de configuración (no versionado)
-require_once dirname(__DIR__) . '/config.php';
+require_once dirname(__DIR__) . '/config/database.php';
 
 // Base URL del proyecto — calculada desde la ubicación real del archivo en disco.
 // Funciona en raíz (/), subdirectorio (/crm/) o subdirectorio anidado (/apps/crm/).

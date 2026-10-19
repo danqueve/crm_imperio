@@ -57,25 +57,25 @@ crm/
 │   └── tools/                # Herramientas internas de diagnóstico
 ├── assets/
 │   └── css/                  # Hojas de estilo de la aplicación
+├── config/
+│   ├── database.php           # Credenciales DB (ignorado en git)
+│   └── database.example.php   # Plantilla de configuración
 ├── docs/
-│   └── plans/                # Planes técnicos y documentación de cambios
+│   ├── guides/                # Instructivos para vendedores y verificadores
+│   └── plans/                 # Planes técnicos y documentación de cambios
 ├── includes/
 │   ├── db.php                # Conexión PDO + sesión + timeout
 │   ├── functions.php         # CSRF, paginación, log_audit()
 │   ├── header.php            # Navbar con control de roles
 │   └── footer.php            # Pie de página + lucide.createIcons()
-├── index.php, dashboard.php… # Puentes públicos a app/pages (URLs compatibles)
-├── save_sale.php, logout.php…# Puentes públicos a app/actions (URLs compatibles)
-├── style.css                 # Puente a assets/css/style.css
-├── config.php                # Credenciales DB (NO subir al repo)
-├── config.example.php        # Plantilla de configuración
+├── .htaccess                 # Rutas públicas compatibles hacia app/ y assets/
 ├── uploads/                  # Archivos adjuntos de ventas (ignorado en git)
 └── img/                      # Logo e imágenes estáticas
 ```
 
-Las URLs históricas se mantienen mediante archivos puente en la raíz, por lo
-que los enlaces externos, formularios y marcadores existentes continúan
-funcionando mientras la implementación queda organizada por responsabilidad.
+Las URLs históricas se mantienen mediante reglas internas de Apache en
+`.htaccess`; los enlaces externos, formularios y marcadores existentes
+continúan funcionando mientras la raíz del proyecto permanece limpia.
 
 ---
 
