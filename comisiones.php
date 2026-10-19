@@ -3,9 +3,9 @@ require 'includes/db.php';
 require_once 'includes/functions.php'; // Requerimiento de funciones globales
 
 // SEGURIDAD: Solo Admin o Supervisor
-if (!isset($_SESSION['role']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'supervisor')) { 
-    header("Location: dashboard.php"); 
-    exit; 
+if (!isset($_SESSION['role']) || ($_SESSION['role'] !== 'admin' && $_SESSION['role'] !== 'supervisor')) {
+    header("Location: dashboard.php");
+    exit;
 }
 
 // --- 1. CONFIGURACIÓN DE FECHAS (Semana Vigente: Lunes a Sábado) ---
@@ -20,6 +20,13 @@ $endSql = $end . ' 23:59:59';
 
 // Preparamos filtros para que la paginación los mantenga en la URL
 $filtros = ['start' => $start, 'end' => $end];
+
+// --- Navegación semana anterior/siguiente (mismo largo de rango que el actual) ---
+$spanDays = (int)((strtotime($end) - strtotime($start)) / 86400) + 1;
+$prevStart = date('Y-m-d', strtotime($start . " -$spanDays days"));
+$prevEnd   = date('Y-m-d', strtotime($start . " -1 day"));
+$nextStart = date('Y-m-d', strtotime($end . " +1 day"));
+$nextEnd   = date('Y-m-d', strtotime($end . " +$spanDays days"));
 
 // --- 2. OBTENER TOTALES GENERALES DEL PERIODO (Para las tarjetas de resumen) ---
 // Comisión: tasa propia del vendedor, salvo ventas RapiCompra que siempre cobran RAPICOMPRA_COMMISSION_RATE
@@ -36,6 +43,19 @@ $summary = $stmtT->fetch();
 $totalVentas = $summary['total_ventas'] ?? 0;
 $totalComisiones = $summary['total_comisiones'] ?? 0;
 $total_registros = $summary['total_registros'] ?? 0;
+
+// --- Resumen por vendedor (celular): mismo criterio de comisión, agrupado ---
+$sqlPorVendedor = "SELECT u.id, u.name,
+                           COUNT(*) as cnt,
+                           SUM(s.total_amount) as total_venta,
+                           SUM(s.total_amount * (CASE WHEN s.payment_method = 'rapicompra' THEN " . RAPICOMPRA_COMMISSION_RATE . " ELSE u.commission_rate END / 100)) as total_comision
+                    FROM sales s JOIN users u ON s.user_id = u.id
+                    WHERE s.status = 'entregado' AND s.delivered_at BETWEEN ? AND ?
+                    GROUP BY u.id
+                    ORDER BY total_comision DESC";
+$stmtPorVendedor = $pdo->prepare($sqlPorVendedor);
+$stmtPorVendedor->execute([$startSql, $endSql]);
+$porVendedor = $stmtPorVendedor->fetchAll(PDO::FETCH_ASSOC);
 
 // --- 3. LÓGICA DE PAGINACIÓN ---
 $registros_por_pagina = 25;
@@ -90,99 +110,105 @@ include 'includes/header.php';
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
-<main class="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 fade-in">
-    
-    <div class="flex flex-col md:flex-row md:items-center gap-4 mb-8 justify-between">
-        <div class="flex items-center gap-4">
-            <a href="dashboard.php" class="p-2 rounded-full transition" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-3);" onmouseover="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--ink-3)'">
-                <i data-lucide="chevron-left"></i>
-            </a>
-            <div>
-                <h1 class="text-2xl font-bold" style="color:var(--ink);">Reporte de Comisiones</h1>
-                <p class="text-sm text-slate-500">Liquidación semanal por fecha de entrega.</p>
-            </div>
+<main class="app-main">
+<div class="app-container">
+
+    <div class="page-head">
+        <div class="page-head__text">
+            <a href="dashboard.php" class="navbar-back only-desktop"><?= ui_icon('chevron-left') ?> Panel</a>
+            <h1 class="large-title">Reporte de comisiones</h1>
+            <p class="subhead">Liquidación semanal por fecha de entrega.</p>
         </div>
+    </div>
+
+    <!-- Navegación de semana (celular) -->
+    <div class="segmented only-mobile" style="grid-template-columns:auto 1fr auto">
+        <a href="?<?= http_build_query(['start' => $prevStart, 'end' => $prevEnd]) ?>" class="segmented__item" aria-label="Período anterior"><?= ui_icon('chevron-left') ?></a>
+        <span class="segmented__item tab" style="font-weight:600;cursor:default"><?= date('d/m', strtotime($start)) ?> – <?= date('d/m', strtotime($end)) ?></span>
+        <a href="?<?= http_build_query(['start' => $nextStart, 'end' => $nextEnd]) ?>" class="segmented__item" aria-label="Período siguiente"><?= ui_icon('chevron-right') ?></a>
     </div>
 
     <!-- Filtros y Resumen -->
-    <div class="flex flex-col xl:flex-row gap-6 mb-8">
-        <!-- Formulario Filtro -->
-        <div class="flex-1 p-5 rounded-2xl" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-            <form class="flex flex-col sm:flex-row gap-4 items-end">
-                <div class="w-full sm:w-auto flex-1">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Desde</label>
-                    <input type="date" name="start" value="<?= $start ?>" class="w-full input-light px-3 py-2">
-                </div>
-                <div class="w-full sm:w-auto flex-1">
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1.5">Hasta</label>
-                    <input type="date" name="end" value="<?= $end ?>" class="w-full input-light px-3 py-2">
-                </div>
-                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg transition flex items-center gap-2">
-                    <i data-lucide="filter" class="w-4 h-4"></i> Filtrar
-                </button>
-                <button type="button" onclick="exportarPDFComplejo()" class="bg-rose-600 hover:bg-rose-500 text-white px-6 py-2.5 rounded-lg font-bold shadow-lg transition flex items-center gap-2">
-                    <i data-lucide="file-chart-column" class="w-4 h-4"></i> Reporte Liquidación
-                </button>
-            </form>
-        </div>
+    <div class="row" style="align-items:stretch">
+        <form class="card card--pad only-desktop" style="flex:2 1 400px;display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+            <div class="field" style="flex:1;min-width:140px">
+                <label class="field__label">Desde</label>
+                <input type="date" name="start" value="<?= $start ?>" class="input">
+            </div>
+            <div class="field" style="flex:1;min-width:140px">
+                <label class="field__label">Hasta</label>
+                <input type="date" name="end" value="<?= $end ?>" class="input">
+            </div>
+            <button type="submit" class="btn btn--primary"><?= ui_icon('filter') ?> Filtrar</button>
+            <button type="button" onclick="exportarPDFComplejo()" class="btn btn--danger"><?= ui_icon('file-chart-column') ?> Reporte liquidación</button>
+        </form>
 
-        <!-- Tarjetas Totales -->
-        <div class="flex gap-4 flex-col sm:flex-row xl:w-auto">
-            <div class="p-5 rounded-2xl flex-1 min-w-[200px]" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-                <span class="text-slate-500 text-xs uppercase font-bold tracking-wider block mb-1">Total Ventas</span>
-                <div class="text-2xl font-bold" style="color:var(--ink);">$<?= number_format($totalVentas, 0, ',', '.') ?></div>
-            </div>
-            <div class="p-5 rounded-2xl flex-1 min-w-[200px]" style="background:var(--apr-bg);border:1.5px solid rgba(11,107,70,.18);box-shadow:var(--shadow-card);">
-                <span class="text-emerald-500 text-xs uppercase font-bold tracking-wider block mb-1">Comisiones (5%)</span>
-                <div class="text-3xl font-bold text-emerald-400">$<?= number_format($totalComisiones, 0, ',', '.') ?></div>
-            </div>
+        <div class="kpis" style="flex:1 1 320px">
+            <article class="card kpi">
+                <span class="eyebrow">Ventas entregadas</span>
+                <span class="kpi__value tab"><?= ui_money($totalVentas) ?></span>
+                <span class="kpi__sub tab"><?= $total_registros ?> operaciones</span>
+            </article>
+            <article class="card kpi" style="background:var(--tint-soft);border-color:var(--tint)">
+                <span class="eyebrow" style="color:var(--tint-text)">A liquidar</span>
+                <span class="kpi__value tab" style="color:var(--tint-text)"><?= ui_money($totalComisiones) ?></span>
+                <span class="kpi__sub">Según comisión de cada vendedor</span>
+            </article>
         </div>
     </div>
 
-    <!-- Tabla de Resultados -->
-    <div class="rounded-2xl overflow-hidden flex flex-col min-h-[500px]" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-        <div class="overflow-x-auto flex-1">
-            <table class="w-full text-sm text-left">
-                <thead class="uppercase text-xs font-bold tracking-wider" style="background:#f8f7fc;color:var(--ink-3);border-bottom:1.5px solid var(--line);">
+    <!-- Por vendedor (celular) -->
+    <section class="only-mobile" style="display:flex;flex-direction:column;gap:8px">
+        <h2 class="group__title">Por vendedor</h2>
+        <?php if (empty($porVendedor)): ?>
+        <div class="card"><div class="empty"><?= ui_icon('users') ?><p class="empty__title">Sin entregas en el período</p></div></div>
+        <?php else: ?>
+        <div class="group__body">
+            <?php foreach ($porVendedor as $v): ?>
+            <a href="perfil_vendedor.php?id=<?= $v['id'] ?>" class="cell">
+                <?= ui_avatar($v['name']) ?>
+                <span class="cell__body">
+                    <span class="cell__title"><?= htmlspecialchars($v['name']) ?></span>
+                    <span class="tab cell__sub"><?= (int)$v['cnt'] ?> entrega<?= $v['cnt'] == 1 ? '' : 's' ?> · <?= ui_money($v['total_venta']) ?></span>
+                </span>
+                <span class="tab" style="font-weight:700"><?= ui_money($v['total_comision']) ?></span>
+                <span class="cell__chevron"><?= ui_icon('chevron-right') ?></span>
+            </a>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+        <button type="button" onclick="exportarPDFComplejo()" class="btn btn--block"><?= ui_icon('file-text') ?> Descargar liquidación en PDF</button>
+    </section>
+
+    <!-- Tabla de Resultados (PC) -->
+    <section class="card only-desktop" style="overflow:hidden">
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <th class="p-4 whitespace-nowrap">F. Entrega</th>
-                        <th class="p-4">Vendedor</th>
-                        <th class="p-4">Cliente</th>
-                        <th class="p-4">Artículo</th>
-                        <th class="p-4 text-right">Total Venta</th>
-                        <th class="p-4 text-right text-emerald-400">Comisión</th>
+                        <th>F. entrega</th><th>Vendedor</th><th>Cliente</th><th>Artículo</th><th class="num">Total venta</th><th class="num">Comisión</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-800">
+                <tbody>
                     <?php if (empty($displaySales)): ?>
-                        <tr><td colspan="6" class="p-10 text-center text-slate-500 italic">No hay registros entregados en este rango de fechas.</td></tr>
-                    <?php else: ?>
-                        <?php foreach ($displaySales as $s): ?>
-                        <tr class="transition" style="border-bottom:1px dashed var(--line);" onmouseover="this.style.background='rgba(99,102,241,.04)'" onmouseout="this.style.background=''">
-                            <td class="p-4 text-slate-300 font-mono text-xs">
-                                <?= date('d/m/Y', strtotime($s['delivered_at'])) ?>
-                            </td>
-                            <td class="p-4 font-bold text-slate-300">
-                                <a href="perfil_vendedor.php?id=<?= $s['user_id'] ?>" class="hover:text-blue-400 hover:underline transition flex items-center gap-1 group">
-                                    <?= htmlspecialchars($s['seller_name']) ?>
-                                    <i data-lucide="external-link" class="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                                </a>
-                            </td>
-                            <td class="p-4 text-slate-300"><?= htmlspecialchars($s['client_name']) ?></td>
-                            <td class="p-4 text-blue-300"><?= htmlspecialchars($s['item']) ?></td>
-                            <td class="p-4 text-right font-medium" style="color:var(--ink);">$<?= number_format($s['total_amount'], 0, ',', '.') ?></td>
-                            <td class="p-4 text-right font-bold text-emerald-400">$<?= number_format($s['commission'], 0, ',', '.') ?></td>
+                        <tr><td colspan="6"><div class="empty"><?= ui_icon('receipt') ?><p class="empty__title">No hay registros entregados en este rango de fechas</p></div></td></tr>
+                    <?php else: foreach ($displaySales as $s): ?>
+                        <tr>
+                            <td class="tab caption"><?= date('d/m/Y', strtotime($s['delivered_at'])) ?></td>
+                            <td><a href="perfil_vendedor.php?id=<?= $s['user_id'] ?>"><?= htmlspecialchars($s['seller_name']) ?></a></td>
+                            <td><?= htmlspecialchars($s['client_name']) ?></td>
+                            <td class="subhead"><?= htmlspecialchars($s['item']) ?></td>
+                            <td class="num tab"><?= ui_money($s['total_amount']) ?></td>
+                            <td class="num tab" style="font-weight:700;color:var(--tint-text)"><?= ui_money($s['commission']) ?></td>
                         </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                    <?php endforeach; endif; ?>
                 </tbody>
             </table>
         </div>
+    </section>
 
-        <!-- PAGINACIÓN GLOBAL -->
-        <?= renderPagination($total_registros, $registros_por_pagina, $pagina_actual, $filtros); ?>
-    </div>
-
+    <?= renderPagination($total_registros, $registros_por_pagina, $pagina_actual, $filtros); ?>
+</div>
 </main>
 
 <script>
@@ -194,15 +220,13 @@ include 'includes/header.php';
         const doc = new jsPDF('p', 'mm', 'a4');
         const pageWidth = doc.internal.pageSize.getWidth();
 
-        // 1. Cabecera
         doc.setFontSize(18); doc.setFont("helvetica", "bold");
         doc.text("Liquidación de Comisiones", pageWidth / 2, 15, { align: 'center' });
         doc.setFontSize(10); doc.setFont("helvetica", "normal");
         doc.text("Periodo: <?= date('d/m/Y', strtotime($start)) ?> al <?= date('d/m/Y', strtotime($end)) ?>", pageWidth / 2, 22, { align: 'center' });
 
-        // 2. Tabla Detalle
         const detailBody = salesData.map(row => [
-            row.date, row.seller, row.client, row.item, 
+            row.date, row.seller, row.client, row.item,
             row.installments + ' x ' + currency.format(row.amount_installment),
             currency.format(row.total), currency.format(row.commission)
         ]);
@@ -216,7 +240,6 @@ include 'includes/header.php';
             headStyles: { fillColor: [240, 240, 240], textColor: [0,0,0], fontStyle: 'bold' }
         });
 
-        // 3. Resumen por Vendedor
         const vendorTotals = {};
         salesData.forEach(row => {
             if (!vendorTotals[row.seller]) vendorTotals[row.seller] = 0;
