@@ -37,10 +37,10 @@ $startSql = $start . ' 00:00:00';
 $endSql = $end . ' 23:59:59';
 
 // 3. Obtener Ventas Entregadas en el Rango
-$sql = "SELECT * FROM sales 
-        WHERE user_id = ? 
-        AND status = 'entregado' 
-        AND delivered_at BETWEEN ? AND ? 
+$sql = "SELECT * FROM sales
+        WHERE user_id = ?
+        AND status = 'entregado'
+        AND delivered_at BETWEEN ? AND ?
         ORDER BY delivered_at DESC";
 
 $stmt = $pdo->prepare($sql);
@@ -60,6 +60,31 @@ foreach ($sales as $i => $s) {
     $totalVentas += $s['total_amount'];
     $totalComisiones += $commission;
 }
+
+// 4b. Objetivo del mes (mismo criterio que dashboard.php) y ventas activas sin entregar todavía
+$mtdStart = date('Y-m-01') . ' 00:00:00';
+$mtdEnd   = date('Y-m-d') . ' 23:59:59';
+$stmtGoal = $pdo->prepare(
+    "SELECT COALESCE(MAX(g.target_sales), 0) as target_sales,
+            COUNT(CASE WHEN s.status IN ('aprobado','entregado')
+                            AND s.created_at BETWEEN ? AND ?
+                       THEN s.id END) as progress_sales
+     FROM users u
+     LEFT JOIN seller_goals g ON g.user_id = u.id
+     LEFT JOIN sales s ON s.user_id = u.id
+     WHERE u.id = ?
+     GROUP BY u.id"
+);
+$stmtGoal->execute([$mtdStart, $mtdEnd, $seller_id]);
+$goal = $stmtGoal->fetch(PDO::FETCH_ASSOC);
+$goalTarget   = (int)($goal['target_sales'] ?? 0);
+$goalProgress = (int)($goal['progress_sales'] ?? 0);
+$goalPct      = $goalTarget > 0 ? round($goalProgress / $goalTarget * 100) : 0;
+
+$stmtPending = $pdo->prepare("SELECT status, COUNT(*) as total FROM sales WHERE user_id = ? AND status IN ('revision','aprobado') GROUP BY status");
+$stmtPending->execute([$seller_id]);
+$pendingCounts = ['revision' => 0, 'aprobado' => 0];
+foreach ($stmtPending->fetchAll(PDO::FETCH_ASSOC) as $row) { $pendingCounts[$row['status']] = (int)$row['total']; }
 
 // 5. Cambio de contraseña (solo el propio usuario)
 $pass_message = '';
@@ -84,123 +109,192 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     }
 }
 
+$isOwnProfile = ($seller_id == $my_id);
+
 include 'includes/header.php';
 ?>
 
-<main class="flex-1 max-w-5xl mx-auto w-full p-4 sm:p-6 lg:p-8 fade-in">
+<main class="app-main">
+<div class="app-container">
 
-    <!-- Cabecera y Volver -->
-    <div class="flex items-center gap-4 mb-8">
-        <a href="dashboard.php" class="p-2 rounded-full transition" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-3);" onmouseover="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'" onmouseout="this.style.background='var(--paper)';this.style.color='var(--ink-3)'">
-            <i data-lucide="arrow-left"></i>
-        </a>
+    <div class="page-head">
+        <div class="page-head__text">
+            <a href="dashboard.php" class="navbar-back only-desktop"><?= ui_icon('chevron-left') ?> Panel</a>
+            <h1 class="large-title"><?= $isOwnProfile ? 'Mis ventas y comisiones' : 'Ficha de vendedor' ?></h1>
+            <p class="subhead">Detalle de desempeño y liquidación del período.</p>
+        </div>
+    </div>
+
+    <?php if ($pass_message): ?><div class="notice notice--ok"><?= ui_icon('check-circle') ?> <span><?= htmlspecialchars($pass_message) ?></span></div><?php endif; ?>
+    <?php if ($pass_error): ?><div class="notice notice--error"><?= ui_icon('alert-octagon') ?> <span><?= htmlspecialchars($pass_error) ?></span></div><?php endif; ?>
+
+    <!-- Perfil + objetivo (celular) -->
+    <section class="card card--pad only-mobile" style="display:flex;align-items:center;gap:12px">
+        <?= ui_avatar($seller['name'], 'lg') ?>
         <div>
-            <h1 class="text-2xl font-bold" style="color:var(--ink);">
-                <!-- Título Dinámico: Si veo mi propio ID dice 'Mis Ventas', sino 'Ficha' -->
-                <?= ($seller_id == $my_id) ? 'Mis Ventas y Comisiones' : 'Ficha de Vendedor' ?>
-            </h1>
-            <p class="text-sm text-slate-500">Detalle de desempeño y liquidación del periodo.</p>
+            <span class="cell__title"><?= htmlspecialchars($seller['name']) ?></span>
+            <div class="subhead tab"><?= ucfirst($seller['role']) ?> · comisión <?= (int)$sellerRate ?>%</div>
         </div>
-    </div>
+    </section>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        
-        <!-- Tarjeta de Perfil -->
-        <div class="p-6 rounded-2xl" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-            <div class="flex items-center gap-4 mb-4">
-                <div class="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
-                    <?= strtoupper(substr($seller['name'], 0, 1)) ?>
-                </div>
-                <div>
-                    <h2 class="text-lg font-bold" style="color:var(--ink);"><?= htmlspecialchars($seller['name']) ?></h2>
-                    <span class="text-xs px-2 py-1 rounded uppercase font-bold" style="background:var(--accent-soft);color:var(--accent-ink);border:1px solid rgba(99,102,241,.2);"><?= ucfirst($seller['role']) ?></span>
-                </div>
-            </div>
-            <div class="space-y-2 text-sm pt-4" style="color:var(--ink-2);border-top:1.5px solid var(--line);">
-                <div class="flex justify-between"><span>Usuario/DNI:</span> <span class="font-mono" style="color:var(--ink);"><?= htmlspecialchars($seller['username']) ?></span></div>
-                <div class="flex justify-between"><span>Celular:</span> <span style="color:var(--ink);"><?= htmlspecialchars($seller['phone'] ?? '-') ?></span></div>
-                <div class="flex justify-between"><span>Alta:</span> <span style="color:var(--ink);"><?= date('d/m/Y', strtotime($seller['created_at'])) ?></span></div>
-            </div>
+    <!-- El filtro existía antes del rediseño: se mantiene también en celular. -->
+    <form method="GET" class="card card--pad only-mobile" style="display:flex;gap:8px;align-items:flex-end">
+        <?php if (!$isOwnProfile): ?><input type="hidden" name="id" value="<?= $seller_id ?>"><?php endif; ?>
+        <div class="field" style="flex:1;min-width:0">
+            <label class="field__label">Desde</label>
+            <input type="date" name="start" value="<?= $start ?>" class="input">
         </div>
+        <div class="field" style="flex:1;min-width:0">
+            <label class="field__label">Hasta</label>
+            <input type="date" name="end" value="<?= $end ?>" class="input">
+        </div>
+        <button type="submit" class="btn btn--icon" aria-label="Filtrar período"><?= ui_icon('filter') ?></button>
+    </form>
 
-        <!-- Tarjeta de Totales del Periodo -->
-        <div class="lg:col-span-2 p-6 rounded-2xl flex flex-col justify-between" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-            
-            <!-- Filtro -->
-            <form class="flex flex-wrap gap-3 items-end mb-6 pb-6" style="border-bottom:1.5px solid var(--line);">
-                <!-- Si es admin/sup y está viendo a OTRO, mantenemos el ID en el filtro -->
-                <?php if ($seller_id != $my_id): ?>
-                    <input type="hidden" name="id" value="<?= $seller_id ?>">
+    <?php if ($goalTarget > 0): $r = 38; $circ = round(2 * M_PI * $r, 1); $off = round($circ * (1 - min(100, $goalPct) / 100), 1); ?>
+    <section class="card card--pad" style="display:flex;align-items:center;gap:16px">
+        <div class="ring-wrap" style="width:84px;height:84px">
+            <svg class="ring" viewBox="0 0 84 84" width="84" height="84">
+                <circle class="ring__track" cx="42" cy="42" r="<?= $r ?>" stroke-width="9"></circle>
+                <circle class="ring__value" cx="42" cy="42" r="<?= $r ?>" stroke-width="9" stroke-dasharray="<?= $circ ?>" stroke-dashoffset="<?= $off ?>"></circle>
+            </svg>
+            <div class="ring__label"><span class="tab" style="font-weight:700"><?= $goalPct ?>%</span></div>
+        </div>
+        <div>
+            <?php $mesesEs = ['', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']; ?>
+            <span class="eyebrow">Objetivo de <?= $mesesEs[(int)date('n')] ?></span>
+            <div class="tab headline"><?= $goalProgress ?> de <?= $goalTarget ?> ventas</div>
+            <div class="subhead"><?= $goalProgress >= $goalTarget ? '¡Objetivo cumplido!' : 'Te faltan ' . ($goalTarget - $goalProgress) . ' para llegar' ?></div>
+        </div>
+    </section>
+    <?php endif; ?>
+
+    <div class="row" style="align-items:flex-start">
+        <div class="col-main" style="display:flex;flex-direction:column;gap:20px">
+
+            <!-- KPIs -->
+            <div class="kpis only-mobile">
+                <article class="card kpi"><span class="eyebrow">Entregadas</span><span class="kpi__value tab"><?= count($sales) ?></span></article>
+                <article class="card kpi"><span class="eyebrow">Vendido</span><span class="kpi__value tab" style="font-size:18px"><?= ui_money($totalVentas) ?></span></article>
+                <article class="card kpi" style="background:var(--tint-soft);border-color:var(--tint)"><span class="eyebrow" style="color:var(--tint-text)">A cobrar</span><span class="kpi__value tab" style="font-size:18px;color:var(--tint-text)"><?= ui_money($totalComisiones) ?></span></article>
+            </div>
+
+            <?php if ($pendingCounts['revision'] > 0 || $pendingCounts['aprobado'] > 0): ?>
+            <div class="card card--pad only-mobile" style="display:flex;align-items:center;gap:10px">
+                <span class="dot dot--revision"></span>
+                <span class="subhead" style="margin:0"><?= $pendingCounts['revision'] ?> en revisión · <?= $pendingCounts['aprobado'] ?> aprobada<?= $pendingCounts['aprobado'] == 1 ? '' : 's' ?> sin entregar</span>
+            </div>
+            <?php endif; ?>
+
+            <!-- Filtro + totales (PC) -->
+            <section class="card card--pad only-desktop">
+                <form style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--separator)">
+                    <?php if (!$isOwnProfile): ?><input type="hidden" name="id" value="<?= $seller_id ?>"><?php endif; ?>
+                    <div class="field" style="flex:1;min-width:140px">
+                        <label class="field__label">Desde</label>
+                        <input type="date" name="start" value="<?= $start ?>" class="input">
+                    </div>
+                    <div class="field" style="flex:1;min-width:140px">
+                        <label class="field__label">Hasta</label>
+                        <input type="date" name="end" value="<?= $end ?>" class="input">
+                    </div>
+                    <button type="submit" class="btn btn--primary"><?= ui_icon('filter') ?> Filtrar período</button>
+                </form>
+                <div class="kpis">
+                    <article class="card kpi"><span class="eyebrow">Ventas entregadas</span><span class="kpi__value tab"><?= ui_money($totalVentas) ?></span><span class="kpi__sub tab"><?= count($sales) ?> operaciones</span></article>
+                    <article class="card kpi" style="background:var(--tint-soft);border-color:var(--tint)"><span class="eyebrow" style="color:var(--tint-text)">Comisiones</span><span class="kpi__value tab" style="color:var(--tint-text)"><?= ui_money($totalComisiones) ?></span><span class="kpi__sub">A cobrar</span></article>
+                </div>
+            </section>
+
+            <!-- Listado de ventas -->
+            <section class="card only-desktop" style="overflow:hidden">
+                <div class="card__head"><h2 class="headline" style="margin:0"><?= ui_icon('list') ?> Detalle de ventas del período</h2></div>
+                <div class="table-wrap">
+                    <table class="data-table">
+                        <thead><tr><th>Fecha</th><th>Cliente</th><th>Artículo</th><th class="num">Monto</th><th class="num">Comisión</th><th></th></tr></thead>
+                        <tbody>
+                            <?php if (empty($sales)): ?>
+                                <tr><td colspan="6"><div class="empty"><?= ui_icon('receipt') ?><p class="empty__title">No hay ventas entregadas en este rango de fechas</p></div></td></tr>
+                            <?php else: foreach ($sales as $s): ?>
+                                <tr>
+                                    <td class="tab caption"><?= date('d/m/Y', strtotime($s['delivered_at'])) ?></td>
+                                    <td><?= htmlspecialchars($s['client_name']) ?></td>
+                                    <td class="subhead"><?= htmlspecialchars($s['item']) ?></td>
+                                    <td class="num tab"><?= ui_money($s['total_amount']) ?></td>
+                                    <td class="num tab" style="font-weight:700;color:var(--tint-text)"><?= ui_money($s['commission']) ?></td>
+                                    <td style="text-align:right"><a href="ver_ficha.php?id=<?= $s['id'] ?>" class="btn btn--icon btn--sm"><?= ui_icon('eye') ?></a></td>
+                                </tr>
+                            <?php endforeach; endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Listado de ventas (celular) -->
+            <section class="only-mobile" style="display:flex;flex-direction:column;gap:8px">
+                <h2 class="group__title">Entregadas en el período</h2>
+                <?php if (empty($sales)): ?>
+                <div class="card"><div class="empty"><?= ui_icon('receipt') ?><p class="empty__title">No hay ventas entregadas en este rango</p></div></div>
+                <?php else: ?>
+                <div class="group__body">
+                    <?php foreach ($sales as $s): ?>
+                    <a href="ver_ficha.php?id=<?= $s['id'] ?>" class="cell">
+                        <span class="cell__body">
+                            <span class="cell__title"><?= htmlspecialchars($s['client_name']) ?></span>
+                            <span class="tab cell__sub"><?= htmlspecialchars($s['item']) ?> · <?= date('d/m', strtotime($s['delivered_at'])) ?></span>
+                        </span>
+                        <span style="display:flex;flex-direction:column;align-items:flex-end">
+                            <span class="tab" style="font-weight:600"><?= ui_money($s['total_amount']) ?></span>
+                            <span class="tab caption" style="color:var(--green);font-weight:600">+<?= ui_money($s['commission']) ?></span>
+                        </span>
+                    </a>
+                    <?php endforeach; ?>
+                </div>
                 <?php endif; ?>
-                
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Desde</label>
-                    <input type="date" name="start" value="<?= $start ?>" class="input-light p-2 text-sm">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Hasta</label>
-                    <input type="date" name="end" value="<?= $end ?>" class="input-light p-2 text-sm">
-                </div>
-                <button type="submit" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded text-sm font-bold shadow-lg transition">Filtrar Periodo</button>
-            </form>
-
-            <!-- Resultados Numéricos -->
-            <div class="grid grid-cols-2 gap-4">
-                <div class="p-4 rounded-xl" style="background:var(--paper);border:1.5px solid var(--line);">
-                    <p class="text-xs text-slate-500 uppercase font-bold">Ventas Entregadas</p>
-                    <p class="text-2xl font-bold mt-1" style="color:var(--ink);">$<?= number_format($totalVentas, 0, ',', '.') ?></p>
-                    <p class="text-xs text-slate-600 mt-1"><?= count($sales) ?> operaciones</p>
-                </div>
-                <div class="bg-emerald-900/10 p-4 rounded-xl border border-emerald-500/20">
-                    <p class="text-xs text-emerald-500 uppercase font-bold">Comisiones</p>
-                    <p class="text-2xl font-bold text-emerald-400 mt-1">$<?= number_format($totalComisiones, 0, ',', '.') ?></p>
-                    <p class="text-xs text-emerald-500/60 mt-1">A cobrar</p>
-                </div>
-            </div>
+            </section>
         </div>
+
+        <!-- Perfil + cambio de contraseña (PC en columna lateral; celular al final) -->
+        <aside class="col-side" style="display:flex;flex-direction:column;gap:20px">
+            <section class="card card--pad only-desktop">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+                    <?= ui_avatar($seller['name'], 'lg') ?>
+                    <div>
+                        <span class="cell__title"><?= htmlspecialchars($seller['name']) ?></span>
+                        <div><span class="tag"><?= ucfirst($seller['role']) ?></span></div>
+                    </div>
+                </div>
+                <div class="kv" style="padding:0"><span class="kv__label">Usuario/DNI</span><span class="tab"><?= htmlspecialchars($seller['username']) ?></span></div>
+                <div class="kv" style="padding:0"><span class="kv__label">Celular</span><span><?= htmlspecialchars($seller['phone'] ?? '-') ?></span></div>
+                <div class="kv" style="padding:0"><span class="kv__label">Comisión</span><span class="tab"><?= (int)$sellerRate ?>%</span></div>
+                <div class="kv" style="padding:0"><span class="kv__label">Alta</span><span class="tab"><?= date('d/m/Y', strtotime($seller['created_at'])) ?></span></div>
+            </section>
+
+            <?php if ($isOwnProfile): ?>
+            <section class="card card--pad">
+                <h2 class="headline" style="margin:0 0 12px"><?= ui_icon('lock') ?> Cambiar contraseña</h2>
+                <form method="POST" style="display:flex;flex-direction:column;gap:12px">
+                    <?= csrf_field() ?>
+                    <input type="hidden" name="action" value="change_password">
+                    <div class="field">
+                        <label class="field__label">Contraseña actual</label>
+                        <input type="password" name="current_password" required class="input">
+                    </div>
+                    <div class="field">
+                        <label class="field__label">Nueva contraseña</label>
+                        <input type="password" name="new_password" required minlength="6" class="input">
+                    </div>
+                    <div class="field">
+                        <label class="field__label">Repetir nueva contraseña</label>
+                        <input type="password" name="confirm_password" required minlength="6" class="input">
+                    </div>
+                    <button type="submit" class="btn btn--primary"><?= ui_icon('save') ?> Actualizar contraseña</button>
+                </form>
+            </section>
+            <?php endif; ?>
+        </aside>
     </div>
-
-    <!-- Listado de Ventas -->
-    <div class="rounded-2xl overflow-hidden" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-        <div class="p-5" style="border-bottom:1.5px solid var(--line);background:#f8f7fc;">
-            <h3 class="font-bold flex items-center gap-2" style="color:var(--ink);"><i data-lucide="list" class="w-4 h-4" style="color:var(--ink-3);"></i> Detalle de Ventas del Periodo</h3>
-        </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-                <thead class="uppercase text-xs font-bold tracking-wider" style="background:#f8f7fc;color:var(--ink-3);border-bottom:1.5px solid var(--line);">
-                    <tr>
-                        <th class="p-4">Fecha</th>
-                        <th class="p-4">Cliente</th>
-                        <th class="p-4">Artículo</th>
-                        <th class="p-4 text-right">Monto</th>
-                        <th class="p-4 text-right text-emerald-400">Comisión</th>
-                        <th class="p-4 text-center">Ver</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-800">
-                    <?php if (empty($sales)): ?>
-                        <tr><td colspan="6" class="p-8 text-center text-slate-500 italic">No hay ventas entregadas en este rango de fechas.</td></tr>
-                    <?php else: ?>
-                        <?php foreach ($sales as $s): ?>
-                        <tr class="transition" style="border-bottom:1px dashed var(--line);" onmouseover="this.style.background='rgba(99,102,241,.04)'" onmouseout="this.style.background=''">
-                            <td class="p-4 text-black"><?= date('d/m/Y', strtotime($s['delivered_at'])) ?></td>
-                            <td class="p-4 font-medium text-black"><?= htmlspecialchars($s['client_name']) ?></td>
-                            <td class="p-4 text-black"><?= htmlspecialchars($s['item']) ?></td>
-                            <td class="p-4 text-right font-mono text-black">$<?= number_format($s['total_amount'], 0, ',', '.') ?></td>
-                            <td class="p-4 text-right font-bold text-emerald-400">$<?= number_format($s['commission'], 0, ',', '.') ?></td>
-                            <td class="p-4 text-center">
-                                <a href="ver_ficha.php?id=<?= $s['id'] ?>" class="p-1.5 rounded transition inline-block" style="color:var(--accent-ink);" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='transparent';this.style.color='var(--accent-ink)'"><i data-lucide="eye" class="w-4 h-4"></i></a>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-
-
-
+</div>
 </main>
 
 <?php include 'includes/footer.php'; ?>
