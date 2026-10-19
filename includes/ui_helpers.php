@@ -121,3 +121,13 @@ if (!function_exists('ui_is_active')) {
         return basename($_SERVER['PHP_SELF']) === basename(strtok($href, '?'));
     }
 }
+
+if (!function_exists('ui_fecha_larga')) {
+    /** "Sábado 17 de octubre", para el eyebrow de .page-head. Sin depender del locale del servidor. */
+    function ui_fecha_larga(?int $ts = null): string {
+        $ts = $ts ?? time();
+        $dias  = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+        $meses = ['', 'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+        return $dias[(int)date('w', $ts)] . ' ' . (int)date('j', $ts) . ' de ' . $meses[(int)date('n', $ts)];
+    }
+}

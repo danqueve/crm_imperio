@@ -43,6 +43,14 @@ if ($is_admin) {
     $denominador = $stats['entregado'] + $stats['rechazado'];
     $efectividad = $denominador > 0 ? round($stats['entregado'] / $denominador * 100) : 0;
 
+    // Rechazos por "no potable" en el período (clientes que quedaron en lista negra)
+    $stmtBlacklist = $pdo->prepare(
+        "SELECT COUNT(DISTINCT client_dni) FROM sales
+         WHERE status = 'rechazado' AND rejected_type = 'no_potable' AND created_at BETWEEN ? AND ?"
+    );
+    $stmtBlacklist->execute([$startSql, $endSql]);
+    $blacklistedCount = (int)$stmtBlacklist->fetchColumn();
+
     // --- Objetivos de Ventas (todos los roles activos, mes calendario en curso, independiente del filtro de arriba) ---
     $mtdStart = date('Y-m-01') . ' 00:00:00';
     $mtdEnd   = date('Y-m-d') . ' 23:59:59';
@@ -132,401 +140,375 @@ $pdfData = array_map(function($order) {
 }, $orders);
 
 include 'includes/header.php';
+
+// --- Derivados de presentación (no tocan $start/$end ni la consulta) ---
+if ($is_admin) {
+    $todayStr      = date('Y-m-d');
+    $weekStartStr  = date('Y-m-d', strtotime('monday this week'));
+    $monthStartStr = date('Y-m-01');
+    $periodMode = 'personalizado';
+    if ($start === $todayStr && $end === $todayStr) $periodMode = 'hoy';
+    elseif ($start === $weekStartStr && $end === $todayStr) $periodMode = 'semana';
+    elseif ($start === $monthStartStr && $end === $todayStr) $periodMode = 'mes';
+}
+
+$bandejaTitle = $is_limited_view ? 'Mis ventas activas' : ($role === 'verificador' ? 'Mis verificaciones asignadas' : 'Bandeja de revisión');
+$bienvenidaMsg = $is_limited_view
+    ? ('Tenés ' . count($orders) . ' venta' . (count($orders) === 1 ? '' : 's') . ' activa' . (count($orders) === 1 ? '' : 's') . '.')
+    : ($role === 'verificador'
+        ? ('Tenés ' . count($orders) . ' verificación' . (count($orders) === 1 ? '' : 'es') . ' asignada' . (count($orders) === 1 ? '' : 's') . '.')
+        : ('Tenés ' . count($orders) . ' venta' . (count($orders) === 1 ? '' : 's') . ' esperando verificación.'));
 ?>
 
 <!-- Librería de exportación PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
 
-<main class="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-6 lg:p-8 fade-in">
-    
+<main class="app-main">
+<div class="app-container">
+
     <?php if (isset($_GET['msg']) && $_GET['msg'] == 'saved'): ?>
-    <div id="toast-success" class="fixed bottom-6 right-6 z-50 flex items-center gap-4 rounded-2xl shadow-xl px-5 py-4" style="background:var(--card);border:1.5px solid var(--apr-bg);animation:slideInToast 0.4s cubic-bezier(0.34,1.56,0.64,1) both;box-shadow:0 8px 32px rgba(11,107,70,.12);">
-        <div style="background:var(--apr-bg);padding:10px;border-radius:12px;flex-shrink:0;">
-            <i data-lucide="check-circle" class="w-5 h-5" style="color:var(--apr-ink);"></i>
-        </div>
+    <div id="toast-success" class="toast">
+        <span class="icon-box icon-box--green"><?= ui_icon('check-circle') ?></span>
         <div>
-            <p class="font-bold text-sm" style="color:var(--ink);">¡Venta registrada!</p>
-            <p class="text-xs mt-0.5" style="color:var(--ink-3);">Guardada correctamente en el sistema.</p>
+            <p class="cell__title" style="margin:0">¡Venta registrada!</p>
+            <p class="caption" style="margin:0">Guardada correctamente en el sistema.</p>
         </div>
-        <button onclick="dismissToast()" class="ml-1 p-1.5 rounded-lg transition shrink-0" style="color:var(--ink-3);" onmouseover="this.style.background='var(--paper)'" onmouseout="this.style.background='transparent'">
-            <i data-lucide="x" class="w-4 h-4"></i>
+        <button type="button" onclick="dismissToast()" class="btn btn--icon btn--sm" style="border:0;margin-left:4px" aria-label="Cerrar">
+            <?= ui_icon('x') ?>
         </button>
     </div>
     <script>
         function dismissToast() {
             const t = document.getElementById('toast-success');
-            if (t) { t.style.transition = 'transform 0.4s ease, opacity 0.4s ease'; t.style.transform = 'translateX(110%)'; t.style.opacity = '0'; setTimeout(() => t.remove(), 400); }
+            if (t) { t.style.transition = 'transform .3s ease, opacity .3s ease'; t.style.transform = 'translateY(12px)'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }
         }
         setTimeout(dismissToast, 4500);
     </script>
     <?php endif; ?>
 
-    <!-- Cabecera -->
-    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
-        <div>
-            <h2 class="text-3xl font-bold tracking-tight uppercase" style="color:var(--ink);">Panel de Control</h2>
-            <p class="text-sm mt-1" style="color:var(--ink-3);">Bienvenido, <span class="font-bold" style="color:var(--accent-ink);"><?= htmlspecialchars($name) ?></span>.</p>
+    <!-- Encabezado de pantalla -->
+    <div class="page-head">
+        <div class="page-head__text">
+            <span class="eyebrow"><?= htmlspecialchars(ui_fecha_larga()) ?></span>
+            <h1 class="large-title">Panel</h1>
+            <p class="subhead">Bienvenido, <?= htmlspecialchars($name) ?>. <?= htmlspecialchars($bienvenidaMsg) ?></p>
         </div>
-        <div class="flex flex-wrap gap-3">
+        <div class="page-head__actions">
+            <?php if ($is_admin): ?>
+            <div role="group" aria-label="Período" class="segmented">
+                <a href="dashboard.php?start=<?= $todayStr ?>&end=<?= $todayStr ?>" class="segmented__item <?= $periodMode === 'hoy' ? 'is-active' : '' ?>">Hoy</a>
+                <a href="dashboard.php?start=<?= $weekStartStr ?>&end=<?= $todayStr ?>" class="segmented__item <?= $periodMode === 'semana' ? 'is-active' : '' ?>">Semana</a>
+                <a href="dashboard.php?start=<?= $monthStartStr ?>&end=<?= $todayStr ?>" class="segmented__item <?= $periodMode === 'mes' ? 'is-active' : '' ?>">Mes</a>
+                <button type="button" class="segmented__item <?= $periodMode === 'personalizado' ? 'is-active' : '' ?>" onclick="togglePeriodoForm()">Personalizado</button>
+            </div>
+            <?php endif; ?>
+
             <?php if ($can_assign): ?>
-            <div class="relative shrink-0" id="verifierFilterWrap">
-                <button type="button" onclick="toggleVerifierDropdown()" id="verifierFilterBtn"
-                        class="input-light rounded-xl px-3 py-2 text-sm flex items-center gap-2">
-                    <i data-lucide="user-check" class="w-3.5 h-3.5"></i>
+            <div style="position:relative;flex-shrink:0" id="verifierFilterWrap">
+                <button type="button" onclick="toggleVerifierDropdown()" id="verifierFilterBtn" class="btn btn--sm">
+                    <?= ui_icon('user-check') ?>
                     <span id="verifierFilterLabel">Todos</span>
-                    <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                    <?= ui_icon('chevron-down') ?>
                 </button>
-                <div id="verifierFilterDropdown" class="hidden absolute z-20 mt-2 w-60 rounded-xl shadow-lg p-3"
-                     style="background:var(--card);border:1.5px solid var(--line);">
-                    <div class="flex justify-between mb-2 text-[10px] font-bold uppercase tracking-widest" style="color:var(--ink-3);">
+                <div id="verifierFilterDropdown" class="card card--pad" style="display:none;position:absolute;z-index:20;margin-top:6px;width:240px;max-height:260px;overflow-y:auto">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:8px" class="caption">
                         <span>Verificador asignado</span>
-                        <button type="button" onclick="toggleAllVerifiers(false)" class="hover:underline">Limpiar</button>
+                        <button type="button" onclick="toggleAllVerifiers(false)" class="caption" style="background:none;border:0;color:var(--tint-text);cursor:pointer;padding:0">Limpiar</button>
                     </div>
-                    <div class="max-h-56 overflow-y-auto space-y-0.5">
-                        <label class="flex items-center gap-2 text-sm px-1.5 py-1.5 rounded-lg cursor-pointer hover:bg-black/5">
-                            <input type="checkbox" class="verifier-checkbox" value="0" onchange="updateVerifierLabel()">
-                            <span style="color:var(--ink-2);">Sin asignar</span>
-                        </label>
-                        <?php foreach ($verifiers as $v): ?>
-                        <label class="flex items-center gap-2 text-sm px-1.5 py-1.5 rounded-lg cursor-pointer hover:bg-black/5">
-                            <input type="checkbox" class="verifier-checkbox" value="<?= $v['id'] ?>" onchange="updateVerifierLabel()">
-                            <span style="color:var(--ink-2);"><?= htmlspecialchars($v['name']) ?></span>
-                        </label>
-                        <?php endforeach; ?>
-                    </div>
+                    <label style="display:flex;align-items:center;gap:8px;padding:6px 2px;cursor:pointer">
+                        <input type="checkbox" class="verifier-checkbox" value="0" onchange="updateVerifierLabel()">
+                        <span class="subhead" style="margin:0">Sin asignar</span>
+                    </label>
+                    <?php foreach ($verifiers as $v): ?>
+                    <label style="display:flex;align-items:center;gap:8px;padding:6px 2px;cursor:pointer">
+                        <input type="checkbox" class="verifier-checkbox" value="<?= $v['id'] ?>" onchange="updateVerifierLabel()">
+                        <span class="subhead" style="margin:0"><?= htmlspecialchars($v['name']) ?></span>
+                    </label>
+                    <?php endforeach; ?>
                 </div>
             </div>
             <?php endif; ?>
-            <button onclick="exportarPDF()" class="flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition" style="background:var(--rec-bg);color:var(--rec-ink);border:1.5px solid rgba(159,18,57,.2);" onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-                <i data-lucide="file-down" class="w-4 h-4"></i> PDF Pendientes
+
+            <button type="button" onclick="exportarPDF()" class="btn btn--sm">
+                <?= ui_icon('file-down') ?> PDF Pendientes
             </button>
+
             <?php if (in_array($role, ['admin', 'supervisor']) || $is_entregador): ?>
-            <a href="entregas.php" class="flex items-center gap-2 text-sm font-bold px-4 py-2 rounded-xl transition" style="background:var(--apr-bg);color:var(--apr-ink);border:1.5px solid rgba(11,107,70,.2);">
-                <i data-lucide="truck" class="w-4 h-4"></i> Gestión Entregas
+            <a href="entregas.php" class="btn btn--sm">
+                <?= ui_icon('truck') ?> Gestión Entregas
             </a>
             <?php endif; ?>
         </div>
     </div>
 
-    <?php if ($myTarget > 0): ?>
-    <!-- Objetivo del mes (usuario logueado, cualquier rol) -->
-    <div class="rounded-2xl p-5 mb-8 flex items-center justify-between gap-4 flex-wrap" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-        <div class="flex items-center gap-3">
-            <div class="p-2.5 rounded-xl" style="background:var(--accent-soft);color:var(--accent-ink);"><i data-lucide="target" class="w-5 h-5"></i></div>
-            <div>
-                <p class="text-[10px] uppercase font-bold tracking-widest" style="color:var(--ink-3);">Objetivo del mes</p>
-                <p class="text-lg font-bold" style="color:var(--ink);"><?= $myProgress ?> / <?= $myTarget ?> ventas <span style="color:var(--accent-ink);">(<?= $myPct ?>%)</span></p>
-            </div>
+    <?php if ($is_admin): ?>
+    <!-- Formulario de fechas personalizadas (se muestra con "Personalizado" o si ya hay un rango custom) -->
+    <form method="GET" id="periodoForm" class="card card--pad" style="display:<?= $periodMode === 'personalizado' ? 'flex' : 'none' ?>;gap:12px;flex-wrap:wrap;align-items:flex-end">
+        <div class="field" style="flex:1;min-width:140px">
+            <label class="field__label" for="f-start">Desde</label>
+            <input type="date" id="f-start" name="start" value="<?= $start ?>" class="input">
         </div>
-        <div class="w-full sm:w-48 h-2 rounded-full overflow-hidden shrink-0" style="background:var(--line);">
-            <div class="h-full <?= $myPct >= 100 ? 'bg-green-500' : ($myPct >= 50 ? 'bg-yellow-500' : 'bg-red-500') ?>" style="width: <?= min(100, $myPct) ?>%"></div>
+        <div class="field" style="flex:1;min-width:140px">
+            <label class="field__label" for="f-end">Hasta</label>
+            <input type="date" id="f-end" name="end" value="<?= $end ?>" class="input">
         </div>
-    </div>
+        <button type="submit" class="btn btn--primary"><?= ui_icon('filter') ?> Aplicar</button>
+    </form>
+    <p class="caption">
+        <?= date('d/m/Y', strtotime($start)) ?> – <?= date('d/m/Y', strtotime($end)) ?> ·
+        <strong class="tab" style="color:var(--label)"><?= $total_periodo ?></strong> ventas en el período
+    </p>
     <?php endif; ?>
 
-    <?php if ($is_admin): ?>
-    <!-- Filtro de Período -->
-    <div class="rounded-2xl p-4 mb-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-        <form method="GET" class="flex flex-col sm:flex-row gap-3 items-end">
-            <div class="flex items-center gap-2 shrink-0 mb-1 sm:mb-0">
-                <i data-lucide="calendar-range" class="w-4 h-4" style="color:var(--accent);"></i>
-                <span class="text-[10px] font-bold uppercase tracking-widest" style="color:var(--ink-3);">Período de análisis</span>
-            </div>
-            <div class="flex gap-3 flex-1 flex-wrap">
-                <div class="flex-1 min-w-[140px]">
-                    <label class="block text-[10px] font-bold uppercase mb-1 ml-1 tracking-widest" style="color:var(--ink-3);">Desde</label>
-                    <input type="date" name="start" value="<?= $start ?>" class="w-full input-light px-3 py-2 text-sm" style="color:var(--ink);">
+    <?php if ($myTarget > 0 || $is_admin): ?>
+    <div class="row">
+        <?php if ($myTarget > 0):
+            $r = 52; $circunferencia = round(2 * M_PI * $r, 1);
+            $pctClamped = min(100, max(0, $myPct));
+            $dashoffset = round($circunferencia * (1 - $pctClamped / 100), 1);
+            $diasRestantes = max(0, (int)date('t') - (int)date('j'));
+            $faltan = max(0, $myTarget - $myProgress);
+        ?>
+        <!-- Objetivo del mes (usuario logueado, cualquier rol) -->
+        <section class="card card--pad" style="flex:1 1 360px;display:flex;align-items:center;gap:20px">
+            <div class="ring-wrap" style="width:128px;height:128px">
+                <svg class="ring" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="Objetivo del mes: <?= $myPct ?> por ciento">
+                    <circle class="ring__track" cx="64" cy="64" r="<?= $r ?>" stroke-width="12"></circle>
+                    <circle class="ring__value" cx="64" cy="64" r="<?= $r ?>" stroke-width="12" stroke-dasharray="<?= $circunferencia ?>" stroke-dashoffset="<?= $dashoffset ?>"></circle>
+                </svg>
+                <div class="ring__label">
+                    <span class="tab title2"><?= $myPct ?>%</span>
+                    <span class="caption">del objetivo</span>
                 </div>
-                <div class="flex-1 min-w-[140px]">
-                    <label class="block text-[10px] font-bold uppercase mb-1 ml-1 tracking-widest" style="color:var(--ink-3);">Hasta</label>
-                    <input type="date" name="end" value="<?= $end ?>" class="w-full input-light px-3 py-2 text-sm" style="color:var(--ink);">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                <span class="eyebrow">Objetivo del mes</span>
+                <span class="tab title2"><?= $myProgress ?> de <?= $myTarget ?> ventas</span>
+                <span class="subhead">
+                    <?= $faltan > 0 ? ('Te faltan ' . $faltan . ' aprobadas · ') : '¡Objetivo cumplido! · ' ?>quedan <?= $diasRestantes ?> día<?= $diasRestantes === 1 ? '' : 's' ?>
+                </span>
+                <?php if ($is_admin): ?>
+                <div style="display:flex;gap:20px;margin-top:8px;padding-top:12px;border-top:1px solid var(--separator)">
+                    <div style="display:flex;flex-direction:column">
+                        <span class="caption">Efectividad</span>
+                        <span class="tab subhead" style="font-weight:600;color:var(--label)"><?= $efectividad ?>%</span>
+                    </div>
+                    <div style="display:flex;flex-direction:column">
+                        <span class="caption">Entregado</span>
+                        <span class="tab subhead" style="font-weight:600;color:var(--label)"><?= ui_money($statsMonto['entregado']) ?></span>
+                    </div>
                 </div>
+                <?php endif; ?>
             </div>
-            <div class="flex gap-2 shrink-0">
-                <button type="submit" class="text-white px-5 py-2 rounded-xl font-bold text-sm transition flex items-center gap-2" style="background:var(--accent);">
-                    <i data-lucide="filter" class="w-4 h-4"></i> Aplicar
-                </button>
-                <a href="dashboard.php" class="px-4 py-2 rounded-xl font-bold text-sm transition flex items-center gap-1" style="background:var(--paper);border:1.5px solid var(--line);color:var(--ink-2);" title="Resetear al mes actual">
-                    <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
-                </a>
-            </div>
-        </form>
-        <?php if ($total_periodo > 0 || $start !== date('Y-m-01') || $end !== date('Y-m-d')): ?>
-        <div class="mt-3 pt-3 flex flex-wrap gap-4 text-xs" style="border-top:1px dashed var(--line);color:var(--ink-3);">
-            <span class="flex items-center gap-1.5"><i data-lucide="calendar" class="w-3 h-3"></i> <?= date('d/m/Y', strtotime($start)) ?> — <?= date('d/m/Y', strtotime($end)) ?></span>
-            <span class="flex items-center gap-1.5"><i data-lucide="bar-chart-2" class="w-3 h-3"></i> <span class="font-bold" style="color:var(--ink);"><?= $total_periodo ?></span> ventas en el período</span>
-            <span class="flex items-center gap-1.5 font-bold" style="color:var(--apr-ink);"><i data-lucide="dollar-sign" class="w-3 h-3"></i> $<?= number_format($statsMonto['entregado'], 0, ',', '.') ?> entregado</span>
-            <?php if ($efectividad > 0): ?>
-            <span class="flex items-center gap-1.5 font-bold" style="color:var(--accent-ink);"><i data-lucide="target" class="w-3 h-3"></i> <?= $efectividad ?>% efectividad</span>
-            <?php endif; ?>
+        </section>
+        <?php endif; ?>
+
+        <?php if ($is_admin): ?>
+        <!-- 2. RESUMEN NUMÉRICO (TARJETAS KPI) -->
+        <div class="kpis" style="flex:999 1 520px">
+            <article class="card kpi">
+                <div class="kpi__top">
+                    <span class="eyebrow">En revisión</span>
+                    <span class="icon-box icon-box--orange"><?= ui_icon('clock') ?></span>
+                </div>
+                <span class="kpi__value stat-counter" data-target="<?= $stats['revision'] ?>">0</span>
+                <span class="kpi__sub"><?= $statsMonto['revision'] > 0 ? (ui_money($statsMonto['revision']) . ' en juego') : '—' ?></span>
+            </article>
+            <article class="card kpi">
+                <div class="kpi__top">
+                    <span class="eyebrow">Aprobadas</span>
+                    <span class="icon-box icon-box--tint"><?= ui_icon('check') ?></span>
+                </div>
+                <span class="kpi__value stat-counter" data-target="<?= $stats['aprobado'] ?>">0</span>
+                <span class="kpi__sub"><?= $statsMonto['aprobado'] > 0 ? ui_money($statsMonto['aprobado']) : 'Esperando entrega' ?></span>
+            </article>
+            <article class="card kpi">
+                <div class="kpi__top">
+                    <span class="eyebrow">Entregadas</span>
+                    <span class="icon-box icon-box--green"><?= ui_icon('truck') ?></span>
+                </div>
+                <span class="kpi__value stat-counter" data-target="<?= $stats['entregado'] ?>">0</span>
+                <span class="kpi__sub"><?= ui_money($statsMonto['entregado']) ?></span>
+            </article>
+            <article class="card kpi">
+                <div class="kpi__top">
+                    <span class="eyebrow">Rechazadas</span>
+                    <span class="icon-box icon-box--red"><?= ui_icon('x-circle') ?></span>
+                </div>
+                <span class="kpi__value stat-counter" data-target="<?= $stats['rechazado'] ?>">0</span>
+                <span class="kpi__sub"><?= $blacklistedCount > 0 ? ($blacklistedCount . ' en lista negra') : '—' ?></span>
+            </article>
         </div>
         <?php endif; ?>
     </div>
+    <?php endif; ?>
 
-    <!-- 2. RESUMEN NUMÉRICO (TARJETAS KPI) -->
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="p-5 rounded-2xl flex items-center justify-between cursor-default transition-all hover:-translate-y-0.5" style="background:var(--rev-bg);border:1.5px solid rgba(138,90,8,.18);box-shadow:0 2px 12px rgba(138,90,8,.08);">
-            <div>
-                <p class="text-[10px] uppercase font-bold tracking-widest mb-1" style="color:var(--rev-ink);">En Revisión</p>
-                <p class="text-3xl font-bold stat-counter" style="color:var(--ink);" data-target="<?= $stats['revision'] ?>">0</p>
-                <?php if ($statsMonto['revision'] > 0): ?>
-                <p class="text-[10px] mt-1 font-mono" style="color:var(--rev-ink);">$<?= number_format($statsMonto['revision'], 0, ',', '.') ?></p>
-                <?php endif; ?>
+    <!-- 1. BANDEJA DE ENTRADA -->
+    <section class="card" style="overflow:hidden">
+        <div class="card__head">
+            <div style="display:flex;align-items:center;gap:10px">
+                <h2 class="headline" style="margin:0"><?= htmlspecialchars($bandejaTitle) ?></h2>
+                <span class="tag tab"><?= count($orders) ?></span>
             </div>
-            <div class="p-2.5 rounded-xl" style="background:rgba(138,90,8,.12);color:var(--rev-ink);"><i data-lucide="clock" class="w-5 h-5"></i></div>
-        </div>
-        <div class="p-5 rounded-2xl flex items-center justify-between cursor-default transition-all hover:-translate-y-0.5" style="background:var(--apr-bg);border:1.5px solid rgba(11,107,70,.18);box-shadow:0 2px 12px rgba(11,107,70,.08);">
-            <div>
-                <p class="text-[10px] uppercase font-bold tracking-widest mb-1" style="color:var(--apr-ink);">Aprobadas</p>
-                <p class="text-3xl font-bold stat-counter" style="color:var(--ink);" data-target="<?= $stats['aprobado'] ?>">0</p>
-                <?php if ($statsMonto['aprobado'] > 0): ?>
-                <p class="text-[10px] mt-1 font-mono" style="color:var(--apr-ink);">$<?= number_format($statsMonto['aprobado'], 0, ',', '.') ?></p>
-                <?php endif; ?>
-            </div>
-            <div class="p-2.5 rounded-xl" style="background:rgba(11,107,70,.12);color:var(--apr-ink);"><i data-lucide="check" class="w-5 h-5"></i></div>
-        </div>
-        <div class="p-5 rounded-2xl flex items-center justify-between cursor-default transition-all hover:-translate-y-0.5" style="background:var(--ent-bg);border:1.5px solid rgba(55,48,163,.18);box-shadow:0 2px 12px rgba(55,48,163,.08);">
-            <div>
-                <p class="text-[10px] uppercase font-bold tracking-widest mb-1" style="color:var(--ent-ink);">Entregadas</p>
-                <p class="text-3xl font-bold stat-counter" style="color:var(--ink);" data-target="<?= $stats['entregado'] ?>">0</p>
-                <?php if ($statsMonto['entregado'] > 0): ?>
-                <p class="text-[10px] mt-1 font-mono font-bold" style="color:var(--apr-ink);">$<?= number_format($statsMonto['entregado'], 0, ',', '.') ?></p>
-                <?php endif; ?>
-            </div>
-            <div class="p-2.5 rounded-xl" style="background:rgba(55,48,163,.12);color:var(--ent-ink);"><i data-lucide="truck" class="w-5 h-5"></i></div>
-        </div>
-        <div class="p-5 rounded-2xl flex items-center justify-between cursor-default transition-all hover:-translate-y-0.5" style="background:var(--rec-bg);border:1.5px solid rgba(159,18,57,.18);box-shadow:0 2px 12px rgba(159,18,57,.08);">
-            <div>
-                <p class="text-[10px] uppercase font-bold tracking-widest mb-1" style="color:var(--rec-ink);">Rechazadas</p>
-                <p class="text-3xl font-bold stat-counter" style="color:var(--ink);" data-target="<?= $stats['rechazado'] ?>">0</p>
-                <?php if ($efectividad > 0): ?>
-                <p class="text-[10px] mt-1" style="color:var(--ink-3);">efectiv. <span class="font-bold" style="color:var(--accent-ink);"><?= $efectividad ?>%</span></p>
-                <?php endif; ?>
-            </div>
-            <div class="p-2.5 rounded-xl" style="background:rgba(159,18,57,.12);color:var(--rec-ink);"><i data-lucide="x-circle" class="w-5 h-5"></i></div>
-        </div>
-    </div>
-
-    <?php endif; // fin bloque admin ?>
-
-    <!-- 1. BANDEJA DE ENTRADA (TABLA) -->
-    <div class="rounded-2xl overflow-hidden <?= $is_admin ? 'mt-8' : '' ?>" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-        <div class="p-5 flex justify-between items-center" style="border-bottom:1.5px solid var(--line);background:#f8f7fc;">
-            <h3 class="font-bold text-base flex items-center gap-2 uppercase tracking-wide" style="color:var(--ink);">
-                <i data-lucide="inbox" class="w-5 h-5" style="color:var(--accent);"></i>
-                <?= $is_limited_view ? "Mis Ventas Activas" : ($role === 'verificador' ? "Mis Verificaciones Asignadas" : "Bandeja de Entrada · Revisión") ?>
-            </h3>
-            <span class="text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full" style="color:var(--ink-3);background:var(--paper);border:1.5px solid var(--line);">
-                <?= count($orders) ?> registros
-            </span>
         </div>
 
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm table-light">
+        <?php if (empty($orders)): ?>
+        <div class="empty">
+            <?= ui_icon('inbox') ?>
+            <p class="empty__title">Todo al día</p>
+            <p class="caption">No hay ventas pendientes de procesar en este momento.</p>
+        </div>
+        <?php else: ?>
+
+        <!-- Tabla (PC) -->
+        <div class="table-wrap only-desktop">
+            <table class="data-table">
                 <thead>
                     <tr>
-                        <th class="hidden sm:table-cell">#</th>
-                        <th class="hidden sm:table-cell">Fecha</th>
+                        <th></th>
                         <th>Cliente</th>
-                        <th class="hidden lg:table-cell">Localidad</th>
-                        <th class="hidden lg:table-cell">Cargado por</th>
-                        <th>Artículo / Total</th>
-                        <th class="hidden sm:table-cell">Estado</th>
-                        <th style="text-align:right;">Acciones</th>
+                        <th>Localidad</th>
+                        <th>Artículo · total</th>
+                        <th>Vendedor</th>
+                        <th>Verificador</th>
+                        <th>Estado</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($orders)): ?>
-                        <tr><td colspan="8" class="p-16 text-center">
-                            <div class="flex flex-col items-center gap-4">
-                                <div class="p-5 rounded-2xl" style="background:var(--paper);border:1.5px solid var(--line);">
-                                    <i data-lucide="inbox" class="w-10 h-10" style="color:var(--ink-3);"></i>
-                                </div>
-                                <div>
-                                    <p class="font-semibold text-base" style="color:var(--ink-2);">Todo al día</p>
-                                    <p class="text-sm mt-1" style="color:var(--ink-3);">No hay ventas pendientes de procesar en este momento.</p>
-                                </div>
-                            </div>
-                        </td></tr>
-                    <?php else: ?>
-                        <?php $counter = 1; foreach ($orders as $order): ?>
-                        <tr class="<?= $order['status'] === 'revision' ? 'row-revision' : 'row-aprobado' ?>">
-                            <td class="hidden sm:table-cell font-bold" style="color:var(--ink-3);"><?= $counter++ ?></td>
-                            <td class="hidden sm:table-cell font-mono text-xs whitespace-nowrap" style="color:var(--ink-2);"><?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></td>
-                            <td class="p-3 sm:p-[13px]">
-                                <div class="font-bold flex items-center gap-1.5" style="color:var(--ink);">
-                                    <?= htmlspecialchars($order['client_name']) ?>
-                                    <?php if (($order['sale_type'] ?? 'credito') === 'contado'): ?>
-                                    <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded" style="background:var(--apr-bg);color:var(--apr-ink);">Contado</span>
-                                    <?php endif; ?>
-                                    <?php if (($order['payment_method'] ?? 'normal') === 'rapicompra'): ?>
-                                    <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded" style="background:var(--accent-soft);color:var(--accent-ink);">RapiCompra</span>
-                                    <?php endif; ?>
-                                    <?php if ((int)($order['contact_attempts'] ?? 0) > 0): ?>
-                                    <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded flex items-center gap-0.5" style="background:var(--rev-bg);color:var(--rev-ink);" title="Tiene intentos de contacto registrados">
-                                        <i data-lucide="history" class="w-2.5 h-2.5"></i> <?= (int)$order['contact_attempts'] ?> intento<?= (int)$order['contact_attempts'] > 1 ? 's' : '' ?>
-                                    </span>
-                                    <?php endif; ?>
-                                </div>
-                                <div class="text-[10px] font-mono flex items-center gap-1 mt-0.5" style="color:var(--apr-ink);">
-                                    <i data-lucide="phone" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($order['client_whatsapp']) ?>
-                                </div>
-                                <div class="text-[10px] font-mono mt-0.5 sm:hidden" style="color:var(--ink-3);"><?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></div>
-                            </td>
-                            <td class="hidden lg:table-cell" style="color:var(--ink-2);">
-                                <div class="flex items-center gap-1.5">
-                                    <i data-lucide="map-pin" class="w-3.5 h-3.5" style="color:var(--ink-3);"></i>
-                                    <?= htmlspecialchars($order['client_locality'] ?: '-') ?>
-                                </div>
-                            </td>
-                            <td class="hidden lg:table-cell" style="color:var(--ink-2);">
-                                <div class="flex items-center gap-1.5">
-                                    <i data-lucide="user-edit" class="w-3.5 h-3.5" style="color:var(--ink-3);"></i>
-                                    <a href="perfil_vendedor.php?id=<?= $order['user_id'] ?>" class="transition hover:underline" style="color:var(--ink-2);" onmouseover="this.style.color='var(--accent-ink)'" onmouseout="this.style.color='var(--ink-2)'">
-                                        <?= isset($order['seller_name']) ? htmlspecialchars($order['seller_name']) : 'Yo' ?>
-                                    </a>
-                                </div>
-                            </td>
-                            <td class="p-3 sm:p-[13px]">
-                                <div class="font-medium" style="color:var(--ink);"><?= htmlspecialchars($order['item']) ?></div>
-                                <div class="text-xs font-bold" style="color:var(--apr-ink);">$<?= number_format($order['total_amount'], 0, ',', '.') ?></div>
-                                <div class="mt-1 sm:hidden"><?= status_badge($order['status']) ?></div>
-                            </td>
-                            <td class="hidden sm:table-cell"><?= status_badge($order['status']) ?></td>
-                            <td class="p-3 sm:p-[13px]" style="text-align:right;">
-                                <?php if ($can_assign && $order['status'] === 'revision'): ?>
-                                <div class="flex justify-end mb-1">
-                                    <?php if (!empty($order['verifier_name'])): ?>
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold" style="background:var(--accent-soft);color:var(--accent-ink);">
-                                        <i data-lucide="user-check" class="w-2.5 h-2.5"></i> <?= htmlspecialchars($order['verifier_name']) ?>
-                                        <?php if (!empty($order['assigned_at'])): ?>
-                                        <span class="font-mono opacity-75">· <?= date('H:i', strtotime($order['assigned_at'])) ?></span>
-                                        <?php endif; ?>
-                                    </span>
-                                    <?php else: ?>
-                                    <span class="text-[10px] italic" style="color:var(--ink-3);">Sin asignar</span>
-                                    <?php endif; ?>
-                                </div>
-                                <form method="POST" action="asignar_verificador.php" class="flex justify-end items-center gap-1.5 mb-2">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="sale_id" value="<?= $order['id'] ?>">
-                                    <select name="verifier_id" class="input-light text-xs min-h-[44px] py-2 px-2 rounded-lg cursor-pointer min-w-[110px]">
-                                        <option value="">Sin asignar</option>
-                                        <?php foreach ($verifiers as $v): ?>
-                                        <option value="<?= $v['id'] ?>" <?= (int)($order['assigned_verifier_id'] ?? 0) === (int)$v['id'] ? 'selected' : '' ?>><?= htmlspecialchars($v['name']) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <button type="submit" class="w-11 h-11 flex items-center justify-center rounded-lg transition shrink-0" style="background:var(--accent-soft);color:var(--accent-ink);border:1.5px solid rgba(99,102,241,.2);" title="Asignar verificador" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'">
-                                        <i data-lucide="user-check" class="w-4 h-4"></i>
-                                    </button>
-                                </form>
+                    <?php foreach ($orders as $order): ?>
+                    <tr onclick="dashRowClick(event, <?= (int)$order['id'] ?>)" style="cursor:pointer">
+                        <td><?= ui_avatar($order['client_name']) ?></td>
+                        <td>
+                            <div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px">
+                                <span class="cell__title" style="font-size:var(--fs-headline)"><?= htmlspecialchars($order['client_name']) ?></span>
+                                <?php if (($order['sale_type'] ?? 'credito') === 'contado'): ?>
+                                <span class="tag">Contado</span>
                                 <?php endif; ?>
-                                <div class="flex justify-end gap-1.5 sm:gap-2 items-center">
-                                    <a href="ver_ficha.php?id=<?= $order['id'] ?>" class="w-11 h-11 flex items-center justify-center rounded-lg transition" style="background:var(--accent-soft);color:var(--accent-ink);border:1.5px solid rgba(99,102,241,.2);" title="Ver Ficha" onmouseover="this.style.background='var(--accent)';this.style.color='#fff'" onmouseout="this.style.background='var(--accent-soft)';this.style.color='var(--accent-ink)'">
-                                        <i data-lucide="eye" class="w-4 h-4"></i>
-                                    </a>
-
-                                    <?php if ($can_manage && $order['status'] === 'revision'): ?>
-                                        <div class="w-px h-4 mx-1" style="background:var(--line);"></div>
-                                        <form method="POST" action="update_status.php" class="inline">
-                                            <?= csrf_field() ?>
-                                            <input type="hidden" name="id" value="<?= $order['id'] ?>">
-                                            <input type="hidden" name="status" value="aprobado">
-                                            <button type="submit" class="w-11 h-11 flex items-center justify-center rounded-lg transition" style="background:var(--apr-bg);color:var(--apr-ink);border:1.5px solid rgba(11,107,70,.2);" title="Aprobar Venta" onmouseover="this.style.background='var(--apr-ink)';this.style.color='#fff'" onmouseout="this.style.background='var(--apr-bg)';this.style.color='var(--apr-ink)'">
-                                                <i data-lucide="check" class="w-4 h-4"></i>
-                                            </button>
-                                        </form>
-                                        <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="w-11 h-11 flex items-center justify-center rounded-lg transition" style="background:var(--rec-bg);color:var(--rec-ink);border:1.5px solid rgba(159,18,57,.2);" title="Rechazar Venta" onclick="return confirm('¿Confirma que desea rechazar esta venta?')" onmouseover="this.style.background='var(--rec-ink)';this.style.color='#fff'" onmouseout="this.style.background='var(--rec-bg)';this.style.color='var(--rec-ink)'">
-                                            <i data-lucide="x" class="w-4 h-4"></i>
-                                        </a>
-                                    <?php endif; ?>
-
-                                    <?php if ($is_vendedor && $order['status'] === 'revision'): ?>
-                                        <div class="w-px h-4 mx-1" style="background:var(--line);"></div>
-                                        <a href="rechazar_venta.php?id=<?= $order['id'] ?>" class="w-11 h-11 flex items-center justify-center rounded-lg transition" style="background:var(--rec-bg);color:var(--rec-ink);border:1.5px solid rgba(159,18,57,.2);" title="Cancelar mi carga" onclick="return confirm('¿Confirma que desea cancelar y retirar esta venta enviada?')" onmouseover="this.style.background='var(--rec-ink)';this.style.color='#fff'" onmouseout="this.style.background='var(--rec-bg)';this.style.color='var(--rec-ink)'">
-                                            <i data-lucide="trash-2" class="w-4 h-4"></i>
-                                        </a>
-                                    <?php endif; ?>
-                                </div>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
+                                <?php if (($order['payment_method'] ?? 'normal') === 'rapicompra'): ?>
+                                <span class="tag tag--indigo">RapiCompra</span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="tab subhead" style="display:flex;align-items:center;gap:6px">
+                                <?= htmlspecialchars($order['client_whatsapp']) ?>
+                                <?php if ((int)($order['contact_attempts'] ?? 0) > 0): ?>
+                                <span style="display:inline-flex;align-items:center;gap:4px;color:var(--label)">
+                                    <?= ui_icon('history', '') ?> <?= (int)$order['contact_attempts'] ?> intento<?= (int)$order['contact_attempts'] > 1 ? 's' : '' ?>
+                                </span>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+                        <td class="subhead"><?= htmlspecialchars($order['client_locality'] ?: '-') ?></td>
+                        <td>
+                            <div><?= htmlspecialchars($order['item']) ?></div>
+                            <div class="tab subhead" style="font-weight:600;color:var(--label)"><?= ui_money($order['total_amount']) ?></div>
+                        </td>
+                        <td class="subhead">
+                            <a href="perfil_vendedor.php?id=<?= $order['user_id'] ?>" onclick="event.stopPropagation()">
+                                <?= isset($order['seller_name']) ? htmlspecialchars($order['seller_name']) : 'Yo' ?>
+                            </a>
+                        </td>
+                        <td class="subhead">
+                            <?php if (!empty($order['verifier_name'])): ?>
+                                <?= htmlspecialchars($order['verifier_name']) ?>
+                            <?php elseif ($can_assign && $order['status'] === 'revision'): ?>
+                                <span class="tag" style="border:1px dashed var(--label-3);background:transparent"><?= ui_icon('user-check') ?> Sin asignar</span>
+                            <?php else: ?>
+                                —
+                            <?php endif; ?>
+                        </td>
+                        <td>
+                            <div style="display:flex;flex-direction:column;gap:3px">
+                                <?= status_badge($order['status']) ?>
+                                <span class="tab caption"><?= date('d/m/Y H:i', strtotime($order['created_at'])) ?></span>
+                            </div>
+                        </td>
+                        <td><span class="cell__chevron"><?= ui_icon('chevron-right') ?></span></td>
+                    </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
-    </div>
+
+        <!-- Lista agrupada (celular) -->
+        <div class="only-mobile">
+            <div class="group__body">
+                <?php foreach ($orders as $order): ?>
+                <a href="ver_ficha.php?id=<?= $order['id'] ?>" class="cell">
+                    <?= ui_avatar($order['client_name']) ?>
+                    <span class="cell__body">
+                        <span style="display:flex;justify-content:space-between;gap:8px">
+                            <span class="cell__title"><?= htmlspecialchars($order['client_name']) ?></span>
+                            <span class="tab caption" style="flex-shrink:0"><?= date('d/m/Y', strtotime($order['created_at'])) ?></span>
+                        </span>
+                        <span class="tab cell__sub"><?= htmlspecialchars($order['item']) ?> · <?= ui_money($order['total_amount']) ?></span>
+                        <span class="cell__meta">
+                            <span class="dot dot--<?= $order['status'] ?>"></span>
+                            <?php
+                            $metaParts = [];
+                            if (!empty($order['verifier_name'])) $metaParts[] = htmlspecialchars($order['verifier_name']);
+                            elseif (array_key_exists('verifier_name', $order)) $metaParts[] = 'Sin asignar';
+                            if (($order['sale_type'] ?? 'credito') === 'contado') $metaParts[] = 'Contado';
+                            if (($order['payment_method'] ?? 'normal') === 'rapicompra') $metaParts[] = 'RapiCompra';
+                            if ((int)($order['contact_attempts'] ?? 0) > 0) $metaParts[] = (int)$order['contact_attempts'] . ' intento' . ((int)$order['contact_attempts'] > 1 ? 's' : '');
+                            echo implode(' · ', $metaParts);
+                            ?>
+                        </span>
+                    </span>
+                    <span class="cell__chevron"><?= ui_icon('chevron-right') ?></span>
+                </a>
+                <?php endforeach; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+    </section>
 
     <?php if ($is_admin): ?>
     <!-- 4. OBJETIVOS DE VENTAS -->
-    <div class="rounded-2xl overflow-hidden mt-8" style="background:var(--card);border:1.5px solid var(--line);box-shadow:var(--shadow-card);">
-        <div class="p-5" style="border-bottom:1.5px solid var(--line);background:#f8f7fc;">
-            <h3 class="font-bold text-base flex items-center gap-2 uppercase tracking-wide" style="color:var(--ink);">
-                <i data-lucide="target" class="w-5 h-5" style="color:var(--accent);"></i> Objetivos de Ventas · Mes Actual
-            </h3>
+    <section class="card" style="padding:16px 20px 20px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px">
+            <h2 class="headline" style="margin:0">Objetivos de ventas · mes actual</h2>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-                <thead class="uppercase text-[10px] font-bold tracking-widest" style="background:#f8f7fc;color:var(--ink-3);border-bottom:1.5px solid var(--line);">
-                    <tr>
-                        <th class="p-4 pl-6">Usuario</th>
-                        <th class="p-4 text-center">Objetivo</th>
-                        <th class="p-4">Progreso</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($sellerGoals)): ?>
-                        <tr><td colspan="3" class="p-8 text-center italic" style="color:var(--ink-3);">No hay usuarios activos registrados.</td></tr>
-                    <?php else: ?>
-                        <?php foreach ($sellerGoals as $g): ?>
-                        <?php
-                        $gTarget = (int)$g['target_sales'];
-                        $gProgress = (int)$g['progress_sales'];
-                        $gPct = $gTarget > 0 ? round($gProgress / $gTarget * 100) : 0;
-                        $gColor = 'bg-gray-400';
-                        if ($gPct >= 100) $gColor = 'bg-green-500';
-                        elseif ($gPct >= 50) $gColor = 'bg-yellow-500';
-                        elseif ($gPct > 0) $gColor = 'bg-red-500';
-                        ?>
-                        <tr style="border-bottom:1px dashed var(--line);">
-                            <td class="p-4 pl-6">
-                                <div class="font-bold" style="color:var(--ink);"><?= htmlspecialchars($g['name']) ?></div>
-                                <span class="inline-flex items-center px-2 py-0.5 mt-1 rounded text-[10px] font-bold uppercase tracking-wide border" style="background:var(--paper);color:var(--ink-2);border-color:var(--line);"><?= ucfirst($g['role']) ?></span>
-                            </td>
-                            <td class="p-4 text-center">
-                                <form method="POST" action="set_goal.php" class="flex items-center justify-center gap-2">
-                                    <?= csrf_field() ?>
-                                    <input type="hidden" name="user_id" value="<?= $g['id'] ?>">
-                                    <input type="number" name="target_sales" min="0" step="1" value="<?= $gTarget ?>" class="w-16 input-light text-xs py-1 px-2 text-center font-mono">
-                                    <button type="submit" class="px-3 py-1.5 rounded-lg text-xs font-bold transition text-white" style="background:var(--accent);">Guardar</button>
-                                </form>
-                            </td>
-                            <td class="p-4">
-                                <?php if ($gTarget === 0): ?>
-                                    <span class="italic text-xs" style="color:var(--ink-3);">Sin objetivo asignado</span>
-                                <?php else: ?>
-                                    <div class="flex items-center gap-3">
-                                        <span class="text-xs font-bold whitespace-nowrap" style="color:var(--ink);"><?= $gProgress ?> / <?= $gTarget ?> ventas (<?= $gPct ?>%)</span>
-                                        <div class="w-full h-1.5 rounded-full overflow-hidden" style="background:var(--line);max-width:160px;">
-                                            <div class="h-full <?= $gColor ?>" style="width: <?= min(100, $gPct) ?>%"></div>
-                                        </div>
-                                    </div>
-                                <?php endif; ?>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+        <?php if (empty($sellerGoals)): ?>
+        <p class="caption">No hay usuarios activos registrados.</p>
+        <?php else: ?>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:12px">
+            <?php foreach ($sellerGoals as $g):
+                $gTarget = (int)$g['target_sales'];
+                $gProgress = (int)$g['progress_sales'];
+                $gPct = $gTarget > 0 ? round($gProgress / $gTarget * 100) : 0;
+            ?>
+            <div class="card card--pad" style="display:flex;align-items:center;gap:12px">
+                <?= ui_avatar($g['name']) ?>
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px">
+                    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+                        <span class="cell__title"><?= htmlspecialchars($g['name']) ?></span>
+                        <span class="tab subhead"><?= $gTarget > 0 ? ($gProgress . ' / ' . $gTarget) : 'Sin objetivo' ?></span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress__bar <?= $gPct >= 100 ? 'progress__bar--done' : '' ?>" style="width:<?= min(100, $gPct) ?>%"></div>
+                    </div>
+                    <form method="POST" action="set_goal.php" style="display:flex;align-items:center;gap:8px">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="user_id" value="<?= $g['id'] ?>">
+                        <input type="number" name="target_sales" min="0" step="1" value="<?= $gTarget ?>" class="input" style="height:32px;width:72px;padding:0 8px;font-size:13px">
+                        <button type="submit" class="btn btn--sm">Guardar</button>
+                    </form>
+                </div>
+            </div>
+            <?php endforeach; ?>
         </div>
-    </div>
-    <?php endif; // fin sección objetivos ?>
+        <?php endif; ?>
+    </section>
+    <?php endif; ?>
+
+</div>
 </main>
 
 <script>
     <?php if ($is_admin): ?>
-    // Contadores animados en stat cards
+    // Contadores animados en las tarjetas KPI
     document.querySelectorAll('.stat-counter').forEach(el => {
         const target = parseInt(el.dataset.target) || 0;
         if (target === 0) { el.textContent = '0'; return; }
@@ -540,12 +522,23 @@ include 'includes/header.php';
         }
         requestAnimationFrame(update);
     });
+
+    function togglePeriodoForm() {
+        const f = document.getElementById('periodoForm');
+        if (f) f.style.display = (f.style.display === 'none' ? 'flex' : 'none');
+    }
     <?php endif; ?>
+
+    // Fila/celda de la bandeja → ver_ficha.php (ignora clicks en links/botones propios)
+    function dashRowClick(e, id) {
+        if (e.target.closest('a, button, input, select, form')) return;
+        window.location = 'ver_ficha.php?id=' + id;
+    }
 
     // Dropdown de verificador (multi-selección con checkboxes) para el PDF
     function toggleVerifierDropdown() {
         const el = document.getElementById('verifierFilterDropdown');
-        if (el) el.classList.toggle('hidden');
+        if (el) el.style.display = (el.style.display === 'none' ? 'block' : 'none');
     }
     function toggleAllVerifiers(checked) {
         document.querySelectorAll('.verifier-checkbox').forEach(cb => cb.checked = checked);
@@ -562,7 +555,8 @@ include 'includes/header.php';
     document.addEventListener('click', function(e) {
         const wrap = document.getElementById('verifierFilterWrap');
         if (wrap && !wrap.contains(e.target)) {
-            document.getElementById('verifierFilterDropdown').classList.add('hidden');
+            const dd = document.getElementById('verifierFilterDropdown');
+            if (dd) dd.style.display = 'none';
         }
     });
 
@@ -600,7 +594,7 @@ include 'includes/header.php';
             head: [['#', 'Fecha', 'Cliente', 'Celular', 'Dirección', 'Artículo', 'Vendedor', 'Verificador']],
             body: data.map((r, i) => [i+1, r.date, r.client, r.phone, r.address, r.item, r.seller, r.verifier]),
             startY: tableStartY, theme: 'grid', styles: { fontSize: 8 },
-            headStyles: { fillColor: [99, 102, 241] },
+            headStyles: { fillColor: [16, 141, 255] },
             margin: { top: tableStartY }
         });
         window.open(doc.output('bloburl'), '_blank');
