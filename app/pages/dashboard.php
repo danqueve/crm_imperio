@@ -156,7 +156,7 @@ $bandejaTitle = $is_limited_view ? 'Mis ventas activas' : ($role === 'verificado
 $bienvenidaMsg = $is_limited_view
     ? ('Tenés ' . count($orders) . ' venta' . (count($orders) === 1 ? '' : 's') . ' activa' . (count($orders) === 1 ? '' : 's') . '.')
     : ($role === 'verificador'
-        ? ('Tenés ' . count($orders) . ' verificación' . (count($orders) === 1 ? '' : 'es') . ' asignada' . (count($orders) === 1 ? '' : 's') . '.')
+        ? ('Tenés ' . count($orders) . (count($orders) === 1 ? ' verificación' : ' verificaciones') . ' asignada' . (count($orders) === 1 ? '' : 's') . '.')
         : ('Tenés ' . count($orders) . ' venta' . (count($orders) === 1 ? '' : 's') . ' esperando verificación.'));
 ?>
 
@@ -371,7 +371,9 @@ $bienvenidaMsg = $is_limited_view
                         <th>Localidad</th>
                         <th>Artículo · total</th>
                         <th>Vendedor</th>
+                        <?php if ($role !== 'verificador'): // al verificador todas las filas le pertenecen ?>
                         <th>Verificador</th>
+                        <?php endif; ?>
                         <th>Estado</th>
                         <th></th>
                     </tr>
@@ -393,7 +395,7 @@ $bienvenidaMsg = $is_limited_view
                             <div class="tab subhead" style="display:flex;align-items:center;gap:6px">
                                 <?= htmlspecialchars($order['client_whatsapp']) ?>
                                 <?php if ((int)($order['contact_attempts'] ?? 0) > 0): ?>
-                                <span style="display:inline-flex;align-items:center;gap:4px;color:var(--label)">
+                                <span style="display:inline-flex;align-items:center;gap:4px;color:var(--label);white-space:nowrap">
                                     <?= ui_icon('history', '') ?> <?= (int)$order['contact_attempts'] ?> intento<?= (int)$order['contact_attempts'] > 1 ? 's' : '' ?>
                                 </span>
                                 <?php endif; ?>
@@ -409,6 +411,7 @@ $bienvenidaMsg = $is_limited_view
                                 <?= isset($order['seller_name']) ? htmlspecialchars($order['seller_name']) : 'Yo' ?>
                             </a>
                         </td>
+                        <?php if ($role !== 'verificador'): ?>
                         <td class="subhead">
                             <?php if (!empty($order['verifier_name'])): ?>
                                 <?= htmlspecialchars($order['verifier_name']) ?>
@@ -418,6 +421,7 @@ $bienvenidaMsg = $is_limited_view
                                 —
                             <?php endif; ?>
                         </td>
+                        <?php endif; ?>
                         <td>
                             <div style="display:flex;flex-direction:column;gap:3px">
                                 <?= status_badge($order['status']) ?>

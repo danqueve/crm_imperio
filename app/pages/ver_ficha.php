@@ -199,7 +199,7 @@ $wa_link = normalize_ar_whatsapp($order['client_whatsapp'] ?? '');
                     <?php if ($isRejStep): ?>
                         <?= htmlspecialchars(rejection_type_label($order['rejected_type'] ?? null)) ?>
                     <?php elseif ($step['key'] === 'revision' && !empty($order['assigned_verifier_name'])): ?>
-                        <?= htmlspecialchars($order['assigned_verifier_name']) ?><?= count($contact_log) > 0 ? ' · ' . count($contact_log) . ' intentos' : '' ?>
+                        <?= htmlspecialchars($order['assigned_verifier_name']) ?><?= count($contact_log) > 0 ? ' · ' . count($contact_log) . (count($contact_log) === 1 ? ' intento' : ' intentos') : '' ?>
                     <?php elseif ($step['key'] === 'aprobado' && !empty($order['approved_at'])): ?>
                         <?= date('d/m/Y H:i', strtotime($order['approved_at'])) ?>
                     <?php elseif ($step['key'] === 'entregado' && !empty($order['delivered_at'])): ?>
