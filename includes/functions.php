@@ -97,7 +97,11 @@ if (!function_exists('renderPagination')) {
         // Limpiar 'page' para evitar duplicados en la URL
         unset($extra_params['page']);
         $queryString = http_build_query($extra_params);
-        $baseUrl = $_SERVER['PHP_SELF'] . '?' . ($queryString ? $queryString . '&' : '');
+        // Relativo (solo el nombre del archivo), no la ruta completa: con el rewrite del .htaccess,
+        // PHP_SELF resuelve a app/pages/<archivo>.php y un link absoluto a esa ruta sacaba al usuario
+        // de las URLs "bonitas", rompiendo desde ahí todos los demás links y forms relativos de la página
+        // (ej. action="update_status.php" terminaba buscando app/pages/update_status.php y daba 404).
+        $baseUrl = basename($_SERVER['PHP_SELF']) . '?' . ($queryString ? $queryString . '&' : '');
 
         ob_start();
         ?>

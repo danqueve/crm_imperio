@@ -235,7 +235,9 @@ input, select, textarea, button { font-family: inherit; }
 @media (max-width: 1023px) {
   .app-sidebar { display: none; }
   .app-search { display: none; }
-  .app-main { padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom, 0px) + 32px); }
+  /* +88px (no solo +32px): dejar lugar también al botón flotante (.fab), que mide 56px y flota
+     16px por encima de la tabbar — si no, tapaba el último botón de la página (ej. "Entregar"). */
+  .app-main { padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom, 0px) + 88px); }
   .only-desktop { display: none !important; }
 }
 @media (min-width: 1024px) {
@@ -730,8 +732,11 @@ a.rounded-full, button.rounded-full, a.w-11, button.w-11, a.w-10, button.w-10 {
   min-width: 44px; min-height: 44px; display: inline-flex; align-items: center; justify-content: center;
 }
 
-/* Páginas viejas: dejar lugar a la barra inferior en celular */
+/* Páginas viejas sin el sistema de diseño (hoy solo admin_audit.php): dejar lugar a la barra inferior.
+   :not(.app-main) para no pisar la regla de abajo (línea ~240), que ya reserva el espacio correcto
+   -- FAB incluido -- para cualquier página migrada; con "main" a secas (sin excluirla) esta regla,
+   por el !important, ganaba siempre y el botón flotante quedaba tapando el último botón de la página. */
 @media (max-width: 1023px) {
-  body.has-tabbar main { padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom, 0px) + 32px) !important; }
+  body.has-tabbar main:not(.app-main) { padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom, 0px) + 32px) !important; }
   body.has-tabbar > footer, .app-content > footer { display: none; }
 }

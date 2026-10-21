@@ -518,6 +518,12 @@ $wa_link = normalize_ar_whatsapp($order['client_whatsapp'] ?? '');
                             $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Catamarca','Concepción','Cruz Alta','Famaillá','La Florida','Leales','Lules','Manantial','Monteros','Ranchillos','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Sgo','Villa Carmela','Yerba Buena'];
                             $localidadesLabels = ['Sgo' => 'Sgo del Estero'];
                             $cur_loc = $order['client_locality'] ?? '';
+                            // Si la localidad guardada no está en la lista (dato viejo o ya no vigente), se agrega
+                            // igual como opción: si no, no quedaba ninguna "selected" y al guardar sin tocar este
+                            // campo se perdía la localidad real (el navegador manda la primera opción de la lista).
+                            if ($cur_loc !== '' && !in_array($cur_loc, $localidades, true)) {
+                                $localidades[] = $cur_loc;
+                            }
                             ?>
                             <select name="client_locality" id="client_locality" class="select">
                                 <option value="" disabled <?= $cur_loc === '' ? 'selected' : '' ?>>Seleccionar localidad...</option>
@@ -591,7 +597,11 @@ $wa_link = normalize_ar_whatsapp($order['client_whatsapp'] ?? '');
                                     if (!empty($current_day) && !in_array($current_day, $dias_permitidos)) {
                                         $options_to_render[] = $current_day;
                                     }
-                                    foreach ($options_to_render as $d):
+                                    ?>
+                                    <!-- Sin esta opción vacía, si no había día cargado (ej. venta de contado) el navegador
+                                         dejaba el <select> en el primer valor de la lista y se guardaba "Lunes" solo. -->
+                                    <option value="" <?= $current_day === '' ? 'selected' : '' ?>>Sin definir</option>
+                                    <?php foreach ($options_to_render as $d):
                                         $is_historical = !in_array($d, $dias_permitidos);
                                     ?>
                                         <option value="<?= htmlspecialchars($d) ?>"

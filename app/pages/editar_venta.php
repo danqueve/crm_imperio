@@ -108,9 +108,15 @@ include dirname(__DIR__, 2) . '/includes/header.php';
                 <div class="field">
                     <label class="field__label">Localidad <?= $is_contado ? '' : '*' ?></label>
                     <?php
-                    $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Concepción','Cruz Alta','Famaillá','La Florida','Leales','Lules','Manantial','Monteros','Ranchillos','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Sgo','Villa Carmela','Yerba Buena'];
+                    $localidades = ['Acheral','Aguilares','Alderete','Banda del Río Salí','Bella Vista','Burruyacu','Catamarca','Concepción','Cruz Alta','Famaillá','La Florida','Leales','Lules','Manantial','Monteros','Ranchillos','Río Colorado','San Miguel de Tucumán','Simoca','Tafí del Valle','Tafí Viejo','Termas','Sgo','Villa Carmela','Yerba Buena'];
                     $localidadesLabels = ['Sgo' => 'Sgo del Estero'];
                     $current_locality = $order['client_locality'] ?? '';
+                    // Si la localidad guardada no está en la lista (dato viejo o ya no vigente), se agrega
+                    // igual como opción: si no, no quedaba ninguna "selected" y al guardar sin tocar este
+                    // campo se perdía la localidad real (el navegador manda la primera opción de la lista).
+                    if ($current_locality !== '' && !in_array($current_locality, $localidades, true)) {
+                        $localidades[] = $current_locality;
+                    }
                     ?>
                     <select name="client_locality" id="client_locality" <?= $req_credito ?> class="select">
                         <option value="" disabled <?= $current_locality === '' ? 'selected' : '' ?>>Seleccionar localidad...</option>

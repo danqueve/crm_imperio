@@ -293,13 +293,11 @@ include dirname(__DIR__, 2) . '/includes/header.php';
                     <?= ui_icon('file-text') ?> Documentación y observaciones
                 </h2>
 
-                <div class="dropzone only-mobile" style="padding:0;border:0;background:none;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px" onclick="event.stopPropagation()">
+                <div class="dropzone only-mobile" style="padding:0;border:0;background:none" onclick="event.stopPropagation()">
+                    <!-- Sin captura de cámara a propósito: se suben archivos ya guardados en el celular
+                         (de cámara reemplazaba la foto anterior en vez de sumarla: con "multiple" no pasa). -->
                     <label class="btn btn--primary" style="height:72px;flex-direction:column;gap:4px">
-                        <?= ui_icon('camera') ?> Sacar foto
-                        <input type="file" name="sale_files[]" accept="image/*" capture="environment" class="sr-only" onchange="previewFiles(this)">
-                    </label>
-                    <label class="btn" style="height:72px;flex-direction:column;gap:4px">
-                        <?= ui_icon('image') ?> Elegir de la galería
+                        <?= ui_icon('image') ?> Elegir archivos
                         <input type="file" name="sale_files[]" multiple accept="image/*,.pdf" class="sr-only" onchange="previewFiles(this)">
                     </label>
                 </div>

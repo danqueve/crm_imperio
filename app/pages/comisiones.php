@@ -8,9 +8,11 @@ if (!isset($_SESSION['role']) || ($_SESSION['role'] !== 'admin' && $_SESSION['ro
     exit;
 }
 
-// --- 1. CONFIGURACIÓN DE FECHAS (Semana Vigente: Lunes a Sábado) ---
+// --- 1. CONFIGURACIÓN DE FECHAS (Semana Vigente: Lunes a Domingo) ---
 $defaultStart = date('Y-m-d', strtotime('monday this week'));
-$defaultEnd = date('Y-m-d', strtotime('saturday this week'));
+// +6 días desde el lunes (no "sunday this week"): da siempre el domingo de la MISMA semana,
+// sin la ambigüedad de los formatos relativos de strtotime().
+$defaultEnd = date('Y-m-d', strtotime($defaultStart . ' +6 days'));
 
 $start = $_GET['start'] ?? $defaultStart;
 $end = $_GET['end'] ?? $defaultEnd;
